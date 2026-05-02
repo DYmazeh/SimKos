@@ -1,0 +1,77 @@
+# syntax=docker/dockerfile:1.6
+#
+# SIMKOS — Multi-stage build
+#
+# Stage 1 (vendor)   : install composer deps tanpa scripts
+# Stage 2 (frontend) : build asset Vite (Tailwind + JS)
+# Stage 3 (runtime)  : FrankenPHP serving Laravel
+#
+# FrankenPHP dipilih karena single binary (Caddy + PHP), hemat RAM
+# di Render free tier (vs nginx + php-fpm + supervisor).
+
+# ---------------- Stage 1: PHP vendor ----------------
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-autoloader \
+    --prefer-dist \
+    --no-interaction \
+    --no-progress
+
+# ---------------- Stage 2: Frontend assets ----------------
+FROM node:22-alpine AS frontend
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY vite.config.js tailwind.config.js* postcss.config.js* ./
+COPY resources/ ./resources/
+COPY public/ ./public/
+RUN npm run build
+
+# ---------------- Stage 3: Runtime ----------------
+FROM dunglas/frankenphp:1-php8.4-alpine AS runtime
+
+WORKDIR /app
+
+# Install ekstensi PHP yang dibutuhkan SIMKOS
+RUN install-php-extensions \
+        pdo_pgsql \
+        pgsql \
+        gd \
+        intl \
+        zip \
+        opcache \
+        bcmath \
+        sodium
+
+# Copy aplikasi
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=frontend /app/public/build ./public/build
+
+# Re-generate optimized autoloader (sekarang full source code ada)
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
+
+# Permission untuk Laravel storage & cache
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
+# Default untuk Laravel production
+ENV APP_ENV=production \
+    APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
+    SESSION_SECURE_COOKIE=true
+
+# Caddy listens on PORT env (Render sets it dynamically)
+ENV SERVER_NAME=":8080"
+EXPOSE 8080
+
+COPY docker/Caddyfile /etc/caddy/Caddyfile
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]

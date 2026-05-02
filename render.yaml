@@ -1,0 +1,55 @@
+# Render blueprint — auto-deploy SIMKOS dari GitHub
+# Setelah push ke GitHub, di Render dashboard: New > Blueprint > pilih repo
+# Render baca file ini & provision service.
+#
+# Free tier: web service tidur setelah 15 menit idle.
+# Mitigasi: UptimeRobot ping ke /up tiap 5 menit (gratis).
+
+services:
+  - type: web
+    name: simkos
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /up
+    autoDeploy: true
+    envVars:
+      - key: APP_NAME
+        value: SIMKOS
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_TIMEZONE
+        value: Asia/Jakarta
+      - key: APP_LOCALE
+        value: id
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: supabase
+      - key: RUN_MIGRATIONS
+        value: "true"
+      # === Variable rahasia yang harus di-set MANUAL di Render dashboard ===
+      # APP_KEY                   - generate via `php artisan key:generate --show`
+      # APP_URL                   - https://<your-render-app>.onrender.com
+      # DB_CONNECTION             - pgsql
+      # DB_HOST                   - aws-0-ap-southeast-1.pooler.supabase.com
+      # DB_PORT                   - 6543
+      # DB_DATABASE               - postgres
+      # DB_USERNAME               - postgres.<project-ref>
+      # DB_PASSWORD               - <db-password-supabase>
+      # DB_SSLMODE                - require
+      # SUPABASE_URL              - https://<project-ref>.supabase.co
+      # SUPABASE_SERVICE_ROLE_KEY - <service_role-key>
+      # SUPABASE_BUCKET           - simkos-uploads

@@ -1,0 +1,51 @@
+# Untuk dev lokal opsional (kalau install Docker Desktop nanti).
+# Day-to-day dev pakai Laragon / `php artisan serve` lebih cepat.
+#
+# Jalankan: docker compose up --build
+# Akses:    http://localhost:8000
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: simkos:dev
+    ports:
+      - "8000:8080"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      APP_TIMEZONE: Asia/Jakarta
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: simkos
+      DB_USERNAME: simkos
+      DB_PASSWORD: simkos
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      RUN_MIGRATIONS: "true"
+    volumes:
+      - ./:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: simkos
+      POSTGRES_PASSWORD: simkos
+      POSTGRES_DB: simkos
+    ports:
+      - "5432:5432"
+    volumes:
+      - simkos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U simkos"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  simkos_pgdata:
