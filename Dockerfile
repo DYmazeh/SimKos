@@ -47,6 +47,15 @@ RUN install-php-extensions \
         bcmath \
         sodium
 
+# Strip file capabilities dari binary frankenphp.
+# Image dunglas/frankenphp set cap_net_bind_service supaya bisa bind port < 1024,
+# tapi setcap binary konflik saat dijalankan oleh user non-root (USER 1000) di Render
+# → kernel reject exec dengan "Operation not permitted".
+# Karena kita pakai port 8080 (>1024), capability ini tidak dibutuhkan.
+RUN apk add --no-cache --virtual .setcap-deps libcap \
+    && setcap -r /usr/local/bin/frankenphp 2>/dev/null || true \
+    && apk del .setcap-deps
+
 # Copy composer binary dari vendor stage (lebih reliable daripada langsung dari composer:2
 # karena path binary bisa berubah antar versi image).
 COPY --from=vendor /usr/bin/composer /usr/local/bin/composer

@@ -19,7 +19,14 @@ if [ ! -f .env ]; then
 fi
 
 # Generate APP_KEY kalau belum ada (safety net)
+# WARNING: APP_KEY harus diset via env var di production supaya konsisten antar restart.
+# Kalau tiap restart APP_KEY berubah, semua session & encrypted cookie jadi invalid.
 if [ -z "$APP_KEY" ]; then
+    echo "[entrypoint] WARNING: APP_KEY env var kosong/tidak diset!" >&2
+    echo "[entrypoint] Set APP_KEY di Render dashboard supaya konsisten antar deploy." >&2
+    echo "[entrypoint] Generating temporary key (akan invalidate sessions saat restart)..." >&2
+    # Write placeholder supaya key:generate punya line untuk di-replace
+    echo "APP_KEY=" >> .env
     php artisan key:generate --force --no-interaction || true
 fi
 
