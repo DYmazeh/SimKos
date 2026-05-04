@@ -44,4 +44,13 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
     php artisan migrate --force --no-interaction
 fi
 
+# Optional seed saat boot (set RUN_SEEDER=true di env Render).
+# Seeder ini idempotent (firstOrCreate/updateOrCreate) — aman dipanggil berulang.
+# Disarankan: enable saat first deploy, lalu set false untuk deploy berikutnya
+# supaya boot lebih cepat & tidak ada risiko overwrite data.
+if [ "$RUN_SEEDER" = "true" ]; then
+    echo "[entrypoint] Running database seeders..."
+    php artisan db:seed --force --no-interaction
+fi
+
 exec "$@"

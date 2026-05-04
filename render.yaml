@@ -40,6 +40,10 @@ services:
         value: supabase
       - key: RUN_MIGRATIONS
         value: "true"
+      # Set "true" sekali untuk first deploy supaya admin user + roles + sample kamar
+      # ke-seed ke DB. Setelah deploy pertama sukses, ubah ke "false" supaya boot lebih cepat.
+      - key: RUN_SEEDER
+        value: "true"
       # === Variable rahasia yang harus di-set MANUAL di Render dashboard ===
       # APP_KEY                   - generate via `php artisan key:generate --show`
       # APP_URL                   - https://<your-render-app>.onrender.com
