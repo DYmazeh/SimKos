@@ -47,13 +47,19 @@ RUN install-php-extensions \
         bcmath \
         sodium
 
+# Copy composer binary dari vendor stage (lebih reliable daripada langsung dari composer:2
+# karena path binary bisa berubah antar versi image).
+COPY --from=vendor /usr/bin/composer /usr/local/bin/composer
+
 # Copy aplikasi
 COPY . .
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 
 # Re-generate optimized autoloader (sekarang full source code ada)
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
+# Gunakan full path untuk menghindari masalah PATH di Alpine
+RUN /usr/local/bin/composer dump-autoload --optimize --no-dev --classmap-authoritative \
+    && rm /usr/local/bin/composer
 
 # Permission untuk Laravel storage & cache
 RUN chown -R www-data:www-data storage bootstrap/cache \
