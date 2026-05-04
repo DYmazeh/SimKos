@@ -26,7 +26,9 @@ class Kamar extends Model
     ];
 
     public const STATUS_TERSEDIA = 'tersedia';
+
     public const STATUS_TERISI = 'terisi';
+
     public const STATUS_MAINTENANCE = 'maintenance';
 
     public function sewa(): HasMany

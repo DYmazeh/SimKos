@@ -8,7 +8,10 @@
     <div class="py-12">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            {{-- Greeting --}}
+            @if (session('success'))
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md p-3 text-sm">{{ session('success') }}</div>
+            @endif
+
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <p class="text-gray-700 dark:text-gray-300">
                     Halo, <span class="font-semibold">{{ auth()->user()->name }}</span> 👋
@@ -61,6 +64,7 @@
                                     <th class="py-2 pr-4">Jumlah</th>
                                     <th class="py-2 pr-4">Jatuh Tempo</th>
                                     <th class="py-2 pr-4">Status</th>
+                                    <th class="py-2 pr-4 text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -77,12 +81,30 @@
                                                 'bg-emerald-100 text-emerald-800' => $t->status === 'lunas',
                                             ])>{{ str_replace('_', ' ', ucfirst($t->status)) }}</span>
                                         </td>
+                                        <td class="py-2 pr-4 text-right">
+                                            @if (in_array($t->status, ['belum_bayar', 'terlambat']))
+                                                <a href="{{ route('penyewa.tagihan.bayar.create', $t) }}"
+                                                   class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-semibold">
+                                                    💳 Bayar / Upload Bukti
+                                                </a>
+                                            @elseif ($t->status === 'menunggu_verifikasi')
+                                                <span class="text-xs text-amber-700 italic">Menunggu verifikasi admin</span>
+                                            @elseif ($t->status === 'lunas')
+                                                <span class="text-xs text-emerald-700">✓ Sudah lunas</span>
+                                            @endif
+
+                                            @php $latestRejected = $t->pembayaran->where('status_verifikasi', 'rejected')->sortByDesc('verified_at')->first(); @endphp
+                                            @if ($latestRejected && in_array($t->status, ['belum_bayar', 'terlambat']))
+                                                <p class="text-[11px] text-rose-600 mt-1 italic">
+                                                    Bukti sebelumnya ditolak: "{{ $latestRejected->catatan }}"
+                                                </p>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Tombol upload bukti transfer akan ditambahkan di Modul C.</p>
                 @endif
             </div>
 

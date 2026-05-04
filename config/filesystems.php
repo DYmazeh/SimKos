@@ -60,6 +60,20 @@ return [
             'report' => false,
         ],
 
+        // Supabase Storage S3-compatible
+        // Generate S3 access keys di Supabase: Settings → Storage → S3 Access Keys → New access key
+        'supabase' => [
+            'driver' => 's3',
+            'key' => env('SUPABASE_S3_KEY'),
+            'secret' => env('SUPABASE_S3_SECRET'),
+            'region' => env('SUPABASE_REGION', 'ap-southeast-1'),
+            'bucket' => env('SUPABASE_BUCKET', 'simkos-uploads'),
+            'endpoint' => rtrim(env('SUPABASE_URL', ''), '/').'/storage/v1/s3',
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

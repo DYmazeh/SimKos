@@ -22,19 +22,20 @@ class TagihanGenerator
      */
     public function generateForPeriode(Carbon $periode): Collection
     {
-        $periodeStart = $periode->copy()->startOfMonth()->toDateString();
-        $jatuhTempo = $periode->copy()->startOfMonth()
-            ->addDays($this->jatuhTempoTanggal - 1)
-            ->toDateString();
+        // Pakai Carbon (bukan string) supaya Eloquent serialize konsisten dengan model cast 'date'.
+        // Penting untuk firstOrCreate match — kalau pakai string, sqlite simpan sebagai datetime
+        // dan compare gagal → duplicate insert + unique-constraint fire.
+        $periodeStart = $periode->copy()->startOfMonth();
+        $jatuhTempo = $periodeStart->copy()->addDays($this->jatuhTempoTanggal - 1);
 
         $created = collect();
 
         Sewa::query()
             ->where('status', Sewa::STATUS_AKTIF)
-            ->where('tgl_mulai', '<=', $periodeStart)
+            ->where('tgl_mulai', '<=', $periodeStart->toDateString())
             ->where(function ($q) use ($periodeStart) {
                 $q->whereNull('tgl_selesai')
-                  ->orWhere('tgl_selesai', '>=', $periodeStart);
+                    ->orWhere('tgl_selesai', '>=', $periodeStart->toDateString());
             })
             ->each(function (Sewa $sewa) use ($periodeStart, $jatuhTempo, $created) {
                 $tagihan = Tagihan::firstOrCreate(

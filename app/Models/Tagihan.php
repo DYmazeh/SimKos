@@ -29,8 +29,11 @@ class Tagihan extends Model
     ];
 
     public const STATUS_BELUM_BAYAR = 'belum_bayar';
+
     public const STATUS_MENUNGGU_VERIFIKASI = 'menunggu_verifikasi';
+
     public const STATUS_LUNAS = 'lunas';
+
     public const STATUS_TERLAMBAT = 'terlambat';
 
     public function sewa(): BelongsTo

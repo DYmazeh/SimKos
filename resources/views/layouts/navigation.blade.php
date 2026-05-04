@@ -26,7 +26,9 @@
                             <x-nav-link :href="route('admin.pembayaran.index')" :active="request()->routeIs('admin.pembayaran.*')">
                                 Verifikasi
                             </x-nav-link>
-                            {{-- Laporan akan ditambahkan di Modul G --}}
+                            <x-nav-link :href="route('admin.laporan.keuangan')" :active="request()->routeIs('admin.laporan.*')">
+                                Laporan
+                            </x-nav-link>
                         @elseif (auth()->user()->hasRole('penyewa'))
                             <x-nav-link :href="route('penyewa.dashboard')" :active="request()->routeIs('penyewa.dashboard')">
                                 Dashboard
@@ -101,6 +103,9 @@
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.pembayaran.index')" :active="request()->routeIs('admin.pembayaran.*')">
                         Verifikasi
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.laporan.keuangan')" :active="request()->routeIs('admin.laporan.*')">
+                        Laporan
                     </x-responsive-nav-link>
                 @elseif (auth()->user()->hasRole('penyewa'))
                     <x-responsive-nav-link :href="route('penyewa.dashboard')" :active="request()->routeIs('penyewa.dashboard')">

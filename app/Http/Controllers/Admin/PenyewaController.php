@@ -23,7 +23,7 @@ class PenyewaController extends Controller
         if ($search = $request->string('q')->toString()) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_lengkap', 'ilike', "%{$search}%")
-                  ->orWhere('no_hp', 'ilike', "%{$search}%");
+                    ->orWhere('no_hp', 'ilike', "%{$search}%");
             });
         }
 
@@ -34,7 +34,7 @@ class PenyewaController extends Controller
 
     public function create(): View
     {
-        $penyewa = new Penyewa();
+        $penyewa = new Penyewa;
 
         return view('admin.penyewa.create', compact('penyewa'));
     }

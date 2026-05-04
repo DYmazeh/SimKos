@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\KamarController as AdminKamarController;
+use App\Http\Controllers\Admin\LaporanController as AdminLaporanController;
 use App\Http\Controllers\Admin\PembayaranController as AdminPembayaranController;
 use App\Http\Controllers\Admin\PenyewaController as AdminPenyewaController;
 use App\Http\Controllers\Admin\SewaController as AdminSewaController;
 use App\Http\Controllers\Admin\TagihanController as AdminTagihanController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\Penyewa\DashboardController as PenyewaDashboardController;
+use App\Http\Controllers\Penyewa\PembayaranController as PenyewaPembayaranController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +40,10 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('pembayaran', [AdminPembayaranController::class, 'index'])->name('pembayaran.index');
         Route::patch('pembayaran/{pembayaran}/approve', [AdminPembayaranController::class, 'approve'])->name('pembayaran.approve');
         Route::patch('pembayaran/{pembayaran}/reject', [AdminPembayaranController::class, 'reject'])->name('pembayaran.reject');
+
+        Route::get('laporan/keuangan', [AdminLaporanController::class, 'keuangan'])->name('laporan.keuangan');
+        Route::get('laporan/penghuni', [AdminLaporanController::class, 'penghuni'])->name('laporan.penghuni');
+        Route::get('laporan/pdf/{type}', [AdminLaporanController::class, 'exportPdf'])->name('laporan.pdf');
     });
 
 // === PENYEWA ===
@@ -46,6 +52,8 @@ Route::middleware(['auth', 'role:penyewa'])
     ->name('penyewa.')
     ->group(function () {
         Route::get('/dashboard', PenyewaDashboardController::class)->name('dashboard');
+        Route::get('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'create'])->name('tagihan.bayar.create');
+        Route::post('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'store'])->name('tagihan.bayar.store');
     });
 
 // Profile (shared antara admin & penyewa)

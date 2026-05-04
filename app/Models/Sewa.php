@@ -30,7 +30,9 @@ class Sewa extends Model
     ];
 
     public const STATUS_AKTIF = 'aktif';
+
     public const STATUS_SELESAI = 'selesai';
+
     public const STATUS_DIBATALKAN = 'dibatalkan';
 
     public function penyewa(): BelongsTo

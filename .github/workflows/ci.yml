@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: PHP ${{ matrix.php }} · Laravel test
+    strategy:
+      matrix:
+        php: ['8.4']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, dom, fileinfo, pdo_sqlite, sqlite, gd, intl, zip, bcmath, sodium
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install Composer deps
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Generate APP_KEY
+        run: php artisan key:generate
+
+      - name: Run Pint (code style check)
+        run: ./vendor/bin/pint --test
+
+      - name: Run PHPUnit
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: php artisan test --parallel --processes=2
