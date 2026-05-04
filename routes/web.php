@@ -13,9 +13,12 @@ use App\Http\Controllers\Penyewa\PembayaranController as PenyewaPembayaranContro
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+// Root: redirect ke dashboard (kalau login) atau ke login page
 Route::get('/', function () {
-    return view('welcome');
-});
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+})->name('home');
 
 // Generic /dashboard — redirect berdasarkan role user
 Route::get('/dashboard', DashboardRedirectController::class)
