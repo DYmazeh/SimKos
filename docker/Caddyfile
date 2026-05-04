@@ -4,6 +4,10 @@
 	frankenphp
 	order php_server before file_server
 	auto_https off
+
+	# Disable admin API — tidak dibutuhkan di production,
+	# dan menghindari error "Operation not permitted" saat bind admin socket.
+	admin off
 }
 
 {$SERVER_NAME:":8080"} {

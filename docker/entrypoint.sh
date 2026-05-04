@@ -11,6 +11,13 @@ fi
 
 cd /app
 
+# Buat .env dari environment variables jika belum ada.
+# Render menyimpan env vars di env, bukan di file .env.
+# Laravel butuh .env untuk key:generate, tapi config:cache pakai env langsung.
+if [ ! -f .env ]; then
+    touch .env
+fi
+
 # Generate APP_KEY kalau belum ada (safety net)
 if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force --no-interaction || true

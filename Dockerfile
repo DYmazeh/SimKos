@@ -61,8 +61,18 @@ COPY --from=frontend /app/public/build ./public/build
 RUN /usr/local/bin/composer dump-autoload --optimize --no-dev --classmap-authoritative \
     && rm /usr/local/bin/composer
 
-# Permission untuk Laravel storage & cache
-RUN chown -R www-data:www-data storage bootstrap/cache \
+# Buat directory yang dibutuhkan Laravel dan set permission
+# FrankenPHP di Render harus jalan non-root, jadi semua dir harus writable
+RUN mkdir -p storage/app/public \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/testing \
+        storage/framework/views \
+        storage/logs \
+        bootstrap/cache \
+        /data/caddy \
+        /config/caddy \
+    && chown -R 1000:1000 /app storage bootstrap/cache /data/caddy /config/caddy \
     && chmod -R 775 storage bootstrap/cache
 
 # Default untuk Laravel production
@@ -72,12 +82,17 @@ ENV APP_ENV=production \
     SESSION_SECURE_COOKIE=true
 
 # Caddy listens on PORT env (Render sets it dynamically)
+# Gunakan port tinggi agar tidak butuh CAP_NET_BIND_SERVICE
 ENV SERVER_NAME=":8080"
 EXPOSE 8080
 
 COPY docker/Caddyfile /etc/caddy/Caddyfile
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Jalankan sebagai non-root user agar tidak butuh capabilities khusus.
+# Render free tier tidak mengizinkan CAP_NET_BIND_SERVICE dll.
+USER 1000
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
