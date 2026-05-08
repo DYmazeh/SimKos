@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -37,5 +38,20 @@ class User extends Authenticatable
     public function penyewa(): HasOne
     {
         return $this->hasOne(Penyewa::class);
+    }
+
+    public function notifikasi(): HasMany
+    {
+        return $this->hasMany(Notifikasi::class)->latest();
+    }
+
+    public function unreadNotifikasi(): HasMany
+    {
+        return $this->hasMany(Notifikasi::class)->where('is_read', false);
+    }
+
+    public function loginLogs(): HasMany
+    {
+        return $this->hasMany(LoginLog::class)->latest('logged_in_at');
     }
 }

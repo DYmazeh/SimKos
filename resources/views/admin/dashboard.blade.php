@@ -155,6 +155,110 @@
                 @endif
             </div>
 
+            {{-- FR-043: Grafik Pendapatan Bulanan --}}
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">📊 Pendapatan 12 Bulan Terakhir</h3>
+                </div>
+                <div class="p-6">
+                    <canvas id="chartPendapatan" height="100"></canvas>
+                </div>
+            </div>
+
+            {{-- FR-047: Kamar Akan Kosong dalam 30 Hari --}}
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">🏠 Kamar Akan Kosong (30 Hari)</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Kontrak sewa yang akan berakhir dalam 30 hari ke depan</p>
+                </div>
+
+                @if ($kamarAkanKosong->isEmpty())
+                    <div class="p-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                        Tidak ada kamar yang akan kosong dalam 30 hari ke depan.
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-gray-50 dark:bg-gray-700/40 text-left text-xs uppercase text-gray-500 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-4 py-3">Kamar</th>
+                                    <th class="px-4 py-3">Penyewa</th>
+                                    <th class="px-4 py-3">Kontrak Berakhir</th>
+                                    <th class="px-4 py-3">Sisa Hari</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                @foreach ($kamarAkanKosong as $sewa)
+                                    @php $sisaHari = \Carbon\Carbon::today()->diffInDays($sewa->tgl_selesai, false); @endphp
+                                    <tr class="text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 font-medium">{{ $sewa->kamar?->nomor_kamar ?? '-' }}</td>
+                                        <td class="px-4 py-3">{{ $sewa->penyewa?->nama_lengkap ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-xs">{{ \Carbon\Carbon::parse($sewa->tgl_selesai)->translatedFormat('d M Y') }}</td>
+                                        <td class="px-4 py-3">
+                                            <span @class([
+                                                'inline-block px-2 py-0.5 rounded-full text-xs font-semibold',
+                                                'bg-rose-100 text-rose-800' => $sisaHari <= 7,
+                                                'bg-amber-100 text-amber-800' => $sisaHari > 7 && $sisaHari <= 14,
+                                                'bg-blue-100 text-blue-800' => $sisaHari > 14,
+                                            ])>{{ $sisaHari }} hari</span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+
         </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('chartPendapatan');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: @json($chartData['labels']),
+                    datasets: [{
+                        label: 'Pendapatan (Rp)',
+                        data: @json($chartData['values']),
+                        backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                        borderColor: 'rgb(99, 102, 241)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp ' + (value / 1000000).toFixed(1) + 'jt';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>
+

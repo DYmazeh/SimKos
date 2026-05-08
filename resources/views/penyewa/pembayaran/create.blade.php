@@ -45,6 +45,32 @@
                 </div>
             </div>
 
+            {{-- FR-024: Instruksi Pembayaran --}}
+            @if (config('simkos.rekening_nomor'))
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 text-sm">
+                    <h4 class="font-semibold text-indigo-800 dark:text-indigo-300 mb-2">💳 Instruksi Pembayaran</h4>
+                    <p class="text-indigo-700 dark:text-indigo-400 mb-2">Transfer ke rekening berikut:</p>
+                    <div class="bg-white dark:bg-gray-800 rounded-md p-3 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Bank</span>
+                            <span class="font-medium text-gray-900 dark:text-gray-100">{{ config('simkos.rekening_bank') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">No. Rekening</span>
+                            <span class="font-mono font-medium text-gray-900 dark:text-gray-100">{{ config('simkos.rekening_nomor') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Atas Nama</span>
+                            <span class="font-medium text-gray-900 dark:text-gray-100">{{ config('simkos.rekening_nama') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Nominal</span>
+                            <span class="font-bold text-indigo-700 dark:text-indigo-300">Rp {{ number_format($tagihan->jumlah, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- Form upload --}}
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
                 <form method="POST" action="{{ route('penyewa.tagihan.bayar.store', $tagihan) }}" enctype="multipart/form-data">
@@ -73,7 +99,7 @@
                         </div>
 
                         <div>
-                            <x-input-label for="bukti" value="Bukti Transfer (JPG/PNG/PDF, max 2MB)" />
+                            <x-input-label for="bukti" value="Bukti Transfer (JPG/PNG/PDF, max 5MB)" />
                             <input id="bukti" name="bukti" type="file" required
                                    accept="image/jpeg,image/png,application/pdf"
                                    class="block mt-1 w-full text-sm text-gray-700 dark:text-gray-300

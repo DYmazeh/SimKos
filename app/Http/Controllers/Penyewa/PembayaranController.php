@@ -7,6 +7,7 @@ use App\Http\Requests\Penyewa\StoreBuktiTransferRequest;
 use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use App\Services\BuktiTransferUploader;
+use App\Services\NotifikasiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class PembayaranController extends Controller
     public function create(Tagihan $tagihan): View
     {
         $this->ensureOwned($tagihan);
+        $tagihan->load('sewa.kamar');
 
         return view('penyewa.pembayaran.create', compact('tagihan'));
     }
@@ -53,9 +55,40 @@ class PembayaranController extends Controller
             }
         });
 
+        // FR-029: Notifikasi ke admin bahwa ada bukti bayar baru
+        $tagihan->load('sewa.penyewa', 'sewa.kamar');
+        $penyewa = $tagihan->sewa?->penyewa;
+        if ($penyewa) {
+            NotifikasiService::notifyBuktiUploaded(
+                $penyewa->nama_lengkap,
+                $tagihan->sewa->kamar->nomor_kamar ?? '-',
+                $tagihan->id
+            );
+        }
+
         return redirect()
             ->route('penyewa.dashboard')
             ->with('success', 'Bukti transfer terkirim. Tunggu verifikasi admin.');
+    }
+
+    /**
+     * FR-030: Riwayat semua pembayaran penyewa
+     */
+    public function riwayat(): View
+    {
+        $user = Auth::user();
+        $penyewa = $user->penyewa;
+
+        $pembayaran = collect();
+        if ($penyewa) {
+            $pembayaran = Pembayaran::query()
+                ->whereHas('tagihan.sewa', fn ($q) => $q->where('penyewa_id', $penyewa->id))
+                ->with(['tagihan.sewa.kamar'])
+                ->latest('tgl_bayar')
+                ->paginate(20);
+        }
+
+        return view('penyewa.riwayat', compact('pembayaran'));
     }
 
     /**

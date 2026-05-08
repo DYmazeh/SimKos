@@ -27,7 +27,7 @@
             @endif
 
             {{-- Filter --}}
-            <form method="GET" class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <form method="GET" class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 grid grid-cols-1 sm:grid-cols-5 gap-3">
                 <div class="sm:col-span-2">
                     <x-text-input name="q" type="search" placeholder="Cari nomor kamar…"
                                   :value="request('q')" class="w-full" />
@@ -38,6 +38,15 @@
                         <option value="">Semua status</option>
                         @foreach (['tersedia' => 'Tersedia', 'terisi' => 'Terisi', 'maintenance' => 'Maintenance'] as $v => $l)
                             <option value="{{ $v }}" @selected(request('status') === $v)>{{ $l }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <select name="tipe"
+                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm">
+                        <option value="">Semua tipe</option>
+                        @foreach (['standar' => 'Standar', 'deluxe' => 'Deluxe', 'vip' => 'VIP'] as $v => $l)
+                            <option value="{{ $v }}" @selected(request('tipe') === $v)>{{ $l }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -74,7 +83,9 @@
                                             'bg-gray-200 text-gray-700' => $k->status === 'maintenance',
                                         ])>{{ ucfirst($k->status) }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-right">
+                                    <td class="px-4 py-3 text-right space-x-2">
+                                        <a href="{{ route('admin.kamar.show', $k) }}"
+                                           class="text-blue-600 dark:text-blue-400 hover:underline text-sm">Detail</a>
                                         <a href="{{ route('admin.kamar.edit', $k) }}"
                                            class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm">Edit</a>
 

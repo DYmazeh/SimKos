@@ -60,6 +60,44 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'reminderList', 'verifikasiList'));
+        // FR-047: Kamar yang akan kosong dalam 30 hari
+        $kamarAkanKosong = Sewa::query()
+            ->where('status', Sewa::STATUS_AKTIF)
+            ->whereNotNull('tgl_selesai')
+            ->where('tgl_selesai', '<=', $now->copy()->addDays(30)->toDateString())
+            ->with(['penyewa', 'kamar'])
+            ->orderBy('tgl_selesai')
+            ->get();
+
+        // FR-043: Data pendapatan 12 bulan terakhir untuk chart
+        $chartData = $this->buildChartData();
+
+        return view('admin.dashboard', compact(
+            'stats', 'reminderList', 'verifikasiList', 'kamarAkanKosong', 'chartData'
+        ));
+    }
+
+    /**
+     * FR-043: Pendapatan bulanan 12 bulan terakhir
+     */
+    private function buildChartData(): array
+    {
+        $labels = [];
+        $values = [];
+
+        for ($i = 11; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $labels[] = $month->translatedFormat('M Y');
+
+            $values[] = (int) Pembayaran::query()
+                ->where('status_verifikasi', Pembayaran::STATUS_APPROVED)
+                ->whereBetween('tgl_bayar', [
+                    $month->copy()->startOfMonth()->toDateString(),
+                    $month->copy()->endOfMonth()->toDateString(),
+                ])
+                ->sum('jumlah_bayar');
+        }
+
+        return compact('labels', 'values');
     }
 }

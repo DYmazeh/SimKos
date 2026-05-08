@@ -33,6 +33,9 @@
                             <x-nav-link :href="route('penyewa.dashboard')" :active="request()->routeIs('penyewa.dashboard')">
                                 Dashboard
                             </x-nav-link>
+                            <x-nav-link :href="route('penyewa.riwayat')" :active="request()->routeIs('penyewa.riwayat')">
+                                Riwayat Bayar
+                            </x-nav-link>
                         @endif
                     @endauth
                 </div>
@@ -40,6 +43,19 @@
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 @auth
+                    {{-- FR-040/FR-041: Notification Bell --}}
+                    @php $unreadCount = auth()->user()->unreadNotifikasi()->count(); @endphp
+                    <a href="{{ route('notifikasi.index') }}" class="relative me-4 p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition" title="Notifikasi">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        @if ($unreadCount > 0)
+                            <span class="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-rose-500 rounded-full">
+                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                            </span>
+                        @endif
+                    </a>
+
                     <span class="me-4 px-2 py-0.5 text-xs font-semibold rounded-full
                         {{ auth()->user()->hasRole('admin') ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800' }}">
                         {{ auth()->user()->getRoleNames()->first() ?? 'no-role' }}
@@ -111,7 +127,17 @@
                     <x-responsive-nav-link :href="route('penyewa.dashboard')" :active="request()->routeIs('penyewa.dashboard')">
                         Dashboard
                     </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('penyewa.riwayat')" :active="request()->routeIs('penyewa.riwayat')">
+                        Riwayat Bayar
+                    </x-responsive-nav-link>
                 @endif
+
+                <x-responsive-nav-link :href="route('notifikasi.index')" :active="request()->routeIs('notifikasi.*')">
+                    🔔 Notifikasi
+                    @if ($unreadCount ?? 0)
+                        <span class="ms-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-rose-500 rounded-full">{{ $unreadCount }}</span>
+                    @endif
+                </x-responsive-nav-link>
             @endauth
         </div>
 

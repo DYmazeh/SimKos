@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
 use App\Models\Tagihan;
+use App\Services\NotifikasiService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PembayaranController extends Controller
 {
@@ -53,6 +56,18 @@ class PembayaranController extends Controller
             }
         });
 
+        // FR-035: Notifikasi ke penyewa
+        $tagihan = $pembayaran->tagihan->load('sewa.penyewa', 'sewa.kamar');
+        $penyewa = $tagihan->sewa?->penyewa;
+        if ($penyewa?->user_id) {
+            NotifikasiService::notifyPembayaranVerified(
+                $penyewa->user_id,
+                'approved',
+                $tagihan->sewa->kamar->nomor_kamar ?? '-',
+                Carbon::parse($tagihan->periode)->translatedFormat('F Y')
+            );
+        }
+
         return back()->with('success', 'Pembayaran disetujui & tagihan diperbarui.');
     }
 
@@ -84,6 +99,35 @@ class PembayaranController extends Controller
             $tagihan->update(['status' => $newStatus]);
         });
 
+        // FR-035: Notifikasi ke penyewa
+        $tagihan = $pembayaran->tagihan->load('sewa.penyewa', 'sewa.kamar');
+        $penyewa = $tagihan->sewa?->penyewa;
+        if ($penyewa?->user_id) {
+            NotifikasiService::notifyPembayaranVerified(
+                $penyewa->user_id,
+                'rejected',
+                $tagihan->sewa->kamar->nomor_kamar ?? '-',
+                Carbon::parse($tagihan->periode)->translatedFormat('F Y')
+            );
+        }
+
         return back()->with('success', 'Pembayaran ditolak. Penyewa diminta upload ulang.');
+    }
+
+    /**
+     * FR-036: Download bukti pembayaran untuk arsip
+     */
+    public function download(Pembayaran $pembayaran): StreamedResponse
+    {
+        if (!$pembayaran->bukti_transfer_url) {
+            abort(404, 'Bukti pembayaran tidak ditemukan.');
+        }
+
+        $disk = config('filesystems.default');
+
+        return Storage::disk($disk)->download(
+            $pembayaran->bukti_transfer_url,
+            'bukti-bayar-' . $pembayaran->id . '.' . pathinfo($pembayaran->bukti_transfer_url, PATHINFO_EXTENSION)
+        );
     }
 }

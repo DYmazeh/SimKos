@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\LaporanKeuanganExport;
+use App\Exports\LaporanPenghuniExport;
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
 use App\Models\Sewa;
@@ -11,6 +13,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LaporanController extends Controller
 {
@@ -60,6 +64,28 @@ class LaporanController extends Controller
         }
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * FR-045: Export Excel — type: 'keuangan' atau 'penghuni'.
+     */
+    public function exportExcel(Request $request, string $type): BinaryFileResponse
+    {
+        [$start, $end, $periode] = $this->resolvePeriode($request);
+
+        if ($type === 'keuangan') {
+            return Excel::download(
+                new LaporanKeuanganExport($start, $end, $periode),
+                'laporan-keuangan-'.$periode.'.xlsx'
+            );
+        } elseif ($type === 'penghuni') {
+            return Excel::download(
+                new LaporanPenghuniExport($start, $end, $periode),
+                'rekap-penghuni-'.$periode.'.xlsx'
+            );
+        }
+
+        abort(404);
     }
 
     /**

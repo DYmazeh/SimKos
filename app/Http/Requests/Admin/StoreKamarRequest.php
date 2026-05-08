@@ -25,6 +25,9 @@ class StoreKamarRequest extends FormRequest
                 Kamar::STATUS_MAINTENANCE,
             ])],
             'deskripsi' => ['nullable', 'string', 'max:1000'],
+            'fasilitas' => ['nullable', 'string', 'max:1000'],
+            'luas_m2' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
+            'lantai' => ['nullable', 'integer', 'min:1', 'max:99'],
         ];
     }
 

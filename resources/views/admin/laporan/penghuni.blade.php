@@ -18,6 +18,10 @@
                    class="inline-flex items-center px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-xs font-semibold uppercase tracking-wide">
                     📄 Export PDF
                 </a>
+                <a href="{{ route('admin.laporan.excel', ['type' => 'penghuni', 'periode' => $periode]) }}"
+                   class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-semibold uppercase tracking-wide">
+                    📊 Export Excel
+                </a>
                 <a href="{{ route('admin.laporan.keuangan', ['periode' => $periode]) }}"
                    class="text-sm text-indigo-600 hover:underline self-center">→ Lihat Laporan Keuangan</a>
             </div>

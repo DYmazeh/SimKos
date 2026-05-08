@@ -9,9 +9,10 @@ use Illuminate\Support\Collection;
 
 class TagihanGenerator
 {
-    public function __construct(private int $jatuhTempoTanggal = 5)
+    public function __construct(private int $jatuhTempoTanggal = 0)
     {
-        // Default: tagihan jatuh tempo tanggal 5 setiap bulan
+        // Baca dari config (env SIMKOS_JATUH_TEMPO_TANGGAL), fallback ke tanggal 5
+        $this->jatuhTempoTanggal = $jatuhTempoTanggal ?: (int) config('simkos.jatuh_tempo_tanggal', 5);
     }
 
     /**

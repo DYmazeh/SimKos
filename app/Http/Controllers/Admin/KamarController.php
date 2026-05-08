@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreKamarRequest;
 use App\Http\Requests\Admin\UpdateKamarRequest;
+use App\Models\FotoKamar;
 use App\Models\Kamar;
+use App\Services\BuktiTransferUploader;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,8 +22,12 @@ class KamarController extends Controller
             $query->where('status', $status);
         }
 
+        if ($tipe = $request->string('tipe')->toString()) {
+            $query->where('tipe', $tipe);
+        }
+
         if ($search = $request->string('q')->toString()) {
-            $query->where('nomor_kamar', 'ilike', "%{$search}%");
+            $query->whereRaw('LOWER(nomor_kamar) LIKE ?', ['%' . strtolower($search) . '%']);
         }
 
         $kamar = $query->orderBy('nomor_kamar')->paginate(15)->withQueryString();
@@ -45,6 +51,19 @@ class KamarController extends Controller
             ->with('success', 'Kamar berhasil ditambahkan.');
     }
 
+    /**
+     * FR-011: Detail kamar + riwayat penyewa
+     */
+    public function show(Kamar $kamar): View
+    {
+        $kamar->load(['foto', 'sewa' => function ($q) {
+            $q->with(['penyewa', 'tagihan'])
+                ->orderBy('tgl_mulai', 'desc');
+        }]);
+
+        return view('admin.kamar.show', compact('kamar'));
+    }
+
     public function edit(Kamar $kamar): View
     {
         return view('admin.kamar.edit', compact('kamar'));
@@ -55,7 +74,7 @@ class KamarController extends Controller
         $kamar->update($request->validated());
 
         return redirect()
-            ->route('admin.kamar.index')
+            ->route('admin.kamar.show', $kamar)
             ->with('success', "Kamar {$kamar->nomor_kamar} berhasil diperbarui.");
     }
 
@@ -73,5 +92,44 @@ class KamarController extends Controller
         return redirect()
             ->route('admin.kamar.index')
             ->with('success', "Kamar {$kamar->nomor_kamar} dihapus.");
+    }
+
+    /**
+     * FR-013: Upload foto kamar (max 5)
+     */
+    public function uploadFoto(Request $request, Kamar $kamar): RedirectResponse
+    {
+        if ($kamar->foto()->count() >= 5) {
+            return back()->withErrors(['foto' => 'Maksimal 5 foto per kamar.']);
+        }
+
+        $request->validate([
+            'foto' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ], [
+            'foto.max' => 'Ukuran foto maksimal 5MB.',
+        ]);
+
+        $path = $request->file('foto')->store('kamar/' . $kamar->id, config('filesystems.default'));
+
+        $kamar->foto()->create([
+            'url' => $path,
+            'urutan' => $kamar->foto()->count(),
+        ]);
+
+        return back()->with('success', 'Foto berhasil diunggah.');
+    }
+
+    /**
+     * FR-013: Hapus foto kamar
+     */
+    public function deleteFoto(Kamar $kamar, FotoKamar $fotoKamar): RedirectResponse
+    {
+        if ($fotoKamar->kamar_id !== $kamar->id) {
+            abort(403);
+        }
+
+        $fotoKamar->delete();
+
+        return back()->with('success', 'Foto dihapus.');
     }
 }

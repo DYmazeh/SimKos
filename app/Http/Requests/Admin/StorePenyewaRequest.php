@@ -21,6 +21,7 @@ class StorePenyewaRequest extends FormRequest
             'no_hp' => ['required', 'string', 'regex:/^(\+62|62|0)8[1-9][0-9]{6,11}$/'],
             'no_ktp' => ['nullable', 'string', 'max:30'],
             'alamat_asal' => ['nullable', 'string', 'max:1000'],
+            'catatan' => ['nullable', 'string', 'max:1000'],
             'buat_akun' => ['nullable', 'boolean'],
             'email' => ['required_if:buat_akun,1', 'nullable', 'email', 'max:255', Rule::unique(User::class, 'email')],
             'password' => ['required_if:buat_akun,1', 'nullable', Password::defaults()],

@@ -22,7 +22,12 @@ class Penyewa extends Model
         'no_hp',
         'alamat_asal',
         'foto_ktp_url',
+        'status_aktif',
+        'catatan',
     ];
+
+    public const STATUS_AKTIF = 'aktif';
+    public const STATUS_NONAKTIF = 'nonaktif';
 
     public function user(): BelongsTo
     {

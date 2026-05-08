@@ -38,6 +38,14 @@
                             <x-input-error :messages="$errors->get('alamat_asal')" class="mt-2" />
                         </div>
 
+                        <div class="md:col-span-2">
+                            <x-input-label for="catatan" value="Catatan (opsional)" />
+                            <textarea id="catatan" name="catatan" rows="2" maxlength="1000"
+                                      placeholder="Catatan internal admin tentang penyewa..."
+                                      class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm">{{ old('catatan') }}</textarea>
+                            <x-input-error :messages="$errors->get('catatan')" class="mt-2" />
+                        </div>
+
                         <div class="md:col-span-2 border-t border-gray-200 dark:border-gray-700 pt-4">
                             <label class="inline-flex items-center gap-2">
                                 <input type="checkbox" name="buat_akun" value="1" x-model="buatAkun"

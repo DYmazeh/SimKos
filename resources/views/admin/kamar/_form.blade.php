@@ -46,6 +46,30 @@
                   class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('deskripsi', $kamar->deskripsi) }}</textarea>
         <x-input-error :messages="$errors->get('deskripsi')" class="mt-2" />
     </div>
+
+    <div class="md:col-span-2">
+        <x-input-label for="fasilitas" value="Fasilitas (opsional)" />
+        <textarea id="fasilitas" name="fasilitas" rows="2" maxlength="1000"
+                  placeholder="AC, WiFi, Kamar Mandi Dalam, Lemari, Meja..."
+                  class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('fasilitas', $kamar->fasilitas) }}</textarea>
+        <x-input-error :messages="$errors->get('fasilitas')" class="mt-2" />
+    </div>
+
+    <div>
+        <x-input-label for="luas_m2" value="Luas (m²) — opsional" />
+        <x-text-input id="luas_m2" name="luas_m2" type="number" step="0.01" min="0"
+                      class="block mt-1 w-full"
+                      :value="old('luas_m2', $kamar->luas_m2)" />
+        <x-input-error :messages="$errors->get('luas_m2')" class="mt-2" />
+    </div>
+
+    <div>
+        <x-input-label for="lantai" value="Lantai — opsional" />
+        <x-text-input id="lantai" name="lantai" type="number" min="1" max="99"
+                      class="block mt-1 w-full"
+                      :value="old('lantai', $kamar->lantai)" />
+        <x-input-error :messages="$errors->get('lantai')" class="mt-2" />
+    </div>
 </div>
 
 <div class="flex items-center gap-3 mt-6">

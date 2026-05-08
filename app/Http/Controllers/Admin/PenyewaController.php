@@ -22,8 +22,8 @@ class PenyewaController extends Controller
 
         if ($search = $request->string('q')->toString()) {
             $query->where(function ($q) use ($search) {
-                $q->where('nama_lengkap', 'ilike', "%{$search}%")
-                    ->orWhere('no_hp', 'ilike', "%{$search}%");
+                $q->whereRaw('LOWER(nama_lengkap) LIKE ?', ['%' . strtolower($search) . '%'])
+                    ->orWhereRaw('LOWER(no_hp) LIKE ?', ['%' . strtolower($search) . '%']);
             });
         }
 
@@ -64,6 +64,7 @@ class PenyewaController extends Controller
                 'no_hp' => $data['no_hp'],
                 'no_ktp' => $data['no_ktp'] ?? null,
                 'alamat_asal' => $data['alamat_asal'] ?? null,
+                'catatan' => $data['catatan'] ?? null,
             ]);
         });
 
