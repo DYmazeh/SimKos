@@ -20,7 +20,7 @@ RUN composer install \
     --prefer-dist \
     --no-interaction \
     --no-progress \
-    --ignore-platform-req=ext-gd
+    --ignore-platform-reqs
 
 # ---------------- Stage 2: Frontend assets ----------------
 FROM node:22-alpine AS frontend
