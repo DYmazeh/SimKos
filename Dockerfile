@@ -26,10 +26,15 @@ RUN composer install \
 FROM node:22-alpine AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
-COPY vite.config.js tailwind.config.js* postcss.config.js* ./
+# --legacy-peer-deps karena react 18 + types-react 18 sometimes conflict
+# dengan dev tooling yang request newer peer ranges
+RUN npm ci --no-audit --no-fund --legacy-peer-deps
+COPY vite.config.js tailwind.config.js* postcss.config.js* tsconfig.json ./
 COPY resources/ ./resources/
 COPY public/ ./public/
+# Ziggy butuh routes table dari Laravel — vendor sudah di-build di stage 1,
+# tapi vite.config alias 'ziggy' resolve ke vendor/tightenco/ziggy/dist
+COPY --from=vendor /app/vendor/tightenco/ziggy ./vendor/tightenco/ziggy
 RUN npm run build
 
 # ---------------- Stage 3: Runtime ----------------
