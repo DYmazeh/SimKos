@@ -8,25 +8,24 @@ use App\Http\Controllers\Admin\PenyewaController as AdminPenyewaController;
 use App\Http\Controllers\Admin\SewaController as AdminSewaController;
 use App\Http\Controllers\Admin\TagihanController as AdminTagihanController;
 use App\Http\Controllers\DashboardRedirectController;
+use App\Http\Controllers\Guest\HomeController as GuestHomeController;
+use App\Http\Controllers\Guest\KamarController as GuestKamarController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\Penyewa\DashboardController as PenyewaDashboardController;
 use App\Http\Controllers\Penyewa\PembayaranController as PenyewaPembayaranController;
 use App\Http\Controllers\ProfileController;
-use App\Models\Kamar;
 use Illuminate\Support\Facades\Route;
 
-// Root: landing page publik (guest lihat kamar) atau redirect ke dashboard
-Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
+// Root: Inertia Guest Home (React) — landing publik
+Route::get('/', GuestHomeController::class)->name('home');
 
-    $kamarTersedia = Kamar::where('status', Kamar::STATUS_TERSEDIA)
-        ->orderBy('harga_bulanan')
-        ->get();
-
-    return view('home', compact('kamarTersedia'));
-})->name('home');
+// Guest pages publik (browsing kamar tanpa login)
+Route::name('guest.')
+    ->prefix('kamar')
+    ->group(function () {
+        Route::get('/', [GuestKamarController::class, 'index'])->name('kamar.index');
+        Route::get('/{kamar}', [GuestKamarController::class, 'show'])->name('kamar.show');
+    });
 
 // Generic /dashboard — redirect berdasarkan role user
 Route::get('/dashboard', DashboardRedirectController::class)

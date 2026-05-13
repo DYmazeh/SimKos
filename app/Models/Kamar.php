@@ -19,15 +19,23 @@ class Kamar extends Model
         'harga_bulanan',
         'status',
         'deskripsi',
+        'foto',
         'fasilitas',
+        'peraturan',
+        'deposit',
+        'min_sewa_bulan',
         'luas_m2',
         'lantai',
     ];
 
     protected $casts = [
         'harga_bulanan' => 'integer',
-        'luas_m2' => 'decimal:2',
+        'deposit' => 'integer',
+        'min_sewa_bulan' => 'integer',
+        'luas_m2' => 'integer',
         'lantai' => 'integer',
+        'foto' => 'array',
+        'fasilitas' => 'array',
     ];
 
     public const STATUS_TERSEDIA = 'tersedia';
@@ -39,11 +47,6 @@ class Kamar extends Model
     public function sewa(): HasMany
     {
         return $this->hasMany(Sewa::class);
-    }
-
-    public function foto(): HasMany
-    {
-        return $this->hasMany(FotoKamar::class)->orderBy('urutan');
     }
 
     public function sewaAktif()

@@ -2,26 +2,23 @@
 
 return [
     'nama' => env('SIMKOS_KOS_NAMA', 'Kos Sejahtera'),
-    'alamat' => env('SIMKOS_KOS_ALAMAT', ''),
-    'kontak_hp' => env('SIMKOS_KONTAK_HP', ''),
+    'alamat' => env('SIMKOS_KOS_ALAMAT', 'Jl. Mawar No. 12, Yogyakarta'),
+
+    // Nomor WhatsApp pengelola (format 08xx / 62xx) — di-render ke wa.me/62xxx
+    'wa_number' => env('SIMKOS_WA_NUMBER', '081385748661'),
+
+    // Profil pengelola untuk section "Tentang Pengelola"
+    'pengelola_nama' => env('SIMKOS_PENGELOLA_NAMA', 'Pengelola Kos'),
+    'pengelola_sejak' => env('SIMKOS_PENGELOLA_SEJAK', '2018'),
+    'pengelola_bio' => env('SIMKOS_PENGELOLA_BIO', 'Mengelola kos dengan prinsip jujur soal biaya, responsif terhadap keluhan, dan menjaga properti agar selalu nyaman untuk seluruh penghuni.'),
 
     /*
      * Berapa hari sebelum jatuh tempo tagihan masuk widget reminder admin.
-     * Contoh: 7 berarti tagihan jatuh tempo dalam 7 hari ke depan
-     * (atau yang sudah lewat) akan ditampilkan.
      */
     'reminder_days' => (int) env('SIMKOS_REMINDER_DAYS', 7),
 
     /*
      * Tanggal tetap jatuh tempo tagihan setiap bulan.
-     * Mis. 5 = setiap tanggal 5.
      */
     'jatuh_tempo_tanggal' => (int) env('SIMKOS_JATUH_TEMPO_TANGGAL', 5),
-
-    /*
-     * Rekening untuk instruksi pembayaran (FR-024)
-     */
-    'rekening_bank' => env('SIMKOS_REKENING_BANK', 'BCA'),
-    'rekening_nomor' => env('SIMKOS_REKENING_NOMOR', ''),
-    'rekening_nama' => env('SIMKOS_REKENING_NAMA', ''),
 ];
