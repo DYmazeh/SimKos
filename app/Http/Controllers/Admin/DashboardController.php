@@ -7,13 +7,15 @@ use App\Models\Kamar;
 use App\Models\Pembayaran;
 use App\Models\Sewa;
 use App\Models\Tagihan;
+use App\Services\WhatsappReminderLink;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(): Response
     {
         // Auto-mark tagihan yang sudah lewat jatuh tempo (idempotent)
         DB::table('tagihan')
@@ -37,67 +39,51 @@ class DashboardController extends Controller
                 ->where('tgl_jatuh_tempo', '<=', $reminderHorizon)
                 ->count(),
             'menunggu_verifikasi' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_PENDING)->count(),
-            'pemasukan_bulan_ini' => Pembayaran::query()
+            'pemasukan_bulan_ini' => (int) Pembayaran::query()
                 ->where('status_verifikasi', Pembayaran::STATUS_APPROVED)
                 ->whereBetween('tgl_bayar', [$awalBulan, $akhirBulan])
                 ->sum('jumlah_bayar'),
         ];
 
-        // List tagihan untuk widget reminder
+        // Reminder list dengan WA link pre-built (untuk Anda — penyewa)
         $reminderList = Tagihan::query()
             ->with(['sewa.penyewa', 'sewa.kamar'])
             ->whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])
             ->where('tgl_jatuh_tempo', '<=', $reminderHorizon)
             ->orderBy('tgl_jatuh_tempo')
             ->limit(20)
-            ->get();
+            ->get()
+            ->map(fn ($t) => [
+                'id' => $t->id,
+                'penyewa_nama' => $t->sewa->penyewa->nama_lengkap,
+                'kamar_nomor' => $t->sewa->kamar->nomor_kamar,
+                'periode' => $t->periode->format('Y-m-d'),
+                'jumlah' => (int) $t->jumlah,
+                'tgl_jatuh_tempo' => $t->tgl_jatuh_tempo->format('Y-m-d'),
+                'status' => $t->status,
+                'wa_link' => WhatsappReminderLink::make($t->sewa->penyewa, $t),
+            ]);
 
-        // Pembayaran menunggu verifikasi (5 terbaru)
         $verifikasiList = Pembayaran::query()
             ->with(['tagihan.sewa.penyewa', 'tagihan.sewa.kamar'])
             ->where('status_verifikasi', Pembayaran::STATUS_PENDING)
             ->latest()
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'tagihan_id' => $p->tagihan_id,
+                'penyewa_nama' => $p->tagihan->sewa->penyewa->nama_lengkap,
+                'kamar_nomor' => $p->tagihan->sewa->kamar->nomor_kamar,
+                'periode' => $p->tagihan->periode->format('Y-m-d'),
+                'jumlah_bayar' => (int) $p->jumlah_bayar,
+            ]);
 
-        // FR-047: Kamar yang akan kosong dalam 30 hari
-        $kamarAkanKosong = Sewa::query()
-            ->where('status', Sewa::STATUS_AKTIF)
-            ->whereNotNull('tgl_selesai')
-            ->where('tgl_selesai', '<=', $now->copy()->addDays(30)->toDateString())
-            ->with(['penyewa', 'kamar'])
-            ->orderBy('tgl_selesai')
-            ->get();
-
-        // FR-043: Data pendapatan 12 bulan terakhir untuk chart
-        $chartData = $this->buildChartData();
-
-        return view('admin.dashboard', compact(
-            'stats', 'reminderList', 'verifikasiList', 'kamarAkanKosong', 'chartData'
-        ));
-    }
-
-    /**
-     * FR-043: Pendapatan bulanan 12 bulan terakhir
-     */
-    private function buildChartData(): array
-    {
-        $labels = [];
-        $values = [];
-
-        for ($i = 11; $i >= 0; $i--) {
-            $month = Carbon::now()->subMonths($i);
-            $labels[] = $month->translatedFormat('M Y');
-
-            $values[] = (int) Pembayaran::query()
-                ->where('status_verifikasi', Pembayaran::STATUS_APPROVED)
-                ->whereBetween('tgl_bayar', [
-                    $month->copy()->startOfMonth()->toDateString(),
-                    $month->copy()->endOfMonth()->toDateString(),
-                ])
-                ->sum('jumlah_bayar');
-        }
-
-        return compact('labels', 'values');
+        return Inertia::render('Admin/Dashboard', [
+            'stats' => $stats,
+            'reminderList' => $reminderList,
+            'verifikasiList' => $verifikasiList,
+            'reminderDays' => config('simkos.reminder_days', 7),
+        ]);
     }
 }
