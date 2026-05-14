@@ -95,10 +95,7 @@ export default function Login({ status, canResetPassword }: { status?: string; c
             </form>
 
             <p style={{ margin: '22px 0 0', fontSize: 13.5, color: 'var(--ink-500)', textAlign: 'center' }}>
-                Belum punya akun?{' '}
-                <Link href={route('register')} style={{ color: 'var(--blue-600)', fontWeight: 500 }}>
-                    Daftar sebagai penyewa
-                </Link>
+                Belum punya akun? Hubungi pemilik kos untuk didaftarkan.
             </p>
         </AuthShell>
     );
