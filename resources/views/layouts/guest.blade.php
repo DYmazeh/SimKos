@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
 </head>
 <body class="font-sans antialiased text-fg-primary bg-surface-base min-h-screen">
     <a href="#main" class="sr-only-focusable absolute top-3 left-3 z-50 px-4 py-2 rounded-pill bg-surface-raised text-fg-secondary text-md">

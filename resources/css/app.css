@@ -192,6 +192,67 @@ a { color: inherit; text-decoration: none; }
   * { animation: none !important; transition: none !important; }
 }
 
+/* ——— Smooth scroll global ——— */
+html { scroll-behavior: smooth; }
+
+/* ——— Page enter animation (Inertia transitions) ——— */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+[data-inertia-page="loaded"] { animation: page-enter 320ms var(--ease) both; }
+
+/* ——— Toast slide-in ——— */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.toast-enter { animation: toast-in 280ms var(--ease) both; }
+
+/* ——— KPI counter shimmer (initial loading vibe) ——— */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 50%, #F1F5F9 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* ——— Card hover lift ——— */
+.card-lift {
+  transition: transform 240ms var(--ease), box-shadow 320ms var(--ease);
+}
+.card-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px -12px rgba(11,13,26,0.18), 0 4px 10px -4px rgba(11,13,26,0.06);
+}
+
+/* ——— Button press feedback ——— */
+.btn-press {
+  transition: transform 120ms var(--ease), box-shadow 200ms var(--ease);
+}
+.btn-press:active { transform: scale(0.97); }
+
+/* ——— Stagger helper (parent + child animation delays) ——— */
+.stagger-children > * { transition-delay: var(--stagger-delay, 0); }
+
+/* ——— Subtle float (untuk Hero icon) ——— */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.float { animation: float 5s ease-in-out infinite; }
+
+/* ——— Pulse ring (untuk avatar online indicator) ——— */
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(37,99,235,0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(37,99,235,0); }
+  100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+}
+.pulse-ring { animation: pulse-ring 2s var(--ease) infinite; }
+
 /* ——— Utility ——— */
 .h-display {
   font-size: clamp(38px, 5vw, 64px);

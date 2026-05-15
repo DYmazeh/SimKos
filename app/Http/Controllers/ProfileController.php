@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,11 +20,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        $avatarUrl = $user->avatar_url
+            ? Storage::disk(config('filesystems.default'))->url($user->avatar_url)
+            : null;
+
         return Inertia::render('Profile/Edit', [
             'user' => [
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
+                'avatar_url' => $avatarUrl,
             ],
             'status' => session('status'),
             'mustVerifyEmail' => $user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail,
@@ -31,24 +37,35 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile information.
+     * Update the user's profile information + avatar upload.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar
+            if ($user->avatar_url) {
+                Storage::disk(config('filesystems.default'))->delete($user->avatar_url);
+            }
+            $path = $request->file('avatar')->store('avatars', config('filesystems.default'));
+            $validated['avatar_url'] = $path;
         }
 
-        $request->user()->save();
+        // Avatar is fillable, exclude file object dari fill
+        $user->fill(collect($validated)->except('avatar')->all());
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return Redirect::route('profile.edit')->with('success', 'Profil berhasil diperbarui.');
     }
 
-    /**
-     * Delete the user's account.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
@@ -56,8 +73,11 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-
         Auth::logout();
+
+        if ($user->avatar_url) {
+            Storage::disk(config('filesystems.default'))->delete($user->avatar_url);
+        }
 
         $user->delete();
 

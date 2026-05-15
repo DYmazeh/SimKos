@@ -7,11 +7,14 @@ use App\Http\Requests\Admin\StorePenyewaRequest;
 use App\Http\Requests\Admin\UpdatePenyewaRequest;
 use App\Models\Kamar;
 use App\Models\Penyewa;
+use App\Models\Sewa;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -77,7 +80,13 @@ class PenyewaController extends Controller
     {
         $data = $request->validated();
 
-        $penyewa = DB::transaction(function () use ($request, $data) {
+        // Handle foto KTP upload (di luar DB transaction supaya file tidak lock)
+        $fotoKtpPath = null;
+        if ($request->hasFile('foto_ktp')) {
+            $fotoKtpPath = $request->file('foto_ktp')->store('ktp', config('filesystems.default'));
+        }
+
+        $penyewa = DB::transaction(function () use ($request, $data, $fotoKtpPath) {
             $userId = null;
 
             if ($request->isCreatingAccount()) {
@@ -92,19 +101,43 @@ class PenyewaController extends Controller
                 $userId = $user->id;
             }
 
-            return Penyewa::create([
+            $penyewa = Penyewa::create([
                 'user_id' => $userId,
                 'nama_lengkap' => $data['nama_lengkap'],
                 'no_hp' => $data['no_hp'],
                 'no_ktp' => $data['no_ktp'] ?? null,
                 'alamat_asal' => $data['alamat_asal'] ?? null,
                 'catatan' => $data['catatan'] ?? null,
+                'foto_ktp_url' => $fotoKtpPath,
             ]);
+
+            // Buat Sewa otomatis kalau kamar dipilih
+            if ($request->hasKontrakSewa()) {
+                $kamar = Kamar::lockForUpdate()->find($data['kamar_id']);
+                if ($kamar && $kamar->status === Kamar::STATUS_TERSEDIA) {
+                    Sewa::create([
+                        'penyewa_id' => $penyewa->id,
+                        'kamar_id' => $kamar->id,
+                        'tgl_mulai' => Carbon::parse($data['tgl_mulai'])->toDateString(),
+                        'tgl_selesai' => isset($data['tgl_selesai']) ? Carbon::parse($data['tgl_selesai'])->toDateString() : null,
+                        'harga_disepakati' => $data['harga_disepakati'] ?? $kamar->harga_bulanan,
+                        'status' => Sewa::STATUS_AKTIF,
+                    ]);
+                    $kamar->update(['status' => Kamar::STATUS_TERISI]);
+                }
+            }
+
+            return $penyewa;
         });
+
+        $msg = "Penyewa {$penyewa->nama_lengkap} berhasil ditambahkan.";
+        if ($request->hasKontrakSewa()) {
+            $msg .= ' Kontrak sewa kamar juga dibuat.';
+        }
 
         return redirect()
             ->route('admin.penyewa.show', $penyewa)
-            ->with('success', "Penyewa {$penyewa->nama_lengkap} berhasil ditambahkan.");
+            ->with('success', $msg);
     }
 
     public function show(Penyewa $penyewa): Response

@@ -10,8 +10,6 @@ use Illuminate\Validation\Rule;
 class ProfileUpdateRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
@@ -26,6 +24,17 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'phone' => ['nullable', 'string', 'regex:/^(\+62|62|0)8[1-9][0-9]{6,11}$/'],
+            'avatar' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'phone.regex' => 'Format nomor HP harus nomor Indonesia valid (08xx, 62xx, atau +62xx).',
+            'avatar.max' => 'Ukuran foto maksimal 2MB.',
+            'avatar.mimes' => 'Format foto: JPG, PNG, WebP, atau GIF.',
         ];
     }
 }

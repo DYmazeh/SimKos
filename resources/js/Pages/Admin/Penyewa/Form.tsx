@@ -43,22 +43,30 @@ export default function PenyewaForm() {
     const [showPwd, setShowPwd] = useState(false);
     const [overrideHarga, setOverrideHarga] = useState(false);
 
-    const form = useForm({
+    const form = useForm<{
+        nama_lengkap: string; no_ktp: string; no_hp: string;
+        alamat_asal: string; catatan: string;
+        foto_ktp: File | null;
+        buat_akun: boolean; email: string; password: string;
+        kamar_id: string; harga_disepakati: string;
+        tgl_mulai: string; tgl_selesai: string;
+    }>({
         nama_lengkap: penyewa?.nama_lengkap ?? '',
         no_ktp: penyewa?.no_ktp ?? '',
         no_hp: penyewa?.no_hp ?? '',
         alamat_asal: penyewa?.alamat_asal ?? '',
         catatan: penyewa?.catatan ?? '',
-        // Akun login (hanya di create)
+        foto_ktp: null,
         buat_akun: !isEdit,
         email: '',
         password: !isEdit ? generatePassword() : '',
-        // Kontrak (hanya di create — Sewa belum di-handle di store, tapi form siap)
         kamar_id: '',
         harga_disepakati: '',
         tgl_mulai: '',
         tgl_selesai: '',
     });
+
+    const [ktpPreview, setKtpPreview] = useState<string | null>(null);
 
     const selectedKamar = kamarTersedia.find((k) => String(k.id) === String(form.data.kamar_id));
     const effectiveHarga = overrideHarga ? form.data.harga_disepakati : (selectedKamar?.harga_bulanan ?? '');
@@ -68,7 +76,7 @@ export default function PenyewaForm() {
         if (isEdit && penyewa) {
             form.put(route('admin.penyewa.update', penyewa.id));
         } else {
-            form.post(route('admin.penyewa.store'));
+            form.post(route('admin.penyewa.store'), { forceFormData: true });
         }
     };
 
@@ -131,22 +139,49 @@ export default function PenyewaForm() {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            <Field label="Foto KTP" htmlFor="foto_ktp">
-                                <label htmlFor="foto_ktp_input" style={{
-                                    display: 'block', cursor: 'pointer',
-                                    border: '2px dashed #CBD5E1', borderRadius: 12,
-                                    padding: 32, textAlign: 'center', background: '#F8FAFC',
-                                }}>
-                                    <div style={{ width: 48, height: 48, borderRadius: 12, background: '#EFF6FF', color: '#2563EB', display: 'inline-grid', placeItems: 'center', marginBottom: 8 }}>
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8.5" cy="11" r="1.5" /><path d="M21 15l-4.5-4.5L7 21" />
-                                        </svg>
+                            <Field label="Foto KTP (opsional)" htmlFor="foto_ktp" error={form.errors.foto_ktp as unknown as string}>
+                                {ktpPreview ? (
+                                    <div style={{ position: 'relative' }}>
+                                        <img src={ktpPreview} alt="Preview KTP"
+                                            style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                        <button type="button"
+                                            onClick={() => { setKtpPreview(null); form.setData('foto_ktp', null); }}
+                                            style={{
+                                                position: 'absolute', top: 8, right: 8,
+                                                width: 28, height: 28, borderRadius: 999,
+                                                background: '#EF4444', color: 'white',
+                                                border: 0, cursor: 'pointer',
+                                                display: 'grid', placeItems: 'center',
+                                            }} aria-label="Hapus foto">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                                        </button>
                                     </div>
-                                    <div style={{ fontSize: 14, color: '#2563EB', fontWeight: 500 }}>Klik untuk upload foto</div>
-                                    <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>JPG, PNG maks 5MB</div>
-                                </label>
-                                <input id="foto_ktp_input" type="file" accept="image/*" style={{ display: 'none' }} />
-                                <p style={{ margin: '6px 0 0', fontSize: 11, color: '#94A3B8' }}>(Upload KTP akan diaktifkan saat handler backend tersedia)</p>
+                                ) : (
+                                    <label htmlFor="foto_ktp_input" style={{
+                                        display: 'block', cursor: 'pointer',
+                                        border: '2px dashed #CBD5E1', borderRadius: 12,
+                                        padding: 32, textAlign: 'center', background: '#F8FAFC',
+                                        transition: 'all 180ms',
+                                    }}>
+                                        <div style={{ width: 48, height: 48, borderRadius: 12, background: '#EFF6FF', color: '#2563EB', display: 'inline-grid', placeItems: 'center', marginBottom: 8 }}>
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8.5" cy="11" r="1.5" /><path d="M21 15l-4.5-4.5L7 21" />
+                                            </svg>
+                                        </div>
+                                        <div style={{ fontSize: 14, color: '#2563EB', fontWeight: 500 }}>Klik untuk upload foto</div>
+                                        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>JPG, PNG, WebP maks 5MB</div>
+                                    </label>
+                                )}
+                                <input id="foto_ktp_input" type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    style={{ display: 'none' }}
+                                    onChange={(e) => {
+                                        const f = e.target.files?.[0];
+                                        if (f) {
+                                            setKtpPreview(URL.createObjectURL(f));
+                                            form.setData('foto_ktp', f);
+                                        }
+                                    }} />
                             </Field>
 
                             <Field label="Catatan (opsional)" htmlFor="catatan">

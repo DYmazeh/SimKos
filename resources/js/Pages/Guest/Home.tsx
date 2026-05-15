@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { TopNav, Footer, waLink } from '@/components/ui';
+import Reveal from '@/components/Reveal';
 import {
     Hero,
     GaleriSection,
@@ -43,24 +44,27 @@ export default function Home() {
 
             <div className="bg-radial" style={{ minHeight: '100vh' }}>
                 <TopNav authenticated={!!auth.user} />
+                {/* Hero langsung visible (above-the-fold) — gunakan animasi internal CSS */}
                 <Hero available={kamarTersediaCount} startingPrice={priceRange.min} waUrl={waUrl} />
-                <KamarFeaturedSection kamar={kamarFeatured} />
+                <Reveal direction="up" distance={32}>
+                    <KamarFeaturedSection kamar={kamarFeatured} />
+                </Reveal>
             </div>
 
-            <GaleriSection />
-            <BiayaSection minPrice={priceRange.min} maxPrice={priceRange.max} />
-            <LokasiSection alamat={profil.alamat} />
+            <Reveal direction="up"><GaleriSection /></Reveal>
+            <Reveal direction="up"><BiayaSection minPrice={priceRange.min} maxPrice={priceRange.max} /></Reveal>
+            <Reveal direction="up"><LokasiSection alamat={profil.alamat} /></Reveal>
 
             {/* Dark sections */}
-            <CaraKerjaSection />
-            <OwnerSection />
+            <Reveal direction="up"><CaraKerjaSection /></Reveal>
+            <Reveal direction="scale"><OwnerSection /></Reveal>
 
             {/* Back to light */}
-            <TestimoniSection items={testimoni} />
-            <PeraturanSection items={faqPeraturan} />
-            <FaqSection items={faqUmum} />
-            <TentangSection profil={profil} />
-            <KontakSection waUrl={waUrl} phone={profil.wa_number} />
+            <Reveal direction="up"><TestimoniSection items={testimoni} /></Reveal>
+            <Reveal direction="up"><PeraturanSection items={faqPeraturan} /></Reveal>
+            <Reveal direction="up"><FaqSection items={faqUmum} /></Reveal>
+            <Reveal direction="up"><TentangSection profil={profil} /></Reveal>
+            <Reveal direction="up"><KontakSection waUrl={waUrl} phone={profil.wa_number} /></Reveal>
 
             <Footer dark />
             <StickyWA waNumber={profil.wa_number} />

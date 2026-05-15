@@ -5,7 +5,7 @@ import { Icon, Field, PasswordInput } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type EditProps = PageProps<{
-    user: { name: string; email: string; phone: string | null };
+    user: { name: string; email: string; phone: string | null; avatar_url: string | null };
     status?: string;
 }>;
 
@@ -13,16 +13,25 @@ export default function ProfileEdit() {
     const { props } = usePage<EditProps>();
     const { user, auth } = props;
 
-    /* ---- Profil form ---- */
-    const profil = useForm({
+    /* ---- Profil form (multipart untuk avatar) ---- */
+    const profil = useForm<{
+        name: string; email: string; phone: string;
+        avatar: File | null; _method: string;
+    }>({
         name: user.name,
         email: user.email,
         phone: user.phone ?? '',
+        avatar: null,
+        _method: 'patch',
     });
 
     const submitProfil = (e: FormEvent) => {
         e.preventDefault();
-        profil.patch(route('profile.update'), { preserveScroll: true });
+        profil.post(route('profile.update'), {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: () => profil.setData('avatar', null),
+        });
     };
 
     /* ---- Password form ---- */
@@ -57,7 +66,7 @@ export default function ProfileEdit() {
         { label: 'Kuat', color: '#10B981' },
     ][Math.max(0, strength - 1)] ?? { label: '—', color: '#CBD5E1' };
 
-    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(user.avatar_url);
     const initial = user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
     return (
@@ -98,20 +107,28 @@ export default function ProfileEdit() {
                                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" />
                                     </svg>
                                 </label>
-                                <input id="avatar-upload" type="file" accept="image/*" style={{ display: 'none' }}
+                                <input id="avatar-upload" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: 'none' }}
                                     onChange={(e) => {
                                         const f = e.target.files?.[0];
-                                        if (f) setPhotoPreview(URL.createObjectURL(f));
+                                        if (f) {
+                                            setPhotoPreview(URL.createObjectURL(f));
+                                            profil.setData('avatar', f);
+                                        }
                                     }} />
                             </div>
                             <div>
                                 <div style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>Foto Profil</div>
                                 <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                                    Format JPG, GIF atau PNG. Ukuran maksimal 2MB.
+                                    Format JPG, GIF, WebP atau PNG. Ukuran maksimal 2MB.
                                 </div>
-                                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>
-                                    (Upload avatar belum aktif di server — coming soon)
-                                </div>
+                                {profil.errors.avatar && (
+                                    <div style={{ fontSize: 12, color: '#EF4444', marginTop: 6 }}>{profil.errors.avatar}</div>
+                                )}
+                                {profil.data.avatar && (
+                                    <div style={{ fontSize: 12, color: '#10B981', marginTop: 6 }}>
+                                        ✓ Foto siap diunggah saat Simpan Perubahan diklik
+                                    </div>
+                                )}
                             </div>
                         </div>
 
