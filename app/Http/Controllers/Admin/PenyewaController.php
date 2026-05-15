@@ -12,31 +12,65 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PenyewaController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $query = Penyewa::query()->with(['user', 'sewaAktif.kamar']);
 
         if ($search = $request->string('q')->toString()) {
             $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(nama_lengkap) LIKE ?', ['%' . strtolower($search) . '%'])
-                    ->orWhereRaw('LOWER(no_hp) LIKE ?', ['%' . strtolower($search) . '%']);
+                $q->whereRaw('LOWER(nama_lengkap) LIKE ?', ['%'.strtolower($search).'%'])
+                    ->orWhereRaw('LOWER(no_hp) LIKE ?', ['%'.strtolower($search).'%'])
+                    ->orWhere('no_ktp', 'like', "%{$search}%");
             });
         }
 
-        $penyewa = $query->orderBy('nama_lengkap')->paginate(15)->withQueryString();
+        $paginator = $query->orderBy('nama_lengkap')->paginate(15)->withQueryString();
 
-        return view('admin.penyewa.index', compact('penyewa'));
+        $penyewa = collect($paginator->items())->map(fn ($p) => [
+            'id' => $p->id,
+            'nama_lengkap' => $p->nama_lengkap,
+            'no_ktp' => $p->no_ktp,
+            'no_hp' => $p->no_hp,
+            'kamar_aktif' => $p->sewaAktif?->kamar?->nomor_kamar,
+            'periode_sewa' => $p->sewaAktif
+                ? $p->sewaAktif->tgl_mulai->format('d M Y').' - '.
+                  ($p->sewaAktif->tgl_selesai ? $p->sewaAktif->tgl_selesai->format('d M Y') : 'sekarang')
+                : null,
+            'status_aktif' => $p->status_aktif ?? 'aktif',
+            'punya_akun' => $p->user !== null,
+        ]);
+
+        return Inertia::render('Admin/Penyewa/Index', [
+            'penyewa' => $penyewa,
+            'filters' => ['q' => $request->string('q')->toString()],
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'total' => $paginator->total(),
+                'from' => $paginator->firstItem() ?? 0,
+                'to' => $paginator->lastItem() ?? 0,
+            ],
+        ]);
     }
 
-    public function create(): View
+    public function create(): Response
     {
-        $penyewa = new Penyewa;
+        // Kamar tersedia untuk dropdown kontrak sewa
+        $kamarTersedia = Kamar::query()
+            ->where('status', Kamar::STATUS_TERSEDIA)
+            ->orderBy('nomor_kamar')
+            ->get(['id', 'nomor_kamar', 'tipe', 'harga_bulanan']);
 
-        return view('admin.penyewa.create', compact('penyewa'));
+        return Inertia::render('Admin/Penyewa/Form', [
+            'mode' => 'create',
+            'penyewa' => null,
+            'kamarTersedia' => $kamarTersedia,
+        ]);
     }
 
     public function store(StorePenyewaRequest $request): RedirectResponse
@@ -52,7 +86,7 @@ class PenyewaController extends Controller
                     'email' => $data['email'],
                     'phone' => $data['no_hp'],
                     'password' => Hash::make($data['password']),
-                    'email_verified_at' => now(), // admin yang bikin → langsung verified
+                    'email_verified_at' => now(),
                 ]);
                 $user->assignRole('penyewa');
                 $userId = $user->id;
@@ -73,29 +107,63 @@ class PenyewaController extends Controller
             ->with('success', "Penyewa {$penyewa->nama_lengkap} berhasil ditambahkan.");
     }
 
-    public function show(Penyewa $penyewa): View
+    public function show(Penyewa $penyewa): Response
     {
         $penyewa->load(['user', 'sewa.kamar', 'sewa.tagihan']);
 
-        // Kamar yang tersedia (untuk dropdown assignment)
         $kamarTersedia = Kamar::query()
             ->where('status', Kamar::STATUS_TERSEDIA)
             ->orderBy('nomor_kamar')
-            ->get();
+            ->get(['id', 'nomor_kamar', 'tipe', 'harga_bulanan']);
 
-        return view('admin.penyewa.show', compact('penyewa', 'kamarTersedia'));
+        return Inertia::render('Admin/Penyewa/Show', [
+            'penyewa' => [
+                'id' => $penyewa->id,
+                'nama_lengkap' => $penyewa->nama_lengkap,
+                'no_ktp' => $penyewa->no_ktp,
+                'no_hp' => $penyewa->no_hp,
+                'alamat_asal' => $penyewa->alamat_asal,
+                'catatan' => $penyewa->catatan,
+                'status_aktif' => $penyewa->status_aktif ?? 'aktif',
+                'user' => $penyewa->user ? [
+                    'email' => $penyewa->user->email,
+                    'verified' => (bool) $penyewa->user->email_verified_at,
+                ] : null,
+                'sewa' => $penyewa->sewa->map(fn ($s) => [
+                    'id' => $s->id,
+                    'kamar_nomor' => $s->kamar->nomor_kamar,
+                    'tipe' => $s->kamar->tipe,
+                    'tgl_mulai' => $s->tgl_mulai->format('Y-m-d'),
+                    'tgl_selesai' => $s->tgl_selesai?->format('Y-m-d'),
+                    'harga_disepakati' => (int) $s->harga_disepakati,
+                    'status' => $s->status,
+                    'jumlah_tagihan' => $s->tagihan->count(),
+                ])->values(),
+            ],
+            'kamarTersedia' => $kamarTersedia,
+        ]);
     }
 
-    public function edit(Penyewa $penyewa): View
+    public function edit(Penyewa $penyewa): Response
     {
-        return view('admin.penyewa.edit', compact('penyewa'));
+        return Inertia::render('Admin/Penyewa/Form', [
+            'mode' => 'edit',
+            'penyewa' => [
+                'id' => $penyewa->id,
+                'nama_lengkap' => $penyewa->nama_lengkap,
+                'no_ktp' => $penyewa->no_ktp,
+                'no_hp' => $penyewa->no_hp,
+                'alamat_asal' => $penyewa->alamat_asal,
+                'catatan' => $penyewa->catatan,
+            ],
+            'kamarTersedia' => [],
+        ]);
     }
 
     public function update(UpdatePenyewaRequest $request, Penyewa $penyewa): RedirectResponse
     {
         $penyewa->update($request->validated());
 
-        // Sync nama & phone ke user-nya kalau ada akun
         if ($penyewa->user) {
             $penyewa->user->update([
                 'name' => $penyewa->nama_lengkap,
