@@ -11,7 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PembayaranController extends Controller
@@ -19,17 +20,49 @@ class PembayaranController extends Controller
     /**
      * Antrian verifikasi: list pembayaran status pending.
      */
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
-        $query = Pembayaran::query()
-            ->with(['tagihan.sewa.penyewa', 'tagihan.sewa.kamar']);
-
         $status = $request->string('status')->toString() ?: 'pending';
-        $query->where('status_verifikasi', $status);
 
-        $pembayaran = $query->latest()->paginate(20)->withQueryString();
+        $query = Pembayaran::query()
+            ->with(['tagihan.sewa.penyewa', 'tagihan.sewa.kamar'])
+            ->where('status_verifikasi', $status);
 
-        return view('admin.pembayaran.index', compact('pembayaran', 'status'));
+        $paginator = $query->latest()->paginate(20)->withQueryString();
+
+        // KPI counts
+        $kpi = [
+            'pending' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_PENDING)->count(),
+            'approved' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_APPROVED)->count(),
+            'rejected' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_REJECTED)->count(),
+        ];
+
+        $pembayaran = collect($paginator->items())->map(fn (Pembayaran $p) => [
+            'id' => $p->id,
+            'tagihan_id' => $p->tagihan_id,
+            'penyewa_nama' => $p->tagihan->sewa->penyewa->nama_lengkap ?? '—',
+            'penyewa_id' => $p->tagihan->sewa->penyewa->id ?? null,
+            'kamar_nomor' => $p->tagihan->sewa->kamar->nomor_kamar ?? '—',
+            'periode' => $p->tagihan->periode->format('Y-m-d'),
+            'jumlah_bayar' => (int) $p->jumlah_bayar,
+            'tgl_bayar' => $p->tgl_bayar->format('Y-m-d'),
+            'metode' => $p->metode,
+            'status_verifikasi' => $p->status_verifikasi,
+            'bukti_transfer_url' => $p->bukti_transfer_url,
+        ]);
+
+        return Inertia::render('Admin/Pembayaran/Index', [
+            'pembayaran' => $pembayaran,
+            'kpi' => $kpi,
+            'filters' => ['status' => $status],
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'total' => $paginator->total(),
+                'from' => $paginator->firstItem() ?? 0,
+                'to' => $paginator->lastItem() ?? 0,
+            ],
+        ]);
     }
 
     public function approve(Request $request, Pembayaran $pembayaran): RedirectResponse
