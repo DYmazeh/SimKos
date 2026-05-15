@@ -35,7 +35,7 @@ COPY public/ ./public/
 # Ziggy butuh routes table dari Laravel — vendor sudah di-build di stage 1,
 # tapi vite.config alias 'ziggy' resolve ke vendor/tightenco/ziggy/dist
 COPY --from=vendor /app/vendor/tightenco/ziggy ./vendor/tightenco/ziggy
-RUN npm run build
+RUN rm -rf public/build && npm run build
 
 # ---------------- Stage 3: Runtime ----------------
 FROM dunglas/frankenphp:1-php8.4-alpine AS runtime

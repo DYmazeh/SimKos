@@ -30,7 +30,11 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force --no-interaction || true
 fi
 
-# Optimize cache (idempotent, aman dipanggil tiap boot)
+# Clear stale caches from previous deploys, then re-cache
+php artisan config:clear --no-interaction
+php artisan route:clear --no-interaction
+php artisan view:clear --no-interaction
+
 php artisan config:cache --no-interaction
 php artisan route:cache --no-interaction
 php artisan view:cache --no-interaction
