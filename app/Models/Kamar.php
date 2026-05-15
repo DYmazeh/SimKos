@@ -19,7 +19,6 @@ class Kamar extends Model
         'harga_bulanan',
         'status',
         'deskripsi',
-        'foto',
         'fasilitas',
         'peraturan',
         'deposit',
@@ -34,7 +33,6 @@ class Kamar extends Model
         'min_sewa_bulan' => 'integer',
         'luas_m2' => 'integer',
         'lantai' => 'integer',
-        'foto' => 'array',
         'fasilitas' => 'array',
     ];
 
@@ -52,5 +50,10 @@ class Kamar extends Model
     public function sewaAktif()
     {
         return $this->hasOne(Sewa::class)->where('status', Sewa::STATUS_AKTIF);
+    }
+
+    public function foto(): HasMany
+    {
+        return $this->hasMany(FotoKamar::class)->orderBy('urutan');
     }
 }

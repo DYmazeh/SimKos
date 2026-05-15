@@ -7,66 +7,88 @@ use App\Http\Requests\Admin\StoreKamarRequest;
 use App\Http\Requests\Admin\UpdateKamarRequest;
 use App\Models\FotoKamar;
 use App\Models\Kamar;
-use App\Services\BuktiTransferUploader;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class KamarController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
-        $query = Kamar::query();
+        $query = Kamar::query()->with(['foto' => fn ($q) => $q->orderBy('urutan')]);
 
         if ($status = $request->string('status')->toString()) {
             $query->where('status', $status);
         }
-
         if ($tipe = $request->string('tipe')->toString()) {
             $query->where('tipe', $tipe);
         }
-
         if ($search = $request->string('q')->toString()) {
-            $query->whereRaw('LOWER(nomor_kamar) LIKE ?', ['%' . strtolower($search) . '%']);
+            $query->whereRaw('LOWER(nomor_kamar) LIKE ?', ['%'.strtolower($search).'%']);
         }
 
-        $kamar = $query->orderBy('nomor_kamar')->paginate(15)->withQueryString();
+        $kamar = $query->orderBy('nomor_kamar')->get()
+            ->map(fn ($k) => $this->mapKamar($k));
 
-        return view('admin.kamar.index', compact('kamar'));
+        return Inertia::render('Admin/Kamar/Index', [
+            'kamar' => $kamar,
+            'filters' => [
+                'q' => $request->string('q')->toString(),
+                'status' => $request->string('status')->toString(),
+                'tipe' => $request->string('tipe')->toString(),
+            ],
+        ]);
     }
 
-    public function create(): View
+    public function create(): Response
     {
-        $kamar = new Kamar(['status' => Kamar::STATUS_TERSEDIA, 'tipe' => 'standar']);
-
-        return view('admin.kamar.create', compact('kamar'));
+        return Inertia::render('Admin/Kamar/Form', [
+            'mode' => 'create',
+            'kamar' => null,
+        ]);
     }
 
     public function store(StoreKamarRequest $request): RedirectResponse
     {
-        Kamar::create($request->validated());
+        $kamar = Kamar::create($request->validated());
 
         return redirect()
-            ->route('admin.kamar.index')
+            ->route('admin.kamar.show', $kamar)
             ->with('success', 'Kamar berhasil ditambahkan.');
     }
 
-    /**
-     * FR-011: Detail kamar + riwayat penyewa
-     */
-    public function show(Kamar $kamar): View
+    public function show(Kamar $kamar): Response
     {
         $kamar->load(['foto', 'sewa' => function ($q) {
-            $q->with(['penyewa', 'tagihan'])
-                ->orderBy('tgl_mulai', 'desc');
+            $q->with(['penyewa', 'tagihan'])->orderBy('tgl_mulai', 'desc');
         }]);
 
-        return view('admin.kamar.show', compact('kamar'));
+        return Inertia::render('Admin/Kamar/Show', [
+            'kamar' => array_merge($this->mapKamar($kamar), [
+                'peraturan' => $kamar->peraturan,
+                'deposit' => (int) $kamar->deposit,
+                'min_sewa_bulan' => (int) $kamar->min_sewa_bulan,
+            ]),
+            'riwayatSewa' => $kamar->sewa->map(fn ($s) => [
+                'id' => $s->id,
+                'penyewa_nama' => $s->penyewa->nama_lengkap ?? '—',
+                'periode' => $s->tgl_mulai->translatedFormat('d M Y').' — '.($s->tgl_selesai ? $s->tgl_selesai->translatedFormat('d M Y') : 'Sekarang'),
+                'status' => $s->status,
+                'jumlah_tagihan' => $s->tagihan->count(),
+            ])->values(),
+        ]);
     }
 
-    public function edit(Kamar $kamar): View
+    public function edit(Kamar $kamar): Response
     {
-        return view('admin.kamar.edit', compact('kamar'));
+        $kamar->load('foto');
+
+        return Inertia::render('Admin/Kamar/Form', [
+            'mode' => 'edit',
+            'kamar' => $this->mapKamar($kamar),
+        ]);
     }
 
     public function update(UpdateKamarRequest $request, Kamar $kamar): RedirectResponse
@@ -80,7 +102,6 @@ class KamarController extends Controller
 
     public function destroy(Kamar $kamar): RedirectResponse
     {
-        // Cegah delete kamar yang masih punya sewa aktif
         if ($kamar->sewaAktif()->exists()) {
             return redirect()
                 ->route('admin.kamar.index')
@@ -94,9 +115,6 @@ class KamarController extends Controller
             ->with('success', "Kamar {$kamar->nomor_kamar} dihapus.");
     }
 
-    /**
-     * FR-013: Upload foto kamar (max 5)
-     */
     public function uploadFoto(Request $request, Kamar $kamar): RedirectResponse
     {
         if ($kamar->foto()->count() >= 5) {
@@ -109,7 +127,7 @@ class KamarController extends Controller
             'foto.max' => 'Ukuran foto maksimal 5MB.',
         ]);
 
-        $path = $request->file('foto')->store('kamar/' . $kamar->id, config('filesystems.default'));
+        $path = $request->file('foto')->store('kamar/'.$kamar->id, config('filesystems.default'));
 
         $kamar->foto()->create([
             'url' => $path,
@@ -119,9 +137,6 @@ class KamarController extends Controller
         return back()->with('success', 'Foto berhasil diunggah.');
     }
 
-    /**
-     * FR-013: Hapus foto kamar
-     */
     public function deleteFoto(Kamar $kamar, FotoKamar $fotoKamar): RedirectResponse
     {
         if ($fotoKamar->kamar_id !== $kamar->id) {
@@ -131,5 +146,29 @@ class KamarController extends Controller
         $fotoKamar->delete();
 
         return back()->with('success', 'Foto dihapus.');
+    }
+
+    /**
+     * Map Kamar model → array untuk Inertia props.
+     */
+    private function mapKamar(Kamar $k): array
+    {
+        return [
+            'id' => $k->id,
+            'nomor_kamar' => $k->nomor_kamar,
+            'tipe' => $k->tipe,
+            'harga_bulanan' => (int) $k->harga_bulanan,
+            'status' => $k->status,
+            'deskripsi' => $k->deskripsi,
+            'fasilitas' => $k->fasilitas ?? [],
+            'luas_m2' => $k->luas_m2,
+            'lantai' => $k->lantai,
+            'foto' => $k->relationLoaded('foto')
+                ? $k->foto->map(fn ($f) => [
+                    'id' => $f->id,
+                    'url' => Storage::disk(config('filesystems.default'))->url($f->url),
+                ])->values()
+                : [],
+        ];
     }
 }
