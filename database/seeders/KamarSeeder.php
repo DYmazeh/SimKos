@@ -71,7 +71,6 @@ class KamarSeeder extends Seeder
                 ['nomor_kamar' => $data['nomor_kamar']],
                 array_merge($data, [
                     'status' => Kamar::STATUS_TERSEDIA,
-                    'foto' => [], // diisi nanti via Supabase Storage
                     'peraturan' => 'Tidak merokok di dalam kamar. Tamu lawan jenis tidak diperkenankan masuk kamar.',
                     'deposit' => $data['harga_bulanan'], // 1× sewa bulanan
                     'min_sewa_bulan' => $data['tipe'] === 'standar' ? 3 : 1,
