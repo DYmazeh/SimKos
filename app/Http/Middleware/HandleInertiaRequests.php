@@ -43,20 +43,26 @@ class HandleInertiaRequests extends Middleware
             ],
 
             // Sidebar counts (admin only) — drives red-dot badges di nav items.
-            // Lazy/cached per-request via closures supaya skip query kalau bukan admin.
+            // Cached 60 detik supaya request tidak hit DB tiap kali navigasi.
+            // Invalidasi otomatis dari TagihanObserver/PembayaranObserver/KomplainObserver
+            // saat ada create/update yang ubah count.
             'sidebar_counts' => fn () => $request->user()?->hasRole('admin')
-                ? [
-                    'tagihan_belum' => \App\Models\Tagihan::query()
-                        ->whereIn('status', ['belum_bayar', 'terlambat'])
-                        ->where('tgl_jatuh_tempo', '<=', now()->addDays(3)->toDateString())
-                        ->count(),
-                    'konfirmasi_pending' => \App\Models\Pembayaran::query()
-                        ->where('status_verifikasi', 'pending')
-                        ->count(),
-                    'komplen_aktif' => \App\Models\Komplain::query()
-                        ->whereNot('status', 'selesai')
-                        ->count(),
-                ]
+                ? \Illuminate\Support\Facades\Cache::remember(
+                    'sidebar_counts:admin',
+                    60,
+                    fn () => [
+                        'tagihan_belum' => \App\Models\Tagihan::query()
+                            ->whereIn('status', ['belum_bayar', 'terlambat'])
+                            ->where('tgl_jatuh_tempo', '<=', now()->addDays(3)->toDateString())
+                            ->count(),
+                        'konfirmasi_pending' => \App\Models\Pembayaran::query()
+                            ->where('status_verifikasi', 'pending')
+                            ->count(),
+                        'komplen_aktif' => \App\Models\Komplain::query()
+                            ->whereNot('status', 'selesai')
+                            ->count(),
+                    ],
+                )
                 : null,
 
             // Config app & SIMKOS

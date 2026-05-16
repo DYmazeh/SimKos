@@ -18,4 +18,20 @@ export default defineConfig({
             'ziggy-js': path.resolve('vendor/tightenco/ziggy/dist'),
         },
     },
+    build: {
+        rollupOptions: {
+            output: {
+                // Split vendor chunks supaya browser bisa cache lintas page navigation.
+                // React + Inertia core jarang berubah, jadi user gak re-download saat
+                // pindah halaman. Recharts cuma dipakai di Laporan Keuangan — diisolasi
+                // ke chunk sendiri.
+                manualChunks: {
+                    'vendor-react': ['react', 'react-dom', 'react-is'],
+                    'vendor-inertia': ['@inertiajs/react'],
+                    'vendor-recharts': ['recharts'],
+                    'vendor-lenis': ['lenis'],
+                },
+            },
+        },
+    },
 });

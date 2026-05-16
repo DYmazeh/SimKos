@@ -32,9 +32,14 @@ class TagihanController extends Controller
 
         $search = $request->string('q')->toString();
 
+        // N+1 prevention: eager load sewa.tagihan dalam SATU query saat fetch penyewa,
+        // bukan loop per-penyewa di mapping fn (sebelumnya 1 + N query).
         $query = Penyewa::query()
             ->whereHas('sewa.tagihan')
-            ->with(['sewaAktif.kamar']);
+            ->with([
+                'sewaAktif.kamar',
+                'sewa.tagihan',
+            ]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -46,18 +51,19 @@ class TagihanController extends Controller
         $paginator = $query->orderBy('nama_lengkap')->paginate(15)->withQueryString();
 
         $rows = collect($paginator->items())->map(function (Penyewa $p) {
-            $tagihanList = Tagihan::query()
-                ->whereHas('sewa', fn ($q) => $q->where('penyewa_id', $p->id))
-                ->get();
+            // Aggregate tagihan dari relasi yang sudah eager-loaded (no extra query)
+            $tagihanList = $p->sewa->flatMap(fn ($s) => $s->tagihan);
 
             $belumLunasTagihan = $tagihanList->whereNotIn('status', [Tagihan::STATUS_LUNAS]);
             $totalBelumLunas = (int) $belumLunasTagihan->sum('jumlah');
 
             $statusAggregate = 'lunas';
-            if ($tagihanList->where('status', Tagihan::STATUS_TERLAMBAT)->count() > 0
-                || $tagihanList->where('status', Tagihan::STATUS_BELUM_BAYAR)->count() > 0) {
+            $hasTerlambat = $tagihanList->where('status', Tagihan::STATUS_TERLAMBAT)->isNotEmpty();
+            $hasBelumBayar = $tagihanList->where('status', Tagihan::STATUS_BELUM_BAYAR)->isNotEmpty();
+            $hasMenunggu = $tagihanList->where('status', Tagihan::STATUS_MENUNGGU_VERIFIKASI)->isNotEmpty();
+            if ($hasTerlambat || $hasBelumBayar) {
                 $statusAggregate = 'belum_bayar';
-            } elseif ($tagihanList->where('status', Tagihan::STATUS_MENUNGGU_VERIFIKASI)->count() > 0) {
+            } elseif ($hasMenunggu) {
                 $statusAggregate = 'menunggu_verifikasi';
             }
 
