@@ -62,10 +62,10 @@ export default function Login({ status, canResetPassword }: { status?: string; c
 
                     <div style={{ position: 'relative', maxWidth: 420 }}>
                         <div style={{ marginBottom: 32 }}>
-                            <Brand size={48} light />
+                            <Brand size={64} light />
                         </div>
                         <h2 style={{ fontSize: 26, fontWeight: 600, margin: '0 0 14px', lineHeight: 1.25, letterSpacing: '-0.02em' }}>
-                            Kos di pusat Kedaton,<br />dekat Pasar Koga.
+                            Hunian modern di kawasan<br />strategis Kedaton.
                         </h2>
                         <p style={{ fontSize: 15, lineHeight: 1.65, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
                             Kelola data kamar, penyewa, dan tagihan dalam satu platform yang efisien dan transparan.

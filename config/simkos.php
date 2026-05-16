@@ -2,7 +2,7 @@
 
 return [
     'nama' => env('SIMKOS_KOS_NAMA', 'Kos Sejahtera'),
-    'alamat' => env('SIMKOS_KOS_ALAMAT', 'Jl. Mawar No. 12, Yogyakarta'),
+    'alamat' => env('SIMKOS_KOS_ALAMAT', 'Jl. Dn. Batur Gg. Kibang No.21, RT./12/RW.LK/01, Surabaya, Kec. Kedaton, Kota Bandar Lampung, Lampung'),
 
     // Nomor WhatsApp pengelola (format 08xx / 62xx) — di-render ke wa.me/62xxx
     'wa_number' => env('SIMKOS_WA_NUMBER', '081385748661'),

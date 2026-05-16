@@ -1,7 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { Field, formatRp } from '@/components/ui';
+import { Field, Icon, Input, Checkbox, PasswordInput, formatRp } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type KamarOption = { id: number; nomor_kamar: string; tipe: string; harga_bulanan: number };
@@ -21,12 +21,25 @@ type FormProps = PageProps<{
     kamarTersedia: KamarOption[];
 }>;
 
-/* Section header dengan blue bar di kiri */
-const SectionTitle = ({ title }: { title: string }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <span style={{ width: 4, height: 18, borderRadius: 2, background: '#2563EB' }} />
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0F172A' }}>{title}</h3>
-    </div>
+const KICKER: React.CSSProperties = {
+    fontSize: 12, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase',
+    color: 'var(--blue-600)', margin: 0,
+};
+
+/* ───── Card section dengan kicker + judul ───── */
+const Card = ({ kicker, title, desc, children }: { kicker: string; title: string; desc?: string; children: ReactNode }) => (
+    <section style={{
+        background: 'white', borderRadius: 16, padding: 28,
+        border: '1px solid rgba(11,13,26,0.06)',
+        boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+    }}>
+        <header style={{ marginBottom: 22 }}>
+            <p style={KICKER}>{kicker}</p>
+            <h2 className="h-2" style={{ margin: '4px 0 0', color: 'var(--ink-900)' }}>{title}</h2>
+            {desc && <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--ink-500)', lineHeight: 1.6 }}>{desc}</p>}
+        </header>
+        {children}
+    </section>
 );
 
 const generatePassword = () => {
@@ -40,7 +53,6 @@ export default function PenyewaForm() {
     const { props } = usePage<FormProps>();
     const { mode, penyewa, kamarTersedia } = props;
     const isEdit = mode === 'edit' && penyewa !== null;
-    const [showPwd, setShowPwd] = useState(false);
     const [overrideHarga, setOverrideHarga] = useState(false);
 
     const form = useForm<{
@@ -82,12 +94,12 @@ export default function PenyewaForm() {
 
     return (
         <AdminLayout
-            title={isEdit ? 'Edit Penyewa' : 'Tambah Penyewa Baru'}
+            title={isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa Baru'}
             breadcrumb={
                 <span>
-                    <Link href={route('admin.penyewa.index')} style={{ color: '#64748B' }}>Penyewa</Link>
-                    {' / '}
-                    <span style={{ color: '#2563EB' }}>{isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa'}</span>
+                    <Link href={route('admin.penyewa.index')} style={{ color: 'var(--ink-500)' }}>Penyewa</Link>
+                    <span style={{ color: 'var(--ink-300)', margin: '0 8px' }}>/</span>
+                    <span style={{ color: 'var(--blue-600)' }}>{isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa'}</span>
                 </span>
             }
         >
@@ -95,47 +107,47 @@ export default function PenyewaForm() {
 
             <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1000, margin: '0 auto' }}>
                 {/* ───── Data Pribadi ───── */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    <SectionTitle title="Data Pribadi" />
+                <Card kicker="Profil" title="Data pribadi penyewa." desc="Informasi identitas dasar yang tersimpan dalam catatan kos.">
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }} className="penyewa-grid">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            <Field label="Nama Lengkap" htmlFor="nama" error={form.errors.nama_lengkap}>
-                                <input id="nama" type="text" className="input"
+                            <Field label="Nama lengkap" htmlFor="nama" error={form.errors.nama_lengkap}>
+                                <Input id="nama" type="text"
                                     value={form.data.nama_lengkap}
                                     onChange={(e) => form.setData('nama_lengkap', e.target.value)}
-                                    placeholder="Masukkan nama lengkap" required
-                                    style={{ borderRadius: 10 }} />
+                                    placeholder="Sesuai KTP" required />
                             </Field>
 
                             <Field label="NIK (16 digit)" htmlFor="nik" error={form.errors.no_ktp}>
-                                <input id="nik" type="text" className="input" inputMode="numeric" pattern="\d*"
-                                    maxLength={16}
+                                <Input id="nik" type="text" inputMode="numeric" pattern="\d*" maxLength={16}
                                     value={form.data.no_ktp}
                                     onChange={(e) => form.setData('no_ktp', e.target.value.replace(/\D/g, ''))}
-                                    placeholder="Masukkan NIK sesuai KTP"
-                                    style={{ borderRadius: 10, fontVariantNumeric: 'tabular-nums' }} />
+                                    placeholder="16 digit pada KTP"
+                                    style={{ fontVariantNumeric: 'tabular-nums' }} />
                             </Field>
 
                             <Field label="No HP / WhatsApp" htmlFor="hp" error={form.errors.no_hp}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', height: 44, borderRadius: 10, border: '1px solid #E5E7EB', background: 'white' }}>
-                                    <span style={{ fontSize: 14, color: '#94A3B8', borderRight: '1px solid #E5E7EB', paddingRight: 10 }}>+62</span>
-                                    <input id="hp" type="tel" inputMode="numeric"
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', height: 44,
+                                    borderRadius: 10, border: '1px solid rgba(11,13,26,0.12)', background: 'white',
+                                }}>
+                                    <span style={{
+                                        fontSize: 14, color: 'var(--ink-400)',
+                                        borderRight: '1px solid rgba(11,13,26,0.08)', paddingRight: 10,
+                                    }}>+62</span>
+                                    <input id="hp" type="tel" inputMode="numeric" required
                                         value={form.data.no_hp.replace(/^(\+62|62|0)/, '')}
                                         onChange={(e) => form.setData('no_hp', '0' + e.target.value.replace(/\D/g, ''))}
                                         placeholder="812345678"
-                                        style={{ flex: 1, border: 0, outline: 'none', fontSize: 14, background: 'transparent' }} required />
+                                        style={{ flex: 1, border: 0, outline: 'none', fontSize: 14, background: 'transparent' }} />
                                 </div>
                             </Field>
 
-                            {!isEdit && (
-                                <Field label="Email (untuk akun login)" htmlFor="email" error={form.errors.email}>
-                                    <input id="email" type="email" className="input"
-                                        value={form.data.email}
-                                        onChange={(e) => form.setData('email', e.target.value)}
-                                        placeholder="example@mail.com"
-                                        style={{ borderRadius: 10 }} />
-                                </Field>
-                            )}
+                            <Field label="Alamat asal (opsional)" htmlFor="alamat_asal">
+                                <Input id="alamat_asal" type="text"
+                                    value={form.data.alamat_asal}
+                                    onChange={(e) => form.setData('alamat_asal', e.target.value)}
+                                    placeholder="Kota / kabupaten asal" />
+                            </Field>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -143,33 +155,42 @@ export default function PenyewaForm() {
                                 {ktpPreview ? (
                                     <div style={{ position: 'relative' }}>
                                         <img src={ktpPreview} alt="Preview KTP"
-                                            style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                            style={{
+                                                width: '100%', maxHeight: 200, objectFit: 'cover',
+                                                borderRadius: 12, border: '1px solid rgba(11,13,26,0.08)',
+                                            }} />
                                         <button type="button"
                                             onClick={() => { setKtpPreview(null); form.setData('foto_ktp', null); }}
+                                            aria-label="Hapus foto"
                                             style={{
                                                 position: 'absolute', top: 8, right: 8,
                                                 width: 28, height: 28, borderRadius: 999,
-                                                background: '#EF4444', color: 'white',
-                                                border: 0, cursor: 'pointer',
+                                                background: 'rgba(11,13,26,0.7)', color: 'white',
+                                                border: 0, cursor: 'pointer', backdropFilter: 'blur(4px)',
                                                 display: 'grid', placeItems: 'center',
-                                            }} aria-label="Hapus foto">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                                            }}>
+                                            <Icon name="x" size={14} stroke={2.5} />
                                         </button>
                                     </div>
                                 ) : (
                                     <label htmlFor="foto_ktp_input" style={{
-                                        display: 'block', cursor: 'pointer',
-                                        border: '2px dashed #CBD5E1', borderRadius: 12,
-                                        padding: 32, textAlign: 'center', background: '#F8FAFC',
-                                        transition: 'all 180ms',
-                                    }}>
-                                        <div style={{ width: 48, height: 48, borderRadius: 12, background: '#EFF6FF', color: '#2563EB', display: 'inline-grid', placeItems: 'center', marginBottom: 8 }}>
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8.5" cy="11" r="1.5" /><path d="M21 15l-4.5-4.5L7 21" />
-                                            </svg>
+                                        display: 'block', cursor: 'pointer', textAlign: 'center',
+                                        border: '2px dashed rgba(11,13,26,0.15)', borderRadius: 12,
+                                        padding: 32, background: 'var(--ink-50)',
+                                        transition: 'all 180ms var(--ease)',
+                                    }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--blue-400)'; e.currentTarget.style.background = 'rgba(96,165,250,0.05)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(11,13,26,0.15)'; e.currentTarget.style.background = 'var(--ink-50)'; }}>
+                                        <div style={{
+                                            width: 48, height: 48, borderRadius: 12,
+                                            background: 'white', color: 'var(--blue-600)',
+                                            display: 'inline-grid', placeItems: 'center', marginBottom: 10,
+                                            border: '1px solid rgba(11,13,26,0.06)',
+                                        }}>
+                                            <Icon name="image" size={22} />
                                         </div>
-                                        <div style={{ fontSize: 14, color: '#2563EB', fontWeight: 500 }}>Klik untuk upload foto</div>
-                                        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>JPG, PNG, WebP maks 5MB</div>
+                                        <div style={{ fontSize: 14, color: 'var(--ink-900)', fontWeight: 500 }}>Klik untuk upload foto</div>
+                                        <div style={{ fontSize: 12, color: 'var(--ink-400)', marginTop: 4 }}>JPG, PNG, WebP — maks 5MB</div>
                                     </label>
                                 )}
                                 <input id="foto_ktp_input" type="file"
@@ -185,35 +206,26 @@ export default function PenyewaForm() {
                             </Field>
 
                             <Field label="Catatan (opsional)" htmlFor="catatan">
-                                <textarea id="catatan"
+                                <textarea id="catatan" className="input"
                                     value={form.data.catatan}
                                     onChange={(e) => form.setData('catatan', e.target.value)}
-                                    placeholder="Keterangan tambahan mengenai penyewa..."
+                                    placeholder="Keterangan tambahan…"
                                     rows={4} maxLength={500}
-                                    style={{
-                                        width: '100%', padding: 14, borderRadius: 10,
-                                        border: '1px solid #E5E7EB', fontSize: 14,
-                                        fontFamily: 'inherit', resize: 'vertical',
-                                    }} />
+                                    style={{ fontFamily: 'inherit', resize: 'vertical', height: 'auto', padding: 12 }} />
                             </Field>
                         </div>
                     </div>
-                </div>
+                </Card>
 
                 {/* ───── Kontrak Sewa ───── */}
                 {!isEdit && (
-                    <div style={{ background: 'white', borderRadius: 14, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                        <SectionTitle title="Kontrak Sewa" />
-                        <p style={{ margin: '0 0 16px', fontSize: 12, color: '#94A3B8' }}>
-                            (Kontrak akan dibuat setelah penyewa disimpan via halaman detail penyewa)
-                        </p>
+                    <Card kicker="Kontrak" title="Sewa kamar (opsional)." desc="Bisa diisi sekarang atau di-skip — kontrak juga bisa dibuat dari halaman detail penyewa.">
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="penyewa-grid">
-                            <Field label="Pilih Kamar" htmlFor="kamar">
+                            <Field label="Pilih kamar" htmlFor="kamar">
                                 <select id="kamar" className="input"
                                     value={form.data.kamar_id}
-                                    onChange={(e) => { form.setData('kamar_id', e.target.value); setOverrideHarga(false); }}
-                                    style={{ borderRadius: 10 }}>
-                                    <option value="">Pilih kamar yang tersedia</option>
+                                    onChange={(e) => { form.setData('kamar_id', e.target.value); setOverrideHarga(false); }}>
+                                    <option value="">— Belum tugaskan kamar —</option>
                                     {kamarTersedia.map((k) => (
                                         <option key={k.id} value={k.id}>
                                             {k.nomor_kamar} · {k.tipe.toUpperCase()} · {formatRp(k.harga_bulanan)}
@@ -222,97 +234,91 @@ export default function PenyewaForm() {
                                 </select>
                             </Field>
 
-                            <Field label="Harga Disepakati" htmlFor="harga">
+                            <Field label="Harga disepakati / bulan" htmlFor="harga">
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <div style={{ position: 'relative', flex: 1 }}>
-                                        <span style={{ position: 'absolute', left: 14, top: 12, fontSize: 14, color: '#94A3B8' }}>Rp</span>
-                                        <input id="harga" type="number"
+                                        <span style={{
+                                            position: 'absolute', left: 14, top: 12,
+                                            fontSize: 14, color: 'var(--ink-400)',
+                                        }}>Rp</span>
+                                        <input id="harga" type="number" className="input"
                                             value={overrideHarga ? form.data.harga_disepakati : effectiveHarga}
                                             onChange={(e) => form.setData('harga_disepakati', e.target.value)}
                                             disabled={!overrideHarga}
-                                            placeholder="1.500.000"
-                                            className="input"
-                                            style={{ borderRadius: 10, paddingLeft: 40, background: overrideHarga ? 'white' : '#F8FAFC' }} />
+                                            placeholder="1500000"
+                                            style={{ paddingLeft: 36, fontVariantNumeric: 'tabular-nums', background: overrideHarga ? 'white' : 'var(--ink-50)' }} />
                                     </div>
                                     <button type="button" onClick={() => setOverrideHarga((o) => !o)}
-                                        style={{
-                                            padding: '0 16px', borderRadius: 10,
-                                            border: '1px solid #2563EB', color: '#2563EB',
-                                            background: 'transparent', cursor: 'pointer',
-                                            fontSize: 13, fontWeight: 500,
-                                        }}>{overrideHarga ? 'Reset' : 'Ubah'}</button>
+                                        className="btn btn-ghost btn-sm" style={{ whiteSpace: 'nowrap' }}>
+                                        {overrideHarga ? 'Reset' : 'Ubah harga'}
+                                    </button>
                                 </div>
                             </Field>
 
-                            <Field label="Tanggal Mulai Sewa" htmlFor="tgl_mulai">
-                                <input id="tgl_mulai" type="date" className="input"
+                            <Field label="Tanggal mulai sewa" htmlFor="tgl_mulai">
+                                <Input id="tgl_mulai" type="date"
                                     value={form.data.tgl_mulai}
-                                    onChange={(e) => form.setData('tgl_mulai', e.target.value)}
-                                    style={{ borderRadius: 10 }} />
+                                    onChange={(e) => form.setData('tgl_mulai', e.target.value)} />
                             </Field>
 
-                            <Field label="Tanggal Akhir Sewa" htmlFor="tgl_selesai">
-                                <input id="tgl_selesai" type="date" className="input"
+                            <Field label="Tanggal akhir sewa (opsional)" htmlFor="tgl_selesai">
+                                <Input id="tgl_selesai" type="date"
                                     value={form.data.tgl_selesai}
-                                    onChange={(e) => form.setData('tgl_selesai', e.target.value)}
-                                    style={{ borderRadius: 10 }} />
+                                    onChange={(e) => form.setData('tgl_selesai', e.target.value)} />
                             </Field>
                         </div>
-                    </div>
+                    </Card>
                 )}
 
                 {/* ───── Akun Login ───── */}
                 {!isEdit && (
-                    <div style={{ background: 'white', borderRadius: 14, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                        <SectionTitle title="Akun Login" />
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, alignItems: 'end' }}>
-                            <Field label="Password Awal" htmlFor="pwd" error={form.errors.password}>
-                                <div style={{ position: 'relative' }}>
-                                    <input id="pwd" type={showPwd ? 'text' : 'password'} className="input"
-                                        value={form.data.password}
-                                        onChange={(e) => form.setData('password', e.target.value)}
-                                        style={{ borderRadius: 10, fontFamily: 'Geist Mono, monospace', paddingRight: 44 }} />
-                                    <button type="button" onClick={() => setShowPwd((s) => !s)}
-                                        style={{ position: 'absolute', right: 12, top: 11, background: 'transparent', border: 0, color: '#94A3B8', cursor: 'pointer' }}>
-                                        {showPwd ? '🙈' : '👁️'}
-                                    </button>
-                                </div>
-                            </Field>
-                            <button type="button" onClick={() => form.setData('password', generatePassword())}
-                                style={{
-                                    height: 44, padding: '0 16px', borderRadius: 10,
-                                    border: '1px solid #2563EB', color: '#2563EB',
-                                    background: 'transparent', cursor: 'pointer',
-                                    fontSize: 13, fontWeight: 500,
-                                }}>Auto-Generate</button>
-                        </div>
-                        <p style={{ margin: '8px 0 0', fontSize: 12, color: '#64748B', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
-                            Password dapat diganti penyewa setelah login pertama.
-                        </p>
-                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16, fontSize: 13, color: '#475569', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={form.data.buat_akun}
-                                onChange={(e) => form.setData('buat_akun', e.target.checked)} />
+                    <Card kicker="Akun" title="Akses login penyewa." desc="Penyewa dapat login dengan akun ini untuk melihat tagihan dan riwayat sewa.">
+                        <Checkbox id="buat_akun"
+                            checked={form.data.buat_akun}
+                            onChange={(e) => form.setData('buat_akun', e.target.checked)}>
                             Buat akun login untuk penyewa ini
-                        </label>
-                    </div>
+                        </Checkbox>
+
+                        {form.data.buat_akun && (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 18 }} className="penyewa-grid">
+                                <Field label="Email" htmlFor="email" error={form.errors.email}>
+                                    <Input id="email" type="email" icon="mail"
+                                        value={form.data.email}
+                                        onChange={(e) => form.setData('email', e.target.value)}
+                                        placeholder="penyewa@contoh.com" />
+                                </Field>
+
+                                <Field label="Password awal" htmlFor="pwd" error={form.errors.password}
+                                    helper="Penyewa dapat mengganti password setelah login pertama.">
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <div style={{ flex: 1 }}>
+                                            <PasswordInput id="pwd"
+                                                value={form.data.password}
+                                                onChange={(e) => form.setData('password', e.target.value)}
+                                                style={{ fontFamily: 'Geist Mono, monospace' }} />
+                                        </div>
+                                        <button type="button" onClick={() => form.setData('password', generatePassword())}
+                                            className="btn btn-ghost btn-sm" style={{ whiteSpace: 'nowrap' }}>
+                                            Auto-generate
+                                        </button>
+                                    </div>
+                                </Field>
+                            </div>
+                        )}
+                    </Card>
                 )}
 
-                {/* Footer */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                    <Link href={route('admin.penyewa.index')}
-                        style={{
-                            padding: '11px 22px', borderRadius: 10,
-                            color: '#475569', fontSize: 14, fontWeight: 500,
-                        }}>Batal</Link>
-                    <button type="submit" disabled={form.processing}
-                        style={{
-                            padding: '11px 28px', borderRadius: 10,
-                            background: '#2563EB', color: 'white',
-                            border: 0, cursor: 'pointer',
-                            fontSize: 14, fontWeight: 600,
-                        }}>
-                        {form.processing ? 'Menyimpan…' : (isEdit ? 'Simpan Perubahan' : 'Simpan Penyewa')}
+                {/* ───── Action footer ───── */}
+                <div style={{
+                    background: 'white', borderRadius: 16, padding: 18,
+                    border: '1px solid rgba(11,13,26,0.06)',
+                    boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                    display: 'flex', justifyContent: 'flex-end', gap: 12, alignItems: 'center',
+                }}>
+                    <Link href={route('admin.penyewa.index')} className="btn btn-link">Batal</Link>
+                    <button type="submit" disabled={form.processing} className="btn btn-primary">
+                        {form.processing ? 'Menyimpan…' : (isEdit ? 'Simpan perubahan' : 'Simpan penyewa')}
+                        {!form.processing && <Icon name="arrow-right" size={15} />}
                     </button>
                 </div>
             </form>

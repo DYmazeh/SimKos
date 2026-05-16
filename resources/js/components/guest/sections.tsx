@@ -65,15 +65,15 @@ export const Hero = ({
             </div>
 
             <h1 className="h-display" style={{ margin: 0, marginBottom: 16, color: 'var(--ink-900)', maxWidth: '22ch', marginLeft: 'auto', marginRight: 'auto' }}>
-                Kos di pusat Kedaton,<br />
+                Hunian modern di kawasan strategis{' '}
                 <span style={{ background: 'linear-gradient(120deg, var(--ink-900), var(--blue-600) 80%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
-                    dekat Pasar Koga.
+                    Kedaton, Bandar Lampung.
                 </span>
             </h1>
 
             <p style={{ fontSize: 18, lineHeight: 1.6, color: 'var(--ink-700)', maxWidth: '54ch', margin: '0 auto 28px' }}>
-                Jl. Teuku Umar, 5 menit jalan kaki ke Pasar Koga, dekat kampus Unila &amp; Teknokrat,
-                serta rumah sakit besar. Pembayaran transparan, semua dikelola di satu sistem.
+                Lokasi premium di Jl. Teuku Umar — akses cepat ke kampus Unila &amp; Teknokrat,
+                fasilitas kesehatan, dan pusat perbelanjaan. Manajemen transparan dalam satu sistem terintegrasi.
             </p>
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -101,29 +101,36 @@ export const Hero = ({
    GALERI PROPERTI — fasilitas umum, pakai foto real (fallback gradient)
    ============================================================ */
 export const GaleriSection = () => {
-    const items: Array<{ label: string; src: string; accent: 'blue' | 'slate' | 'warm' | 'teal' | 'rose'; span?: number }> = [
-        { label: 'Tampak depan', src: '/images/kos/gallery-front.jpg', accent: 'blue', span: 2 },
-        { label: 'Ruang bersama', src: '/images/kos/gallery-living.jpg', accent: 'slate' },
-        { label: 'Dapur', src: '/images/kos/gallery-kitchen.jpg', accent: 'warm' },
-        { label: 'Parkir', src: '/images/kos/gallery-parking.jpg', accent: 'teal' },
-        { label: 'Area cuci', src: '/images/kos/gallery-laundry.jpg', accent: 'rose' },
+    type Accent = 'blue' | 'slate' | 'warm' | 'teal' | 'rose';
+    // Bento 4×3: hero (2×2) + 2 tall (1×2) + 2 wide (2×1) = 12 cells
+    const items: Array<{ label: string; src: string; accent: Accent; area: string }> = [
+        { label: 'Tampak depan', src: '/images/kos/gallery-front.jpg',   accent: 'blue',  area: '1 / 1 / 3 / 3' },
+        { label: 'Dapur',         src: '/images/kos/gallery-kitchen.jpg', accent: 'warm',  area: '1 / 3 / 3 / 4' },
+        { label: 'Parkir',        src: '/images/kos/gallery-parking.jpg', accent: 'teal',  area: '1 / 4 / 3 / 5' },
+        { label: 'Ruang bersama', src: '/images/kos/gallery-living.jpg',  accent: 'slate', area: '3 / 1 / 4 / 3' },
+        { label: 'Area cuci',     src: '/images/kos/gallery-laundry.jpg', accent: 'rose',  area: '3 / 3 / 4 / 5' },
     ];
     return (
         <section id="galeri" style={{ scrollMarginTop: 80, padding: '64px 24px' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto' }}>
                 <SectionHeader kicker="Properti" title="Lihat kos sebelum datang." desc="Foto fasilitas umum yang tersedia untuk seluruh penghuni." />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: '220px', gap: 12 }} className="gal-grid">
+                <div className="gal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: '240px 240px 200px', gap: 14 }}>
                     {items.map((it, i) => (
-                        <div key={i} style={{ gridColumn: it.span === 2 ? 'span 2' : 'span 1', position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.05)' }}>
+                        <div key={i} style={{ gridArea: it.area, position: 'relative', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.05)', boxShadow: '0 1px 2px rgba(11,13,26,0.04)' }}>
                             <GalleryImage src={it.src} alt={it.label} accent={it.accent} />
-                            <div style={{ position: 'absolute', left: 12, bottom: 12, padding: '6px 10px', borderRadius: 8, background: 'rgba(11,13,26,0.75)', color: 'white', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', backdropFilter: 'blur(6px)' }}>
+                            <div style={{ position: 'absolute', left: 14, bottom: 14, padding: '6px 10px', borderRadius: 8, background: 'rgba(11,13,26,0.75)', color: 'white', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', backdropFilter: 'blur(6px)' }}>
                                 {it.label}
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
-            <style>{`@media (max-width: 720px) { .gal-grid { grid-template-columns: 1fr 1fr !important; } .gal-grid > div { grid-column: span 1 !important; } }`}</style>
+            <style>{`
+                @media (max-width: 960px) {
+                    .gal-grid { grid-template-columns: repeat(2, 1fr) !important; grid-template-rows: repeat(5, 200px) !important; }
+                    .gal-grid > div { grid-area: auto !important; }
+                }
+            `}</style>
         </section>
     );
 };
@@ -309,7 +316,7 @@ export const LokasiSection = ({ alamat }: { alamat: string }) => {
     return (
         <section id="lokasi" style={{ scrollMarginTop: 80, padding: '64px 24px' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <SectionHeader kicker="Lokasi" title="Pusat Kedaton, dekat Pasar Koga." desc={`${alamat}. Strategis di Jl. Teuku Umar — 5 menit jalan kaki ke Pasar Koga, dekat kampus Unila & Teknokrat, dan beberapa rumah sakit besar.`} />
+            <SectionHeader kicker="Lokasi" title="Strategis di pusat Kedaton." desc={`${alamat}. Akses cepat ke kampus Unila & Teknokrat, fasilitas kesehatan, serta pusat perbelanjaan utama di Bandar Lampung.`} />
             <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 24, alignItems: 'stretch' }} className="lokasi-grid">
                 <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.08)', background: 'var(--ink-50)', position: 'relative', minHeight: 480 }}>
                     <iframe

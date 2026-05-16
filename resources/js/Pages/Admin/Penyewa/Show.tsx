@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AdminLayout from '@/components/AdminLayout';
-import { formatRp } from '@/components/ui';
+import { Icon, Pill, formatRp } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type SewaItem = {
@@ -28,13 +28,21 @@ type ShowProps = PageProps<{
     };
 }>;
 
-const statusPill = (status: string) => {
-    const map: Record<string, { label: string; bg: string; color: string }> = {
-        aktif: { label: 'Aktif', bg: '#DCFCE7', color: '#15803D' },
-        selesai: { label: 'Selesai', bg: '#F1F5F9', color: '#475569' },
-        dibatalkan: { label: 'Dibatalkan', bg: '#FEE2E2', color: '#991B1B' },
-    };
-    return map[status] ?? map.selesai;
+const KICKER: React.CSSProperties = {
+    fontSize: 12, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase',
+    color: 'var(--blue-600)', margin: 0,
+};
+
+const sewaTone = (status: string): 'success' | 'neutral' | 'warning' => {
+    if (status === 'aktif') return 'success';
+    if (status === 'dibatalkan') return 'warning';
+    return 'neutral';
+};
+
+const sewaLabel = (status: string) => {
+    if (status === 'aktif') return 'Aktif';
+    if (status === 'dibatalkan') return 'Dibatalkan';
+    return 'Selesai';
 };
 
 const fmt = (s: string) => new Date(s).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -50,131 +58,148 @@ export default function PenyewaShow() {
             title={penyewa.nama_lengkap}
             breadcrumb={
                 <span>
-                    <Link href={route('admin.penyewa.index')} style={{ color: '#64748B' }}>Penyewa</Link>
-                    {' / '}
-                    <span style={{ color: '#2563EB' }}>Detail</span>
+                    <Link href={route('admin.penyewa.index')} style={{ color: 'var(--ink-500)' }}>Penyewa</Link>
+                    <span style={{ color: 'var(--ink-300)', margin: '0 8px' }}>/</span>
+                    <span style={{ color: 'var(--blue-600)' }}>Detail</span>
                 </span>
             }
         >
             <Head title={penyewa.nama_lengkap} />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 16 }} className="penyewa-show-grid">
-                {/* Profile card */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center' }}>
-                    <div style={{
-                        width: 96, height: 96, borderRadius: 999, margin: '0 auto 16px',
-                        background: 'linear-gradient(135deg, #93C5FD, #2563EB)',
-                        color: 'white', display: 'grid', placeItems: 'center',
-                        fontSize: 32, fontWeight: 700,
-                    }}>{initial}</div>
-                    <h3 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, color: '#0F172A' }}>{penyewa.nama_lengkap}</h3>
-                    <div style={{ fontSize: 13, color: '#64748B', marginBottom: 12 }}>{penyewa.no_hp}</div>
-                    <span style={{
-                        display: 'inline-block', padding: '4px 12px',
-                        background: penyewa.status_aktif === 'aktif' ? '#DCFCE7' : '#F1F5F9',
-                        color: penyewa.status_aktif === 'aktif' ? '#15803D' : '#64748B',
-                        borderRadius: 999, fontSize: 12, fontWeight: 600,
-                    }}>{penyewa.status_aktif === 'aktif' ? 'Aktif' : 'Nonaktif'}</span>
-
-                    <div style={{ marginTop: 20, textAlign: 'left', fontSize: 13 }}>
-                        {[
-                            { l: 'NIK', v: penyewa.no_ktp ?? '—' },
-                            { l: 'Email', v: penyewa.user?.email ?? '— Tidak punya akun' },
-                            { l: 'Alamat Asal', v: penyewa.alamat_asal ?? '—' },
-                        ].map((r) => (
-                            <div key={r.l} style={{ padding: '8px 0', borderTop: '1px solid #F1F5F9' }}>
-                                <div style={{ color: '#94A3B8', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{r.l}</div>
-                                <div style={{ color: '#0F172A', fontWeight: 500, marginTop: 2 }}>{r.v}</div>
-                            </div>
-                        ))}
-                        {penyewa.catatan && (
-                            <div style={{ padding: '8px 0', borderTop: '1px solid #F1F5F9' }}>
-                                <div style={{ color: '#94A3B8', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Catatan</div>
-                                <p style={{ margin: '4px 0 0', color: '#475569', fontStyle: 'italic' }}>"{penyewa.catatan}"</p>
-                            </div>
-                        )}
+            <div className="penyewa-show-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
+                {/* ───── Profile card ───── */}
+                <aside style={{
+                    background: 'white', borderRadius: 16, padding: 28,
+                    border: '1px solid rgba(11,13,26,0.06)',
+                    boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                    height: 'fit-content',
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <div style={{
+                            width: 92, height: 92, borderRadius: 999, marginBottom: 16,
+                            background: 'linear-gradient(135deg, var(--blue-400), var(--blue-700))',
+                            color: 'white', display: 'grid', placeItems: 'center',
+                            fontSize: 30, fontWeight: 600, letterSpacing: '-0.02em',
+                            boxShadow: '0 4px 16px -4px rgba(37,99,235,0.4)',
+                        }}>{initial}</div>
+                        <h2 className="h-2" style={{ margin: '0 0 6px' }}>{penyewa.nama_lengkap}</h2>
+                        <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--ink-500)', fontVariantNumeric: 'tabular-nums' }}>
+                            {penyewa.no_hp}
+                        </p>
+                        <Pill tone={penyewa.status_aktif === 'aktif' ? 'success' : 'neutral'}
+                            dot={penyewa.status_aktif === 'aktif' ? 'pulse' : true}>
+                            {penyewa.status_aktif === 'aktif' ? 'Aktif' : 'Nonaktif'}
+                        </Pill>
                     </div>
+
+                    {/* Detail rows */}
+                    <dl style={{ margin: '24px 0 0', padding: 0 }}>
+                        <DetailRow label="NIK" value={penyewa.no_ktp ?? '—'} mono />
+                        <DetailRow label="Email" value={penyewa.user?.email ?? <span style={{ color: 'var(--ink-400)' }}>— Tidak punya akun</span>} />
+                        <DetailRow label="Alamat asal" value={penyewa.alamat_asal ?? '—'} />
+                        {penyewa.catatan && (
+                            <DetailRow label="Catatan" value={
+                                <span style={{ fontStyle: 'italic', color: 'var(--ink-500)' }}>"{penyewa.catatan}"</span>
+                            } />
+                        )}
+                    </dl>
 
                     <Link href={route('admin.penyewa.edit', penyewa.id)}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            width: '100%', marginTop: 16, padding: '10px 16px',
-                            borderRadius: 10, border: '1px solid #2563EB',
-                            color: '#2563EB', fontSize: 13, fontWeight: 600,
-                        }}>Edit Profil</Link>
-                </div>
+                        className="btn btn-ghost btn-sm"
+                        style={{ width: '100%', marginTop: 20, justifyContent: 'center' }}>
+                        <Icon name="edit" size={14} /> Edit profil
+                    </Link>
+                </aside>
 
-                {/* Sewa */}
+                {/* ───── Sewa stack ───── */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     {/* Sewa aktif */}
-                    <div style={{ background: 'white', borderRadius: 14, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                        <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#0F172A' }}>Sewa Aktif</h3>
+                    <section style={{
+                        background: 'white', borderRadius: 16, padding: 28,
+                        border: '1px solid rgba(11,13,26,0.06)',
+                        boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                    }}>
+                        <header style={{ marginBottom: 20 }}>
+                            <p style={KICKER}>Kontrak berjalan</p>
+                            <h2 className="h-2" style={{ margin: '4px 0 0' }}>Sewa aktif.</h2>
+                        </header>
                         {sewaAktif ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-                                {[
-                                    { l: 'Kamar', v: `${sewaAktif.kamar_nomor} (${sewaAktif.tipe.toUpperCase()})` },
-                                    { l: 'Tgl Mulai', v: fmt(sewaAktif.tgl_mulai) },
-                                    { l: 'Tgl Selesai', v: sewaAktif.tgl_selesai ? fmt(sewaAktif.tgl_selesai) : 'Belum ditentukan' },
-                                    { l: 'Harga / bulan', v: formatRp(sewaAktif.harga_disepakati) },
-                                ].map((r) => (
-                                    <div key={r.l} style={{ padding: 12, background: '#F8FAFC', borderRadius: 10 }}>
-                                        <div style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{r.l}</div>
-                                        <div style={{ fontSize: 14, fontWeight: 600, color: '#0F172A', marginTop: 2 }}>{r.v}</div>
-                                    </div>
-                                ))}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                                gap: 12,
+                            }}>
+                                <StatTile label="Kamar" value={`${sewaAktif.kamar_nomor}`} sub={sewaAktif.tipe.toUpperCase()} />
+                                <StatTile label="Mulai" value={fmt(sewaAktif.tgl_mulai)} />
+                                <StatTile label="Selesai" value={sewaAktif.tgl_selesai ? fmt(sewaAktif.tgl_selesai) : 'Belum ditentukan'} />
+                                <StatTile label="Harga / bulan" value={formatRp(sewaAktif.harga_disepakati)} accent />
                             </div>
                         ) : (
-                            <p style={{ margin: 0, fontSize: 14, color: '#94A3B8' }}>
-                                Belum ada sewa aktif. Tugaskan kamar dari halaman penyewa (form Tambah/Edit dengan section Kontrak Sewa).
-                            </p>
+                            <EmptyState
+                                icon="bed"
+                                title="Belum ada sewa aktif."
+                                desc="Tugaskan kamar dari halaman edit penyewa atau buat kontrak baru."
+                            />
                         )}
-                    </div>
+                    </section>
 
                     {/* Riwayat */}
-                    <div style={{ background: 'white', borderRadius: 14, padding: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                        <div style={{ padding: '16px 24px', borderBottom: '1px solid #F1F5F9' }}>
-                            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0F172A' }}>Riwayat Sewa</h3>
-                        </div>
+                    <section style={{
+                        background: 'white', borderRadius: 16, overflow: 'hidden',
+                        border: '1px solid rgba(11,13,26,0.06)',
+                        boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                    }}>
+                        <header style={{ padding: '20px 28px 16px' }}>
+                            <p style={KICKER}>Histori</p>
+                            <h2 className="h-2" style={{ margin: '4px 0 0' }}>Riwayat sewa.</h2>
+                        </header>
                         {penyewa.sewa.length === 0 ? (
-                            <div style={{ padding: 24, textAlign: 'center', color: '#94A3B8', fontSize: 14 }}>
-                                Belum ada riwayat.
+                            <div style={{ padding: '0 28px 24px' }}>
+                                <EmptyState icon="receipt" title="Belum ada riwayat." desc="Kontrak yang dibuat untuk penyewa ini akan muncul di sini." />
                             </div>
                         ) : (
-                            <div style={{ overflow: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                            <div style={{ overflow: 'auto', borderTop: '1px solid rgba(11,13,26,0.06)' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead>
-                                        <tr style={{ background: '#F8FAFC' }}>
+                                        <tr>
                                             {['Kamar', 'Periode', 'Harga', 'Status', 'Tagihan'].map((h) => (
-                                                <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>{h}</th>
+                                                <th key={h} style={{
+                                                    padding: '14px 20px', textAlign: 'left',
+                                                    fontSize: 11, fontWeight: 600, color: 'var(--ink-500)',
+                                                    textTransform: 'uppercase', letterSpacing: '0.06em',
+                                                    background: 'var(--ink-50)',
+                                                }}>{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {penyewa.sewa.map((s) => {
-                                            const meta = statusPill(s.status);
-                                            return (
-                                                <tr key={s.id} style={{ borderTop: '1px solid #F1F5F9' }}>
-                                                    <td style={{ padding: '12px 20px', fontWeight: 500 }}>{s.kamar_nomor}</td>
-                                                    <td style={{ padding: '12px 20px', color: '#475569', fontSize: 12 }}>
-                                                        {fmt(s.tgl_mulai)} — {s.tgl_selesai ? fmt(s.tgl_selesai) : 'sekarang'}
-                                                    </td>
-                                                    <td style={{ padding: '12px 20px' }}>{formatRp(s.harga_disepakati)}</td>
-                                                    <td style={{ padding: '12px 20px' }}>
-                                                        <span style={{
-                                                            display: 'inline-block', padding: '3px 10px',
-                                                            background: meta.bg, color: meta.color,
-                                                            borderRadius: 999, fontSize: 11, fontWeight: 600,
-                                                        }}>{meta.label}</span>
-                                                    </td>
-                                                    <td style={{ padding: '12px 20px', color: '#475569' }}>{s.jumlah_tagihan} tagihan</td>
-                                                </tr>
-                                            );
-                                        })}
+                                        {penyewa.sewa.map((s) => (
+                                            <tr key={s.id} style={{ borderTop: '1px solid rgba(11,13,26,0.06)' }}>
+                                                <td style={{ padding: '14px 20px', fontWeight: 500, color: 'var(--ink-900)', fontSize: 14 }}>
+                                                    {s.kamar_nomor}
+                                                    <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--ink-400)', letterSpacing: '0.04em' }}>
+                                                        {s.tipe.toUpperCase()}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '14px 20px', color: 'var(--ink-500)', fontSize: 12.5, fontVariantNumeric: 'tabular-nums' }}>
+                                                    {fmt(s.tgl_mulai)} — {s.tgl_selesai ? fmt(s.tgl_selesai) : 'sekarang'}
+                                                </td>
+                                                <td style={{ padding: '14px 20px', color: 'var(--ink-800)', fontSize: 13.5, fontVariantNumeric: 'tabular-nums' }}>
+                                                    {formatRp(s.harga_disepakati)}
+                                                </td>
+                                                <td style={{ padding: '14px 20px' }}>
+                                                    <Pill tone={sewaTone(s.status)}>{sewaLabel(s.status)}</Pill>
+                                                </td>
+                                                <td style={{ padding: '14px 20px', color: 'var(--ink-500)', fontSize: 13 }}>
+                                                    {s.jumlah_tagihan} tagihan
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
                         )}
-                    </div>
+                    </section>
                 </div>
             </div>
 
@@ -186,3 +211,67 @@ export default function PenyewaShow() {
         </AdminLayout>
     );
 }
+
+/* ───── Subcomponents ───── */
+
+const DetailRow = ({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) => (
+    <div style={{
+        display: 'flex', flexDirection: 'column', gap: 2,
+        padding: '12px 0',
+        borderTop: '1px solid rgba(11,13,26,0.06)',
+    }}>
+        <dt style={{
+            fontSize: 11, color: 'var(--ink-400)',
+            textTransform: 'uppercase', letterSpacing: '0.06em',
+            fontWeight: 500,
+        }}>{label}</dt>
+        <dd style={{
+            margin: 0, fontSize: 14, color: 'var(--ink-900)', fontWeight: 500,
+            fontVariantNumeric: mono ? 'tabular-nums' : undefined,
+            wordBreak: 'break-word',
+        }}>{value}</dd>
+    </div>
+);
+
+const StatTile = ({ label, value, sub, accent = false }: { label: string; value: string; sub?: string; accent?: boolean }) => (
+    <div style={{
+        padding: 14, borderRadius: 12,
+        background: accent ? 'var(--blue-50)' : 'var(--ink-50)',
+        border: `1px solid ${accent ? 'rgba(37,99,235,0.1)' : 'rgba(11,13,26,0.04)'}`,
+    }}>
+        <div style={{
+            fontSize: 10.5, color: accent ? 'var(--blue-700)' : 'var(--ink-400)',
+            textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600,
+        }}>{label}</div>
+        <div style={{
+            marginTop: 4, fontSize: 14.5, fontWeight: 600,
+            color: accent ? 'var(--blue-700)' : 'var(--ink-900)',
+            fontVariantNumeric: 'tabular-nums',
+        }}>{value}</div>
+        {sub && (
+            <div style={{ marginTop: 2, fontSize: 11, color: 'var(--ink-500)', letterSpacing: '0.04em' }}>
+                {sub}
+            </div>
+        )}
+    </div>
+);
+
+const EmptyState = ({ icon, title, desc }: { icon: 'bed' | 'receipt' | 'user'; title: string; desc: string }) => (
+    <div style={{
+        padding: '24px 16px', textAlign: 'center',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+        color: 'var(--ink-500)',
+    }}>
+        <div style={{
+            width: 48, height: 48, borderRadius: 12,
+            background: 'var(--ink-50)', color: 'var(--ink-400)',
+            display: 'grid', placeItems: 'center',
+        }}>
+            <Icon name={icon} size={22} />
+        </div>
+        <div>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-800)', fontWeight: 500 }}>{title}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--ink-500)', maxWidth: '40ch' }}>{desc}</p>
+        </div>
+    </div>
+);
