@@ -8,6 +8,7 @@ use App\Models\Komplain;
 use App\Services\NotifikasiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -24,7 +25,7 @@ class KomplainController extends Controller
         $items = [];
         if ($penyewa) {
             $items = $penyewa->komplain()
-                ->with('kamar')
+                ->with(['kamar', 'foto'])
                 ->get()
                 ->map(fn ($k) => [
                     'id' => $k->id,
@@ -34,6 +35,10 @@ class KomplainController extends Controller
                     'kamar_nomor' => $k->kamar?->nomor_kamar ?? '-',
                     'created_at' => $k->created_at->toDateString(),
                     'resolved_at' => optional($k->resolved_at)->toDateString(),
+                    'foto' => $k->foto->map(fn ($f) => [
+                        'id' => $f->id,
+                        'url' => Storage::disk(config('filesystems.default'))->url($f->url),
+                    ])->values(),
                 ])
                 ->all();
         }
@@ -83,6 +88,14 @@ class KomplainController extends Controller
             'deskripsi' => $request->input('deskripsi'),
             'status' => Komplain::STATUS_MENUNGGU,
         ]);
+
+        // Upload foto bukti (max 3 per StoreKomplainRequest validation)
+        if ($request->hasFile('foto')) {
+            foreach ($request->file('foto') as $file) {
+                $path = $file->store('komplain/'.$komplain->id, config('filesystems.default'));
+                $komplain->foto()->create(['url' => $path]);
+            }
+        }
 
         NotifikasiService::notifyKomplenBaru(
             $penyewa->nama_lengkap,

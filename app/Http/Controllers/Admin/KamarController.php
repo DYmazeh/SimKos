@@ -79,7 +79,7 @@ class KamarController extends Controller
                 $q->with(['penyewa', 'tagihan'])->orderBy('tgl_mulai', 'desc');
             },
             'komplain' => function ($q) {
-                $q->with('penyewa');
+                $q->with(['penyewa', 'foto']);
             },
         ]);
 
@@ -104,6 +104,10 @@ class KamarController extends Controller
                 'status' => $k->status,
                 'created_at' => $k->created_at->format('Y-m-d'),
                 'resolved_at' => optional($k->resolved_at)->format('Y-m-d'),
+                'foto' => $k->foto->map(fn ($f) => [
+                    'id' => $f->id,
+                    'url' => Storage::disk(config('filesystems.default'))->url($f->url),
+                ])->values(),
             ])->values(),
         ]);
     }

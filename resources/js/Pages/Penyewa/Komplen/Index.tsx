@@ -11,6 +11,7 @@ type KomplenItem = {
     kamar_nomor: string;
     created_at: string;
     resolved_at: string | null;
+    foto: Array<{ id: number; url: string }>;
 };
 
 type IndexProps = PageProps<{
@@ -129,6 +130,16 @@ const KomplenCard = ({ komplen }: { komplen: KomplenItem }) => {
                 </Pill>
             </header>
             <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink-700)', lineHeight: 1.6 }}>{komplen.deskripsi}</p>
+            {komplen.foto.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                    {komplen.foto.map((f) => (
+                        <a key={f.id} href={f.url} target="_blank" rel="noopener noreferrer"
+                            style={{ display: 'block', width: 80, height: 60, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.08)' }}>
+                            <img src={f.url} alt="Foto bukti" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </a>
+                    ))}
+                </div>
+            )}
         </article>
     );
 };

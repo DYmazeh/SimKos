@@ -37,6 +37,7 @@ type KomplenItem = {
     status: 'menunggu' | 'diproses' | 'selesai';
     created_at: string;
     resolved_at: string | null;
+    foto: Array<{ id: number; url: string }>;
 };
 
 type ShowProps = PageProps<{
@@ -362,6 +363,16 @@ export default function KamarShow() {
                                         <td style={{ padding: '14px 22px', fontSize: 13, color: 'var(--ink-700)', maxWidth: 380 }}>
                                             <div style={{ fontWeight: 500, color: 'var(--ink-900)', marginBottom: 4 }}>{k.judul}</div>
                                             <div style={{ fontSize: 12.5, color: 'var(--ink-500)', lineHeight: 1.55 }}>{k.deskripsi}</div>
+                                            {k.foto.length > 0 && (
+                                                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                                                    {k.foto.map((f) => (
+                                                        <a key={f.id} href={f.url} target="_blank" rel="noopener noreferrer"
+                                                            style={{ display: 'block', width: 56, height: 42, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.08)' }}>
+                                                            <img src={f.url} alt="Foto bukti komplen" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </td>
                                         <td style={{ padding: '14px 22px' }}>
                                             <Pill tone={komplenTone(k.status)}>{komplenLabel(k.status)}</Pill>

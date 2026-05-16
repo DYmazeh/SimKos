@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import type { FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { Field, Icon, Input } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
@@ -23,14 +23,29 @@ export default function KomplenCreate() {
     const { props } = usePage<CreateProps>();
     const { kamar } = props;
 
-    const form = useForm({
+    const form = useForm<{ judul: string; deskripsi: string; foto: File[] }>({
         judul: '',
         deskripsi: '',
+        foto: [],
     });
+    const [fotoPreviews, setFotoPreviews] = useState<Array<{ url: string; name: string }>>([]);
+
+    const onFotoInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        const merged = [...form.data.foto, ...files].slice(0, 3);
+        form.setData('foto', merged);
+        setFotoPreviews(merged.map((f) => ({ url: URL.createObjectURL(f), name: f.name })));
+    };
+
+    const removeFoto = (idx: number) => {
+        const next = form.data.foto.filter((_, i) => i !== idx);
+        form.setData('foto', next);
+        setFotoPreviews(next.map((f) => ({ url: URL.createObjectURL(f), name: f.name })));
+    };
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        form.post(route('penyewa.komplen.store'));
+        form.post(route('penyewa.komplen.store'), { forceFormData: true });
     };
 
     return (
@@ -102,6 +117,50 @@ export default function KomplenCreate() {
                             placeholder="Tuliskan detail komplen di sini…"
                             rows={6}
                             style={{ fontFamily: 'inherit', resize: 'vertical', height: 'auto', padding: 12 }} />
+                    </Field>
+
+                    <Field label="Foto bukti (opsional, maks. 3)" htmlFor="foto" error={form.errors.foto as unknown as string}
+                        helper="Foto AC bocor, pintu rusak, kerusakan lain — bantu pengelola paham lebih cepat.">
+                        <div>
+                            <label htmlFor="foto_input" style={{
+                                display: 'block', cursor: 'pointer', textAlign: 'center',
+                                border: '2px dashed rgba(11,13,26,0.15)', borderRadius: 12,
+                                padding: 24, background: 'var(--ink-50)',
+                                transition: 'all 180ms var(--ease)',
+                            }}>
+                                <Icon name="image" size={22} style={{ color: 'var(--blue-600)' }} />
+                                <div style={{ marginTop: 8, fontSize: 13.5, color: 'var(--ink-900)', fontWeight: 500 }}>
+                                    {form.data.foto.length > 0
+                                        ? `${form.data.foto.length}/3 foto ditambahkan — klik untuk tambah`
+                                        : 'Klik untuk pilih foto'}
+                                </div>
+                                <div style={{ fontSize: 12, color: 'var(--ink-400)', marginTop: 2 }}>JPG, PNG, WebP — maks 5MB per foto</div>
+                            </label>
+                            <input id="foto_input" type="file" multiple
+                                accept="image/jpeg,image/png,image/webp"
+                                style={{ display: 'none' }}
+                                onChange={onFotoInput} />
+
+                            {fotoPreviews.length > 0 && (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 12 }}>
+                                    {fotoPreviews.map((p, idx) => (
+                                        <div key={idx} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
+                                            <img src={p.url} alt={`Preview ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <button type="button" onClick={() => removeFoto(idx)}
+                                                aria-label="Hapus foto"
+                                                style={{
+                                                    position: 'absolute', top: 6, right: 6,
+                                                    width: 24, height: 24, borderRadius: 999,
+                                                    background: 'rgba(210,68,50,0.95)', color: 'white', border: 0,
+                                                    display: 'grid', placeItems: 'center', cursor: 'pointer',
+                                                }}>
+                                                <Icon name="x" size={13} stroke={2.5} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </Field>
                 </section>
 
