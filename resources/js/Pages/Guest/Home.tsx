@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { TopNav, Footer, waLink } from '@/components/ui';
-import Reveal from '@/components/Reveal';
+import { Slide } from '@/components/guest/parts';
 import {
     Hero,
     GaleriSection,
@@ -11,8 +11,6 @@ import {
     TestimoniSection,
     PeraturanSection,
     FaqSection,
-    TentangSection,
-    OwnerSection,
     KontakSection,
     StickyWA,
     type KamarSummary,
@@ -42,31 +40,52 @@ export default function Home() {
         <>
             <Head title="Beranda" />
 
-            <div className="bg-radial" style={{ minHeight: '100vh' }}>
-                <TopNav authenticated={!!auth.user} />
-                {/* Hero langsung visible (above-the-fold) — gunakan animasi internal CSS */}
-                <Hero available={kamarTersediaCount} startingPrice={priceRange.min} waUrl={waUrl} />
-                <Reveal direction="up" distance={32}>
+            <TopNav authenticated={!!auth.user} />
+
+            <main className="snap-scroll-root bg-radial">
+                <Slide id="top" bgImage="/images/kos/hero-exterior.jpg">
+                    <Hero available={kamarTersediaCount} startingPrice={priceRange.min} waUrl={waUrl} />
+                </Slide>
+
+                <Slide>
                     <KamarFeaturedSection kamar={kamarFeatured} />
-                </Reveal>
-            </div>
+                </Slide>
 
-            <Reveal direction="up"><GaleriSection /></Reveal>
-            <Reveal direction="up"><BiayaSection minPrice={priceRange.min} maxPrice={priceRange.max} /></Reveal>
-            <Reveal direction="up"><LokasiSection alamat={profil.alamat} /></Reveal>
+                <Slide>
+                    <GaleriSection />
+                </Slide>
 
-            {/* Dark sections */}
-            <Reveal direction="up"><CaraKerjaSection /></Reveal>
-            <Reveal direction="scale"><OwnerSection /></Reveal>
+                <Slide>
+                    <LokasiSection alamat={profil.alamat} />
+                </Slide>
 
-            {/* Back to light */}
-            <Reveal direction="up"><TestimoniSection items={testimoni} /></Reveal>
-            <Reveal direction="up"><PeraturanSection items={faqPeraturan} /></Reveal>
-            <Reveal direction="up"><FaqSection items={faqUmum} /></Reveal>
-            <Reveal direction="up"><TentangSection profil={profil} /></Reveal>
-            <Reveal direction="up"><KontakSection waUrl={waUrl} phone={profil.wa_number} /></Reveal>
+                <Slide dark>
+                    <CaraKerjaSection />
+                </Slide>
 
-            <Footer dark />
+                <Slide>
+                    <BiayaSection minPrice={priceRange.min} maxPrice={priceRange.max} />
+                </Slide>
+
+                <Slide>
+                    <TestimoniSection items={testimoni} />
+                </Slide>
+
+                <Slide>
+                    <PeraturanSection items={faqPeraturan} />
+                </Slide>
+
+                <Slide>
+                    <FaqSection items={faqUmum} />
+                </Slide>
+
+                <Slide>
+                    <KontakSection waUrl={waUrl} phone={profil.wa_number} />
+                </Slide>
+
+                <Footer dark />
+            </main>
+
             <StickyWA waNumber={profil.wa_number} />
         </>
     );

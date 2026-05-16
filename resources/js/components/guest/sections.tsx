@@ -46,7 +46,7 @@ export type ProfilKos = {
 };
 
 /* ============================================================
-   HERO — no dashboard preview, CTA: Lihat kamar + Chat WA
+   HERO — full-viewport, optional bg image, CTA: Lihat kamar + Chat WA
    ============================================================ */
 export const Hero = ({
     available,
@@ -57,23 +57,23 @@ export const Hero = ({
     startingPrice: number;
     waUrl: string | null;
 }) => (
-    <section style={{ paddingTop: 56, paddingBottom: 56 }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+    <section style={{ padding: '40px 24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
             <div className="pill pill-neutral" style={{ marginBottom: 20 }}>
                 <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--success)' }} className="pulse-dot" />
                 {available} kamar tersedia · mulai {formatRp(startingPrice)}/bln
             </div>
 
-            <h1 className="h-display" style={{ margin: 0, marginBottom: 16, color: 'var(--ink-900)', maxWidth: '20ch', marginLeft: 'auto', marginRight: 'auto' }}>
-                Kos yang dikelola,<br />
+            <h1 className="h-display" style={{ margin: 0, marginBottom: 16, color: 'var(--ink-900)', maxWidth: '22ch', marginLeft: 'auto', marginRight: 'auto' }}>
+                Kos di pusat Kedaton,<br />
                 <span style={{ background: 'linear-gradient(120deg, var(--ink-900), var(--blue-600) 80%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
-                    jelas dan tenang.
+                    dekat Pasar Koga.
                 </span>
             </h1>
 
-            <p style={{ fontSize: 18, lineHeight: 1.6, color: 'var(--ink-500)', maxWidth: '52ch', margin: '0 auto 28px' }}>
-                Satu sistem untuk data kamar, penyewa, tagihan, dan verifikasi pembayaran.
-                Transparan untuk penghuni, efisien untuk pengelola.
+            <p style={{ fontSize: 18, lineHeight: 1.6, color: 'var(--ink-700)', maxWidth: '54ch', margin: '0 auto 28px' }}>
+                Jl. Teuku Umar, 5 menit jalan kaki ke Pasar Koga, dekat kampus Unila &amp; Teknokrat,
+                serta rumah sakit besar. Pembayaran transparan, semua dikelola di satu sistem.
             </p>
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -88,35 +88,58 @@ export const Hero = ({
                     </a>
                 )}
             </div>
+
+            <div style={{ marginTop: 32, fontSize: 13, color: 'var(--ink-400)', display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
+                <span>Scroll untuk lihat detail</span>
+                <span aria-hidden="true">↓</span>
+            </div>
         </div>
     </section>
 );
 
 /* ============================================================
-   GALERI PROPERTI — fasilitas umum
+   GALERI PROPERTI — fasilitas umum, pakai foto real (fallback gradient)
    ============================================================ */
 export const GaleriSection = () => {
-    const items: Array<{ label: string; accent: 'blue' | 'slate' | 'warm' | 'teal' | 'rose'; span?: number }> = [
-        { label: 'Tampak depan', accent: 'blue', span: 2 },
-        { label: 'Ruang bersama', accent: 'slate' },
-        { label: 'Dapur', accent: 'warm' },
-        { label: 'Parkir', accent: 'teal' },
-        { label: 'Area cuci', accent: 'rose' },
+    const items: Array<{ label: string; src: string; accent: 'blue' | 'slate' | 'warm' | 'teal' | 'rose'; span?: number }> = [
+        { label: 'Tampak depan', src: '/images/kos/gallery-front.jpg', accent: 'blue', span: 2 },
+        { label: 'Ruang bersama', src: '/images/kos/gallery-living.jpg', accent: 'slate' },
+        { label: 'Dapur', src: '/images/kos/gallery-kitchen.jpg', accent: 'warm' },
+        { label: 'Parkir', src: '/images/kos/gallery-parking.jpg', accent: 'teal' },
+        { label: 'Area cuci', src: '/images/kos/gallery-laundry.jpg', accent: 'rose' },
     ];
     return (
-        <section style={{ padding: '64px 24px' }}>
-            <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+        <section id="galeri" style={{ scrollMarginTop: 80, padding: '64px 24px' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
                 <SectionHeader kicker="Properti" title="Lihat kos sebelum datang." desc="Foto fasilitas umum yang tersedia untuk seluruh penghuni." />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: '180px', gap: 12 }} className="gal-grid">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: '220px', gap: 12 }} className="gal-grid">
                     {items.map((it, i) => (
-                        <div key={i} style={{ gridColumn: it.span === 2 ? 'span 2' : 'span 1' }}>
-                            <PhotoPlaceholder label={it.label} accent={it.accent} height="100%" />
+                        <div key={i} style={{ gridColumn: it.span === 2 ? 'span 2' : 'span 1', position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.05)' }}>
+                            <GalleryImage src={it.src} alt={it.label} accent={it.accent} />
+                            <div style={{ position: 'absolute', left: 12, bottom: 12, padding: '6px 10px', borderRadius: 8, background: 'rgba(11,13,26,0.75)', color: 'white', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', backdropFilter: 'blur(6px)' }}>
+                                {it.label}
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
             <style>{`@media (max-width: 720px) { .gal-grid { grid-template-columns: 1fr 1fr !important; } .gal-grid > div { grid-column: span 1 !important; } }`}</style>
         </section>
+    );
+};
+
+/* helper internal: img dengan onError fallback ke PhotoPlaceholder */
+const GalleryImage = ({ src, alt, accent }: { src: string; alt: string; accent: 'blue' | 'slate' | 'warm' | 'teal' | 'rose' }) => {
+    const [failed, setFailed] = useState(false);
+    if (failed) return <PhotoPlaceholder label={alt} accent={accent} height="100%" />;
+    return (
+        <img
+            src={src}
+            alt={alt}
+            onError={() => setFailed(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            loading="lazy"
+        />
     );
 };
 
@@ -143,19 +166,41 @@ export const KamarFeaturedSection = ({ kamar }: { kamar: KamarSummary[] }) => (
 );
 
 /* ============================================================
-   KAMAR CARD (re-used di home + list)
+   KAMAR CARD (re-used di home + list) — image fallback per-tipe
    ============================================================ */
+export const tipeImage = (tipe: string) => `/images/kos/kamar-${tipe}.jpg`;
+
 export const KamarCard = ({ kamar }: { kamar: KamarSummary }) => {
     const tipeColor: 'warning' | 'info' | 'neutral' =
         kamar.tipe === 'vip' ? 'warning' : kamar.tipe === 'deluxe' ? 'info' : 'neutral';
+    const [imgFailed, setImgFailed] = useState(false);
+    const firstFoto: string | null = (() => {
+        if (!kamar.foto) return null;
+        const f = kamar.foto[0] as unknown;
+        if (typeof f === 'string') return f;
+        if (f && typeof f === 'object' && 'url' in (f as Record<string, unknown>)) {
+            return (f as { url: string }).url;
+        }
+        return null;
+    })();
+    const imgSrc = firstFoto || tipeImage(kamar.tipe);
     return (
         <Link
             href={route('guest.kamar.show', { kamar: kamar.id })}
             className="card-solid kamar-card"
             style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
         >
-            <div style={{ height: 140, background: 'linear-gradient(135deg, var(--ink-50), var(--blue-50))', position: 'relative', borderBottom: '1px solid rgba(11,13,26,0.05)' }}>
-                <div className="stripe" style={{ position: 'absolute', inset: 0, opacity: 0.5 }} />
+            <div style={{ height: 180, position: 'relative', borderBottom: '1px solid rgba(11,13,26,0.05)', background: 'linear-gradient(135deg, var(--ink-50), var(--blue-50))', overflow: 'hidden' }}>
+                {!imgFailed && (
+                    <img
+                        src={imgSrc}
+                        alt={`Kamar ${kamar.nomor_kamar}`}
+                        onError={() => setImgFailed(true)}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        loading="lazy"
+                    />
+                )}
+                <div className="stripe" style={{ position: 'absolute', inset: 0, opacity: imgFailed ? 0.5 : 0, transition: 'opacity 200ms' }} />
                 <div style={{ position: 'absolute', top: 12, left: 12 }}>
                     <Pill tone={tipeColor}>{kamar.tipe.toUpperCase()}</Pill>
                 </div>
@@ -215,7 +260,7 @@ export const BiayaSection = ({ minPrice, maxPrice }: { minPrice: number; maxPric
         { item: 'Denda telat', value: 'Rp 25.000 / 3 hari', note: 'Berlaku setelah jatuh tempo lewat' },
     ];
     return (
-        <section style={{ padding: '64px 24px', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(4px)', borderTop: '1px solid rgba(11,13,26,0.04)' }}>
+        <section id="biaya" style={{ scrollMarginTop: 80, padding: '64px 24px', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(4px)', borderTop: '1px solid rgba(11,13,26,0.04)' }}>
             <div style={{ maxWidth: 920, margin: '0 auto' }}>
                 <SectionHeader kicker="Struktur biaya" title="Semua biaya, terbuka di muka." desc="Tidak ada biaya tersembunyi. Semua komponen pembayaran tertera di sini sebelum Anda booking." />
                 <div className="card-solid" style={{ padding: 0, overflow: 'hidden' }}>
@@ -239,59 +284,75 @@ export const BiayaSection = ({ minPrice, maxPrice }: { minPrice: number; maxPric
 };
 
 /* ============================================================
-   LOKASI & SEKITAR
+   LOKASI & SEKITAR — Google Maps embed + POI Kedaton Bandar Lampung
    ============================================================ */
 export const LokasiSection = ({ alamat }: { alamat: string }) => {
-    const landmarks: Array<{ name: string; distance: string; icon: 'map-pin' | 'shield' | 'home' | 'wallet' }> = [
-        { name: 'Kampus UGM', distance: '8 menit motor', icon: 'map-pin' },
-        { name: 'Halte TransJogja', distance: '3 menit jalan kaki', icon: 'map-pin' },
-        { name: 'Indomaret', distance: '1 menit jalan kaki', icon: 'map-pin' },
-        { name: 'RS Sardjito', distance: '12 menit motor', icon: 'shield' },
-        { name: 'Masjid', distance: '5 menit jalan kaki', icon: 'home' },
-        { name: 'Pasar Demangan', distance: '6 menit motor', icon: 'wallet' },
-        { name: 'ATM BCA & BNI', distance: '2 menit jalan kaki', icon: 'wallet' },
-        { name: 'Warung makan', distance: 'Banyak di sekitar', icon: 'home' },
+    // Koordinat: Kos di Jl. Teuku Umar / Pasar Koga area, Kedaton, Bandar Lampung
+    const lat = -5.3926173;
+    const lng = 105.264344;
+    const landmarks: Array<{ name: string; distance: string; icon: 'map-pin' | 'shield' | 'home' | 'wallet'; highlight?: boolean }> = [
+        { name: 'Pasar Koga', distance: '±300 m · 5 menit jalan kaki', icon: 'map-pin', highlight: true },
+        { name: 'Mall Boemi Kedaton', distance: '±500 m · 7 menit jalan kaki', icon: 'wallet' },
+        { name: 'Kantor Kec. Kedaton', distance: '±600 m · 2 menit motor', icon: 'home' },
+        { name: 'Radisson Lampung Kedaton', distance: '±900 m · 3 menit motor', icon: 'home' },
+        { name: 'RS Advent Bandar Lampung', distance: '±1,2 km · 4 menit motor', icon: 'shield' },
+        { name: 'Universitas Teknokrat', distance: '±1,5 km · 5 menit motor', icon: 'map-pin' },
+        { name: 'Universitas Lampung (Unila)', distance: '±1,8 km · 6 menit motor', icon: 'map-pin' },
+        { name: 'RS Bumi Waras', distance: '±2,5 km · 8 menit motor', icon: 'shield' },
+        { name: 'RSUD Abdul Moeloek', distance: '±3,5 km · 12 menit motor', icon: 'shield' },
+        { name: 'Indomaret/Alfamart', distance: '±200 m · 3 menit jalan kaki', icon: 'wallet' },
+        { name: 'Jl. Teuku Umar (jalan utama)', distance: '50 m · 1 menit jalan kaki', icon: 'map-pin' },
+        { name: 'Bandara Radin Inten II', distance: '±25 km · 40 menit', icon: 'map-pin' },
     ];
-    const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(alamat)}`;
+    const mapUrl = `https://www.google.com/maps/place/${lat},${lng}/@${lat},${lng},17z`;
+    const embedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed`;
     return (
-        <section style={{ padding: '64px 24px' }}>
-            <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-                <SectionHeader kicker="Lokasi" title="Strategis di pusat aktivitas." desc={`${alamat}. Dekat kampus, transportasi umum, dan kebutuhan harian.`} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 24, alignItems: 'stretch' }} className="lokasi-grid">
-                    <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.08)', background: 'var(--ink-50)', position: 'relative', minHeight: 340 }}>
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)' }}>
-                            <svg viewBox="0 0 400 340" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                                <path d="M0,220 L120,180 L240,210 L400,160" stroke="rgba(255,255,255,0.7)" strokeWidth="14" fill="none" strokeLinecap="round" />
-                                <path d="M0,80 L160,120 L300,60 L400,100" stroke="rgba(255,255,255,0.5)" strokeWidth="10" fill="none" strokeLinecap="round" />
-                                <path d="M180,0 L160,340" stroke="rgba(255,255,255,0.4)" strokeWidth="8" fill="none" />
-                                <circle cx="200" cy="170" r="12" fill="var(--blue-600)" stroke="white" strokeWidth="3" />
-                                <circle cx="200" cy="170" r="22" fill="var(--blue-600)" opacity="0.2" />
-                            </svg>
+        <section id="lokasi" style={{ scrollMarginTop: 80, padding: '64px 24px' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <SectionHeader kicker="Lokasi" title="Pusat Kedaton, dekat Pasar Koga." desc={`${alamat}. Strategis di Jl. Teuku Umar — 5 menit jalan kaki ke Pasar Koga, dekat kampus Unila & Teknokrat, dan beberapa rumah sakit besar.`} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 24, alignItems: 'stretch' }} className="lokasi-grid">
+                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.08)', background: 'var(--ink-50)', position: 'relative', minHeight: 480 }}>
+                    <iframe
+                        title="Lokasi SimKos di Kedaton, Bandar Lampung"
+                        src={embedUrl}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        style={{ width: '100%', height: '100%', border: 0, display: 'block', minHeight: 480 }}
+                    />
+                    <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, pointerEvents: 'none' }}>
+                        <div style={{ padding: '10px 14px', borderRadius: 12, background: 'white', boxShadow: 'var(--shadow-2)', fontSize: 13, pointerEvents: 'auto' }}>
+                            <div style={{ fontSize: 11, color: 'var(--ink-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Alamat</div>
+                            <div style={{ fontWeight: 600, color: 'var(--ink-900)' }}>{alamat}</div>
                         </div>
-                        <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                            <div style={{ padding: '10px 14px', borderRadius: 12, background: 'white', boxShadow: 'var(--shadow-2)', fontSize: 13 }}>
-                                <div style={{ fontSize: 11, color: 'var(--ink-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Lokasi</div>
-                                <div style={{ fontWeight: 600, color: 'var(--ink-900)' }}>{alamat}</div>
-                            </div>
-                            <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">Buka di Maps</a>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-800)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tempat penting terdekat</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                            {landmarks.map((l, i) => (
-                                <div key={i} style={{ padding: '12px 14px', borderRadius: 12, background: 'white', border: '1px solid rgba(11,13,26,0.06)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--blue-600)', marginBottom: 4 }}>
-                                        <Icon name={l.icon} size={14} />
-                                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-900)' }}>{l.name}</span>
-                                    </div>
-                                    <div style={{ fontSize: 12, color: 'var(--ink-500)', marginLeft: 22 }}>{l.distance}</div>
-                                </div>
-                            ))}
-                        </div>
+                        <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm" style={{ pointerEvents: 'auto' }}>
+                            Petunjuk Arah <Icon name="arrow-right" size={14} />
+                        </a>
                     </div>
                 </div>
+
+                <div style={{ maxHeight: 480, overflowY: 'auto', paddingRight: 4 }} data-lenis-prevent>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-800)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tempat penting terdekat</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {landmarks.map((l, i) => (
+                            <div key={i} style={{
+                                padding: '12px 14px',
+                                borderRadius: 12,
+                                background: l.highlight ? 'linear-gradient(135deg, var(--blue-50), white)' : 'white',
+                                border: l.highlight ? '1px solid var(--blue-200, rgba(37,99,235,0.25))' : '1px solid rgba(11,13,26,0.06)',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: l.highlight ? 'var(--blue-700)' : 'var(--blue-600)', marginBottom: 4 }}>
+                                    <Icon name={l.icon} size={14} />
+                                    <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ink-900)' }}>{l.name}</span>
+                                    {l.highlight && (
+                                        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--blue-700)', background: 'var(--blue-100)', padding: '2px 6px', borderRadius: 999, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Terdekat</span>
+                                    )}
+                                </div>
+                                <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginLeft: 22 }}>{l.distance}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
             </div>
             <style>{`@media (max-width: 860px) { .lokasi-grid { grid-template-columns: 1fr !important; } }`}</style>
         </section>
@@ -311,7 +372,7 @@ export const CaraKerjaSection = () => {
         { n: '06', icon: 'shield', title: 'Selesai dan tenang', desc: 'Pengingat tagihan dikirim otomatis via WhatsApp menjelang jatuh tempo. Tidak ada yang terlewat.' },
     ];
     return (
-        <section id="cara" style={{ scrollMarginTop: 80, background: 'var(--dark-bg)', padding: '80px 24px' }}>
+        <section id="cara-kerja" style={{ scrollMarginTop: 80, background: 'var(--dark-bg)', padding: '80px 24px' }}>
             <div style={{ maxWidth: 1120, margin: '0 auto' }}>
                 <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--teal-500)', margin: 0 }}>Cara kerja</p>
                 <h2 style={{ fontSize: 'clamp(28px, 4vw, 38px)', lineHeight: 1.15, letterSpacing: '-0.025em', fontWeight: 500, color: 'var(--dark-text)', margin: '8px 0 0', maxWidth: '22ch' }}>
@@ -394,7 +455,7 @@ export const TestimoniSection = ({ items }: { items: TestimoniItem[] }) => {
 export const PeraturanSection = ({ items }: { items: FaqItem[] }) => {
     if (items.length === 0) return null;
     return (
-        <section style={{ padding: '64px 24px', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(4px)', borderTop: '1px solid rgba(11,13,26,0.04)' }}>
+        <section id="peraturan" style={{ scrollMarginTop: 80, padding: '64px 24px', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(4px)', borderTop: '1px solid rgba(11,13,26,0.04)' }}>
             <div style={{ maxWidth: 820, margin: '0 auto' }}>
                 <SectionHeader kicker="Peraturan kos" title="Aturan yang menjaga kenyamanan bersama." desc="Kebijakan ini berlaku untuk seluruh penghuni dan disepakati saat penandatanganan kontrak." />
                 <Accordion items={items.map((i) => ({ q: i.pertanyaan, a: i.jawaban }))} />
@@ -409,7 +470,7 @@ export const PeraturanSection = ({ items }: { items: FaqItem[] }) => {
 export const FaqSection = ({ items }: { items: FaqItem[] }) => {
     if (items.length === 0) return null;
     return (
-        <section style={{ padding: '64px 24px' }}>
+        <section id="faq" style={{ scrollMarginTop: 80, padding: '64px 24px' }}>
             <div style={{ maxWidth: 820, margin: '0 auto' }}>
                 <SectionHeader kicker="Pertanyaan umum" title="Hal yang sering ditanyakan." desc="Jika pertanyaan Anda belum terjawab di sini, silakan hubungi pengelola langsung." />
                 <Accordion items={items.map((i) => ({ q: i.pertanyaan, a: i.jawaban }))} />

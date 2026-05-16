@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
-import { Field, Input, PasswordInput, Checkbox } from '@/components/ui';
+import { type FormEvent, useState } from 'react';
+import { Brand, Field, Input, PasswordInput, Checkbox } from '@/components/ui';
 
 type LoginForm = {
     email: string;
@@ -20,61 +20,54 @@ export default function Login({ status, canResetPassword }: { status?: string; c
         post(route('login'));
     };
 
+    const [bgFailed, setBgFailed] = useState(false);
+
     return (
         <>
             <Head title="Masuk" />
 
             <div style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '5fr 7fr', background: '#F8FAFC' }} className="login-grid">
-                {/* ───── LEFT: branding + photo ───── */}
+                {/* ───── LEFT: branding + image hero ───── */}
                 <aside style={{
                     position: 'relative',
                     overflow: 'hidden',
-                    background: 'linear-gradient(160deg, #1E3A8A 0%, #2563EB 60%, #3B82F6 100%)',
+                    background: bgFailed
+                        ? 'linear-gradient(160deg, #0b1220 0%, #1E3A8A 60%, #2563EB 100%)'
+                        : '#0b1220',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'flex-end',
                     padding: 48,
                     color: 'white',
                 }} className="login-left">
-                    {/* Subtle building shape (SVG) */}
-                    <svg viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.15 }}>
-                        <rect x="80" y="200" width="180" height="380" fill="white" />
-                        {[240, 310, 380, 450].map((y) => (
-                            <g key={y}>
-                                <rect x="100" y={y} width="30" height="40" fill="#1E3A8A" />
-                                <rect x="150" y={y} width="30" height="40" fill="#1E3A8A" />
-                                <rect x="200" y={y} width="30" height="40" fill="#1E3A8A" />
-                            </g>
-                        ))}
-                        <rect x="320" y="280" width="160" height="300" fill="white" />
-                        {[320, 380, 440].map((y) => (
-                            <g key={y}>
-                                <rect x="340" y={y} width="28" height="38" fill="#1E3A8A" />
-                                <rect x="385" y={y} width="28" height="38" fill="#1E3A8A" />
-                                <rect x="430" y={y} width="28" height="38" fill="#1E3A8A" />
-                            </g>
-                        ))}
-                        <rect x="0" y="580" width="600" height="220" fill="white" opacity="0.1" />
-                    </svg>
+                    {/* Background image with fallback */}
+                    {!bgFailed && (
+                        <img
+                            src="/images/kos/login-side.jpg"
+                            alt=""
+                            onError={() => setBgFailed(true)}
+                            style={{
+                                position: 'absolute', inset: 0,
+                                width: '100%', height: '100%',
+                                objectFit: 'cover', display: 'block',
+                                opacity: 0.55,
+                            }}
+                        />
+                    )}
+                    {/* Dark overlay for readability */}
+                    <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(180deg, rgba(11,18,32,0.4) 0%, rgba(11,18,32,0.85) 100%)',
+                    }} aria-hidden="true" />
 
-                    <div style={{ position: 'relative', maxWidth: 380 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
-                            <div style={{
-                                width: 56, height: 56, borderRadius: 14,
-                                background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
-                                border: '1px solid rgba(255,255,255,0.25)',
-                                display: 'grid', placeItems: 'center',
-                            }}>
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" />
-                                </svg>
-                            </div>
-                            <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: '-0.02em' }}>SIMKOS</div>
+                    <div style={{ position: 'relative', maxWidth: 420 }}>
+                        <div style={{ marginBottom: 32 }}>
+                            <Brand size={48} light />
                         </div>
-                        <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', lineHeight: 1.3 }}>
-                            Sistem Informasi Manajemen Kos-Kosan
+                        <h2 style={{ fontSize: 26, fontWeight: 600, margin: '0 0 14px', lineHeight: 1.25, letterSpacing: '-0.02em' }}>
+                            Kos di pusat Kedaton,<br />dekat Pasar Koga.
                         </h2>
-                        <p style={{ fontSize: 15, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)', margin: 0 }}>
+                        <p style={{ fontSize: 15, lineHeight: 1.65, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
                             Kelola data kamar, penyewa, dan tagihan dalam satu platform yang efisien dan transparan.
                         </p>
                     </div>

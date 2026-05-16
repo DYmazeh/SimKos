@@ -192,8 +192,50 @@ a { color: inherit; text-decoration: none; }
   * { animation: none !important; transition: none !important; }
 }
 
-/* ——— Smooth scroll global ——— */
-html { scroll-behavior: smooth; }
+/* ——— Smooth scroll (Lenis takes over di app.tsx) ——— */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+
+/* ——— Full-viewport slide sections (Perplexity-style) ——— */
+.snap-slide {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  scroll-snap-align: start;
+}
+.snap-slide-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+.snap-slide-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+.snap-slide-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.85));
+}
+.snap-slide-dark { background: var(--dark-bg); color: var(--dark-text); }
+.snap-slide-dark .snap-slide-bg::after {
+  background: linear-gradient(180deg, rgba(11,18,32,0.7), rgba(11,18,32,0.92));
+}
+.snap-scroll-root { scroll-snap-type: y proximity; }
+@media (min-width: 1024px) {
+  .snap-scroll-root { scroll-snap-type: y mandatory; }
+}
+@media (max-width: 1023px) {
+  .snap-slide { min-height: auto; scroll-snap-align: none; }
+  .snap-scroll-root { scroll-snap-type: none; }
+}
 
 /* ——— Page enter animation (Inertia transitions) ——— */
 @keyframes page-enter {

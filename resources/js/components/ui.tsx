@@ -67,16 +67,45 @@ export const Icon = ({ name, size = 18, stroke = 1.6, className = '', style }: I
 };
 
 /* ============================================================
-   BRAND MARK
+   BRAND MARK — pakai image logo kalau ada, fallback ke gradient SVG
    ============================================================ */
-export const Brand = ({ size = 28, light = false }: { size?: number; light?: boolean }) => (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-        <span className="brand-mark" style={{ width: size, height: size }} aria-hidden="true" />
-        <span style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', color: light ? '#f5f3ed' : 'var(--ink-900)' }}>
-            SimKos
+export const Brand = ({
+    size = 28,
+    light = false,
+    showText = true,
+}: {
+    size?: number;
+    light?: boolean;
+    showText?: boolean;
+}) => {
+    const [imgFailed, setImgFailed] = useState(false);
+    return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            {imgFailed ? (
+                <span className="brand-mark" style={{ width: size, height: size }} aria-hidden="true" />
+            ) : (
+                <img
+                    src="/images/brand/logo.png"
+                    alt="SimKos"
+                    width={size}
+                    height={size}
+                    onError={() => setImgFailed(true)}
+                    style={{
+                        width: size,
+                        height: size,
+                        objectFit: 'contain',
+                        filter: light ? 'brightness(0) invert(1)' : 'none',
+                    }}
+                />
+            )}
+            {showText && (
+                <span style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', color: light ? '#f5f3ed' : 'var(--ink-900)' }}>
+                    SimKos
+                </span>
+            )}
         </span>
-    </span>
-);
+    );
+};
 
 /* ============================================================
    PILL
@@ -227,7 +256,8 @@ export const TopNav = ({ authenticated = false }: { authenticated?: boolean }) =
             </Link>
             <nav aria-label="Navigasi utama" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                 <Link href={route('guest.kamar.index')} className="nav-a">Kamar</Link>
-                <a href="#tentang" className="nav-a">Tentang</a>
+                <a href="#cara-kerja" className="nav-a">Cara Kerja</a>
+                <a href="#lokasi" className="nav-a">Lokasi</a>
                 <a href="#kontak" className="nav-a">Kontak</a>
                 {authenticated ? (
                     <Link href={route('dashboard')} className="btn btn-ghost btn-sm">Dashboard</Link>
@@ -245,26 +275,77 @@ export const TopNav = ({ authenticated = false }: { authenticated?: boolean }) =
 );
 
 /* ============================================================
-   FOOTER
+   FOOTER — 4 kolom dengan navigasi penting
    ============================================================ */
-export const Footer = ({ dark = false }: { dark?: boolean }) => (
-    <footer style={{
-        borderTop: dark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(11,13,26,0.08)',
-        background: dark ? 'var(--dark-bg)' : 'rgba(255,255,255,0.5)',
-        backdropFilter: dark ? 'none' : 'blur(10px)',
-    }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: dark ? 'var(--dark-muted)' : 'var(--ink-500)', fontSize: 13 }}>
-                <Brand size={22} light={dark} />
-                <span style={{ opacity: 0.5 }}>·</span>
-                <span>© 2026 Sistem Informasi Manajemen Kos</span>
+export const Footer = ({ dark = false }: { dark?: boolean }) => {
+    const linkColor = dark ? 'var(--dark-muted)' : 'var(--ink-500)';
+    const headColor = dark ? 'var(--dark-text)' : 'var(--ink-900)';
+    const dividerColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(11,13,26,0.08)';
+    return (
+        <footer style={{
+            borderTop: `1px solid ${dividerColor}`,
+            background: dark ? 'var(--dark-bg)' : 'rgba(255,255,255,0.6)',
+            backdropFilter: dark ? 'none' : 'blur(10px)',
+        }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px 24px' }}>
+                <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 40, marginBottom: 32 }}>
+                    {/* Brand block */}
+                    <div>
+                        <Brand size={32} light={dark} />
+                        <p style={{ fontSize: 13.5, color: linkColor, marginTop: 14, lineHeight: 1.6, maxWidth: '34ch' }}>
+                            Kos modern di pusat Kedaton, Bandar Lampung — 5 menit dari Pasar Koga, dekat kampus & RS.
+                        </p>
+                    </div>
+
+                    {/* Eksplor */}
+                    <div>
+                        <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: headColor, margin: '0 0 14px' }}>Eksplor</h4>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <li><Link href={route('guest.kamar.index')} style={{ color: linkColor, fontSize: 13.5 }}>Kamar</Link></li>
+                            <li><a href="/#galeri" style={{ color: linkColor, fontSize: 13.5 }}>Galeri</a></li>
+                            <li><a href="/#lokasi" style={{ color: linkColor, fontSize: 13.5 }}>Lokasi</a></li>
+                            <li><a href="/#faq" style={{ color: linkColor, fontSize: 13.5 }}>FAQ</a></li>
+                        </ul>
+                    </div>
+
+                    {/* Booking */}
+                    <div>
+                        <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: headColor, margin: '0 0 14px' }}>Booking</h4>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <li><a href="/#cara-kerja" style={{ color: linkColor, fontSize: 13.5 }}>Cara Booking</a></li>
+                            <li><a href="/#biaya" style={{ color: linkColor, fontSize: 13.5 }}>Biaya & Deposit</a></li>
+                            <li><a href="/#peraturan" style={{ color: linkColor, fontSize: 13.5 }}>Peraturan</a></li>
+                            <li><Link href={route('login')} style={{ color: linkColor, fontSize: 13.5 }}>Login Penyewa</Link></li>
+                        </ul>
+                    </div>
+
+                    {/* Hubungi */}
+                    <div>
+                        <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: headColor, margin: '0 0 14px' }}>Hubungi</h4>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <li><a href="/#kontak" style={{ color: linkColor, fontSize: 13.5 }}>WhatsApp</a></li>
+                            <li><a href="/#kontak" style={{ color: linkColor, fontSize: 13.5 }}>Telepon</a></li>
+                            <li><span style={{ color: linkColor, fontSize: 13.5 }}>Senin–Minggu, 08.00–21.00</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style={{ paddingTop: 20, borderTop: `1px solid ${dividerColor}`, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', color: linkColor, fontSize: 12.5 }}>
+                    <span>© 2026 SimKos · Sistem Informasi Manajemen Kos</span>
+                    <span>Dibuat untuk tugas Manajemen Proyek TI — Kelompok 4</span>
+                </div>
             </div>
-            <div style={{ display: 'flex', gap: 18, fontSize: 13, color: dark ? 'var(--dark-muted)' : 'var(--ink-500)' }}>
-                <Link href={route('login')}>Masuk Penyewa</Link>
-            </div>
-        </div>
-    </footer>
-);
+            <style>{`
+                @media (max-width: 860px) {
+                    .footer-grid { grid-template-columns: 1fr 1fr !important; }
+                }
+                @media (max-width: 540px) {
+                    .footer-grid { grid-template-columns: 1fr !important; }
+                }
+            `}</style>
+        </footer>
+    );
+};
 
 /* ============================================================
    AUTH SHELL

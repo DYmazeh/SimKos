@@ -1,5 +1,39 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { Icon } from '@/components/ui';
+
+/* ============================================================
+   Slide — full-viewport wrapper (Perplexity-style snap)
+   Component-section di dalamnya mengontrol padding & layout sendiri;
+   Slide hanya add: min-h-100vh, snap-align, optional background image.
+   ============================================================ */
+export const Slide = ({
+    id,
+    bgImage,
+    dark = false,
+    className = '',
+    children,
+}: {
+    id?: string;
+    bgImage?: string;
+    dark?: boolean;
+    className?: string;
+    children: ReactNode;
+}) => (
+    <div
+        id={id}
+        className={`snap-slide ${dark ? 'snap-slide-dark' : ''} ${className}`}
+        style={{ scrollMarginTop: 0 }}
+    >
+        {bgImage && (
+            <div
+                className="snap-slide-bg"
+                style={{ backgroundImage: `url(${bgImage})` }}
+                aria-hidden="true"
+            />
+        )}
+        <div className="snap-slide-content">{children}</div>
+    </div>
+);
 
 /* ============================================================
    PhotoPlaceholder — reusable gradient placeholder (until real photos)
