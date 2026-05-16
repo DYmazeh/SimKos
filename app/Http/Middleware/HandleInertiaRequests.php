@@ -42,6 +42,23 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
 
+            // Sidebar counts (admin only) — drives red-dot badges di nav items.
+            // Lazy/cached per-request via closures supaya skip query kalau bukan admin.
+            'sidebar_counts' => fn () => $request->user()?->hasRole('admin')
+                ? [
+                    'tagihan_belum' => \App\Models\Tagihan::query()
+                        ->whereIn('status', ['belum_bayar', 'terlambat'])
+                        ->where('tgl_jatuh_tempo', '<=', now()->addDays(3)->toDateString())
+                        ->count(),
+                    'konfirmasi_pending' => \App\Models\Pembayaran::query()
+                        ->where('status_verifikasi', 'pending')
+                        ->count(),
+                    'komplen_aktif' => \App\Models\Komplain::query()
+                        ->whereNot('status', 'selesai')
+                        ->count(),
+                ]
+                : null,
+
             // Config app & SIMKOS
             'app' => [
                 'name' => config('app.name'),

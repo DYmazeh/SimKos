@@ -313,13 +313,18 @@ export default function PenyewaForm() {
                     background: 'white', borderRadius: 16, padding: 18,
                     border: '1px solid rgba(11,13,26,0.06)',
                     boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
-                    display: 'flex', justifyContent: 'flex-end', gap: 12, alignItems: 'center',
+                    display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap',
                 }}>
-                    <Link href={route('admin.penyewa.index')} className="btn btn-link">Batal</Link>
-                    <button type="submit" disabled={form.processing} className="btn btn-primary">
-                        {form.processing ? 'Menyimpan…' : (isEdit ? 'Simpan perubahan' : 'Simpan penyewa')}
-                        {!form.processing && <Icon name="arrow-right" size={15} />}
-                    </button>
+                    <Link href={route('admin.penyewa.index')} className="btn btn-ghost btn-sm">
+                        <Icon name="arrow-left" size={14} /> Kembali
+                    </Link>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <Link href={route('admin.penyewa.index')} className="btn btn-link">Batal</Link>
+                        <button type="submit" disabled={form.processing} className="btn btn-primary">
+                            {form.processing ? 'Menyimpan…' : (isEdit ? 'Simpan perubahan' : 'Simpan penyewa')}
+                            {!form.processing && <Icon name="arrow-right" size={15} />}
+                        </button>
+                    </div>
                 </div>
             </form>
 

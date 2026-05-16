@@ -26,7 +26,9 @@ class DashboardController extends Controller
         $now = Carbon::now();
         $awalBulan = $now->copy()->startOfMonth()->toDateString();
         $akhirBulan = $now->copy()->endOfMonth()->toDateString();
-        $reminderHorizon = $now->copy()->addDays(config('simkos.reminder_days', 7))->toDateString();
+        // H-3 horizon untuk dashboard (lebih ketat dari config reminder_days,
+        // sesuai user requirement: tagihan muncul mendesak H-3 sebelum jatuh tempo)
+        $reminderHorizon = $now->copy()->addDays(3)->toDateString();
 
         $stats = [
             'total_kamar' => Kamar::count(),
@@ -45,13 +47,13 @@ class DashboardController extends Controller
                 ->sum('jumlah_bayar'),
         ];
 
-        // Reminder list dengan WA link pre-built (untuk Anda — penyewa)
+        // Peringatan Jatuh Tempo: H-3 only, limit 5 most urgent
         $reminderList = Tagihan::query()
             ->with(['sewa.penyewa', 'sewa.kamar'])
             ->whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])
             ->where('tgl_jatuh_tempo', '<=', $reminderHorizon)
             ->orderBy('tgl_jatuh_tempo')
-            ->limit(20)
+            ->limit(5)
             ->get()
             ->map(fn ($t) => [
                 'id' => $t->id,
@@ -64,26 +66,37 @@ class DashboardController extends Controller
                 'wa_link' => WhatsappReminderLink::make($t->sewa->penyewa, $t),
             ]);
 
-        $verifikasiList = Pembayaran::query()
+        $reminderTotalCount = Tagihan::query()
+            ->whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])
+            ->where('tgl_jatuh_tempo', '<=', $reminderHorizon)
+            ->count();
+
+        // Pembayaran Terbaru: gabungan semua pembayaran (any status), 5-10 latest
+        $pembayaranTerbaru = Pembayaran::query()
             ->with(['tagihan.sewa.penyewa', 'tagihan.sewa.kamar'])
-            ->where('status_verifikasi', Pembayaran::STATUS_PENDING)
-            ->latest()
-            ->limit(5)
+            ->latest('created_at')
+            ->limit(8)
             ->get()
             ->map(fn ($p) => [
                 'id' => $p->id,
                 'tagihan_id' => $p->tagihan_id,
-                'penyewa_nama' => $p->tagihan->sewa->penyewa->nama_lengkap,
-                'kamar_nomor' => $p->tagihan->sewa->kamar->nomor_kamar,
-                'periode' => $p->tagihan->periode->format('Y-m-d'),
+                'penyewa_nama' => $p->tagihan?->sewa?->penyewa?->nama_lengkap ?? '-',
+                'kamar_nomor' => $p->tagihan?->sewa?->kamar?->nomor_kamar ?? '-',
+                'periode' => $p->tagihan?->periode?->format('Y-m-d'),
                 'jumlah_bayar' => (int) $p->jumlah_bayar,
+                'tgl_jatuh_tempo' => $p->tagihan?->tgl_jatuh_tempo?->format('Y-m-d'),
+                'status_verifikasi' => $p->status_verifikasi,
+                'tagihan_status' => $p->tagihan?->status,
             ]);
+
+        $pembayaranPendingCount = Pembayaran::where('status_verifikasi', Pembayaran::STATUS_PENDING)->count();
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'reminderList' => $reminderList,
-            'verifikasiList' => $verifikasiList,
-            'reminderDays' => config('simkos.reminder_days', 7),
+            'reminderTotalCount' => $reminderTotalCount,
+            'pembayaranTerbaru' => $pembayaranTerbaru,
+            'pembayaranPendingCount' => $pembayaranPendingCount,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\KamarController as AdminKamarController;
+use App\Http\Controllers\Admin\KomplainController as AdminKomplainController;
 use App\Http\Controllers\Admin\LaporanController as AdminLaporanController;
 use App\Http\Controllers\Admin\PembayaranController as AdminPembayaranController;
 use App\Http\Controllers\Admin\PenyewaController as AdminPenyewaController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Guest\HomeController as GuestHomeController;
 use App\Http\Controllers\Guest\KamarController as GuestKamarController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\Penyewa\DashboardController as PenyewaDashboardController;
+use App\Http\Controllers\Penyewa\KomplainController as PenyewaKomplainController;
 use App\Http\Controllers\Penyewa\PembayaranController as PenyewaPembayaranController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -48,12 +50,16 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
         Route::get('tagihan', [AdminTagihanController::class, 'index'])->name('tagihan.index');
         Route::post('tagihan/generate', [AdminTagihanController::class, 'generate'])->name('tagihan.generate');
+        Route::get('tagihan/penyewa/{penyewa}', [AdminTagihanController::class, 'penyewa'])->name('tagihan.penyewa');
         Route::get('tagihan/{tagihan}', [AdminTagihanController::class, 'show'])->name('tagihan.show');
 
         Route::get('pembayaran', [AdminPembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::get('pembayaran/{pembayaran}', [AdminPembayaranController::class, 'show'])->name('pembayaran.show');
         Route::patch('pembayaran/{pembayaran}/approve', [AdminPembayaranController::class, 'approve'])->name('pembayaran.approve');
         Route::patch('pembayaran/{pembayaran}/reject', [AdminPembayaranController::class, 'reject'])->name('pembayaran.reject');
         Route::get('pembayaran/{pembayaran}/download', [AdminPembayaranController::class, 'download'])->name('pembayaran.download');
+
+        Route::patch('komplain/{komplain}/status', [AdminKomplainController::class, 'updateStatus'])->name('komplain.update-status');
 
         Route::get('laporan/keuangan', [AdminLaporanController::class, 'keuangan'])->name('laporan.keuangan');
         Route::get('laporan/penghuni', [AdminLaporanController::class, 'penghuni'])->name('laporan.penghuni');
@@ -70,6 +76,10 @@ Route::middleware(['auth', 'verified', 'role:penyewa'])
         Route::get('/riwayat', [PenyewaPembayaranController::class, 'riwayat'])->name('riwayat');
         Route::get('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'create'])->name('tagihan.bayar.create');
         Route::post('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'store'])->name('tagihan.bayar.store');
+
+        Route::get('/komplen', [PenyewaKomplainController::class, 'index'])->name('komplen.index');
+        Route::get('/komplen/create', [PenyewaKomplainController::class, 'create'])->name('komplen.create');
+        Route::post('/komplen', [PenyewaKomplainController::class, 'store'])->name('komplen.store');
     });
 
 // Notifikasi (shared antara admin & penyewa)

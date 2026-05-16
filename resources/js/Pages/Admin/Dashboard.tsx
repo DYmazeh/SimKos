@@ -1,7 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import AdminLayout from '@/components/AdminLayout';
-import { Icon, formatRp } from '@/components/ui';
+import { Icon, Pill, formatRp } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type Stats = {
@@ -18,266 +17,283 @@ type Stats = {
 type ReminderItem = {
     id: number;
     penyewa_nama: string;
-    penyewa_avatar?: string | null;
     kamar_nomor: string;
     periode: string;
     jumlah: number;
     tgl_jatuh_tempo: string;
     status: 'belum_bayar' | 'terlambat' | 'menunggu_verifikasi' | 'lunas';
-    wa_link: string | null;
+    wa_link: string;
 };
 
-type VerifikasiItem = {
+type PembayaranTerbaruItem = {
     id: number;
     tagihan_id: number;
     penyewa_nama: string;
     kamar_nomor: string;
-    periode: string;
+    periode: string | null;
     jumlah_bayar: number;
+    tgl_jatuh_tempo: string | null;
+    status_verifikasi: 'pending' | 'approved' | 'rejected';
+    tagihan_status: 'belum_bayar' | 'terlambat' | 'menunggu_verifikasi' | 'lunas' | null;
 };
 
-type AdminDashboardProps = PageProps<{
+type DashboardProps = PageProps<{
     stats: Stats;
     reminderList: ReminderItem[];
-    verifikasiList: VerifikasiItem[];
-    reminderDays: number;
-    revenueChart?: Array<{ month: string; value: number }>;
+    reminderTotalCount: number;
+    pembayaranTerbaru: PembayaranTerbaruItem[];
+    pembayaranPendingCount: number;
 }>;
 
-// 6 bulan terakhir fallback kalau backend belum kirim revenueChart
-const DEFAULT_REVENUE = [
-    { month: 'Jan', value: 4200 },
-    { month: 'Feb', value: 5100 },
-    { month: 'Mar', value: 4700 },
-    { month: 'Apr', value: 6200 },
-    { month: 'Mei', value: 5800 },
-    { month: 'Jun', value: 7100 },
-];
+const formatDate = (s: string | null) => s
+    ? new Date(s).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
 
-const StatusPill = ({ status }: { status: ReminderItem['status'] }) => {
-    const map: Record<ReminderItem['status'], { label: string; bg: string; color: string }> = {
-        lunas: { label: 'Lunas', bg: '#DCFCE7', color: '#15803D' },
-        menunggu_verifikasi: { label: 'Menunggu', bg: '#FEF3C7', color: '#92400E' },
-        belum_bayar: { label: 'Belum Bayar', bg: '#FEE2E2', color: '#991B1B' },
-        terlambat: { label: 'Terlambat', bg: '#FEE2E2', color: '#991B1B' },
-    };
-    const s = map[status];
-    return (
-        <span style={{
-            display: 'inline-block', padding: '4px 12px',
-            borderRadius: 999, fontSize: 12, fontWeight: 600,
-            background: s.bg, color: s.color,
-        }}>{s.label}</span>
-    );
+/* Status text untuk Peringatan Jatuh Tempo (dynamic based on tgl_jatuh_tempo) */
+const reminderStatus = (item: ReminderItem) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(item.tgl_jatuh_tempo);
+    due.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return { label: `Terlambat ${Math.abs(diffDays)} hari`, tone: 'warning' as const };
+    if (diffDays === 0) return { label: 'Jatuh Tempo Hari Ini', tone: 'warning' as const };
+    if (diffDays === 1) return { label: 'Jatuh Tempo Besok', tone: 'warning' as const };
+    return { label: `H-${diffDays} Jatuh Tempo`, tone: 'info' as const };
+};
+
+const verifikasiPill = (status: PembayaranTerbaruItem['status_verifikasi'], tagihanStatus: PembayaranTerbaruItem['tagihan_status']) => {
+    if (status === 'approved') return { label: 'Lunas', tone: 'success' as const };
+    if (status === 'pending') return { label: 'Menunggu', tone: 'warning' as const };
+    if (status === 'rejected') {
+        if (tagihanStatus === 'terlambat') return { label: 'Terlambat', tone: 'warning' as const };
+        return { label: 'Belum Bayar', tone: 'warning' as const };
+    }
+    return { label: 'Lunas', tone: 'success' as const };
 };
 
 const Avatar = ({ name }: { name: string }) => {
     const initial = name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
     return (
         <div style={{
-            width: 32, height: 32, borderRadius: 999,
-            background: 'linear-gradient(135deg, #93C5FD, #2563EB)',
+            width: 36, height: 36, borderRadius: 999,
+            background: 'linear-gradient(135deg, var(--blue-400), var(--blue-700))',
             color: 'white', display: 'grid', placeItems: 'center',
-            fontSize: 11, fontWeight: 600, flexShrink: 0,
+            fontSize: 12, fontWeight: 600, flex: '0 0 auto',
+            letterSpacing: '-0.01em',
         }}>{initial}</div>
     );
 };
 
+const KPI = ({ label, value, accent, icon }: {
+    label: string;
+    value: string | number;
+    accent: 'blue' | 'green' | 'amber' | 'indigo';
+    icon: 'home' | 'check' | 'user' | 'wallet';
+}) => {
+    const palette = {
+        blue:   { bg: 'var(--blue-50)',  fg: 'var(--blue-700)'   },
+        green:  { bg: 'rgba(31,143,91,0.10)',  fg: 'var(--success)' },
+        amber:  { bg: 'rgba(200,158,42,0.12)', fg: '#8a6c10'  },
+        indigo: { bg: 'var(--blue-50)',  fg: 'var(--blue-700)'   },
+    }[accent];
+    return (
+        <div style={{
+            background: 'white', borderRadius: 14, padding: 18,
+            border: '1px solid rgba(11,13,26,0.06)',
+            boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+            display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+            <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: palette.bg, color: palette.fg,
+                display: 'grid', placeItems: 'center', flex: '0 0 auto',
+            }}>
+                <Icon name={icon === 'wallet' ? 'wallet' : icon === 'home' ? 'home' : icon === 'check' ? 'check' : 'user'} size={22} />
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 13, color: 'var(--ink-500)', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink-900)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {value}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function AdminDashboard() {
-    const { props } = usePage<AdminDashboardProps>();
-    const { stats, reminderList, revenueChart } = props;
-
-    const kpiCards = [
-        { label: 'Total Kamar', value: stats.total_kamar, color: '#3B82F6', icon: <BlueHomeIcon /> },
-        { label: 'Kamar Terisi', value: stats.kamar_terisi, color: '#10B981', icon: <GreenCheckIcon /> },
-        { label: 'Kamar Kosong', value: stats.kamar_tersedia, color: '#F59E0B', icon: <YellowKeyIcon /> },
-        { label: 'Belum Lunas', value: stats.tagihan_jatuh_tempo_horizon, color: '#EF4444', icon: <RedWalletIcon /> },
-    ];
-
-    const donutData = [
-        { name: 'Terisi', value: stats.kamar_terisi, color: '#2563EB' },
-        { name: 'Kosong', value: stats.kamar_tersedia, color: '#F59E0B' },
-    ];
-
-    const revenue = (revenueChart && revenueChart.length > 0) ? revenueChart : DEFAULT_REVENUE;
+    const { props } = usePage<DashboardProps>();
+    const { stats, reminderList, reminderTotalCount, pembayaranTerbaru, pembayaranPendingCount } = props;
 
     return (
         <AdminLayout title="Dashboard">
             <Head title="Dashboard Admin" />
 
-            {/* KPI cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
-                {kpiCards.map((c, i) => (
-                    <div key={i} style={{
-                        background: 'white',
-                        borderRadius: 14,
-                        padding: 20,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                    }}>
-                        <div>
-                            <div style={{ fontSize: 13, color: '#64748B', marginBottom: 6 }}>{c.label}</div>
-                            <div style={{ fontSize: 28, fontWeight: 700, color: '#0F172A' }}>{c.value}</div>
-                        </div>
-                        {c.icon}
-                    </div>
-                ))}
+            {/* ───── KPI cards ───── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 22 }}>
+                <KPI label="Total Kamar" value={stats.total_kamar} accent="blue" icon="home" />
+                <KPI label="Kamar Terisi" value={stats.kamar_terisi} accent="green" icon="check" />
+                <KPI label="Kamar Kosong" value={stats.kamar_tersedia} accent="amber" icon="user" />
+                <KPI label="Pendapatan Bulan Ini" value={formatRp(stats.pemasukan_bulan_ini)} accent="indigo" icon="wallet" />
             </div>
 
-            {/* Charts row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 24 }} className="charts-row">
-                {/* Line chart pendapatan */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0F172A' }}>Ringkasan Pendapatan</h3>
-                        <span style={{
-                            padding: '6px 14px', borderRadius: 999,
-                            background: '#F1F5F9', color: '#64748B',
-                            fontSize: 12, fontWeight: 500,
-                        }}>6 Bulan Terakhir</span>
+            {/* ───── Peringatan Jatuh Tempo ───── */}
+            <section style={{
+                background: 'white', borderRadius: 14, marginBottom: 22, overflow: 'hidden',
+                border: '1px solid rgba(11,13,26,0.06)',
+                boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                position: 'relative',
+            }}>
+                {/* Red vertical accent */}
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'var(--danger)' }} />
+                <header style={{
+                    padding: '18px 22px 14px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    flexWrap: 'wrap', gap: 12,
+                }}>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--ink-900)', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        <Icon name="alert-circle" size={18} style={{ color: 'var(--danger)' }} />
+                        Peringatan Jatuh Tempo
+                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        {reminderTotalCount > 0 && (
+                            <span style={{
+                                padding: '4px 10px', borderRadius: 999,
+                                background: 'rgba(210,68,50,0.10)', color: 'var(--danger)',
+                                fontSize: 11.5, fontWeight: 600,
+                            }}>
+                                {reminderTotalCount} Tagihan Mendesak
+                            </span>
+                        )}
+                        <Link href={route('admin.tagihan.index')} style={{ fontSize: 13, color: 'var(--blue-600)', fontWeight: 500 }}>
+                            Lihat semua →
+                        </Link>
                     </div>
-                    <ResponsiveContainer width="100%" height={280}>
-                        <AreaChart data={revenue} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="revArea" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.5} />
-                                    <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.05} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                            <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                            <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                            <Tooltip
-                                contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12 }}
-                                formatter={(v: number) => [`Rp ${v.toLocaleString('id-ID')}`, 'Pendapatan']}
-                            />
-                            <Area type="monotone" dataKey="value" stroke="#2563EB" strokeWidth={2} fill="url(#revArea)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Donut status kamar */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600, color: '#0F172A' }}>Status Kamar</h3>
-                    <ResponsiveContainer width="100%" height={220}>
-                        <PieChart>
-                            <Pie data={donutData} dataKey="value" cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3}>
-                                {donutData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                            </Pie>
-                            <Tooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 8 }}>
-                        {donutData.map((d) => (
-                            <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ width: 10, height: 10, borderRadius: 2, background: d.color }} />
-                                <span style={{ fontSize: 12, color: '#475569' }}>{d.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* Tagihan Terbaru */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0F172A' }}>Tagihan Terbaru</h3>
-                    <Link href={route('admin.tagihan.index')} style={{ fontSize: 13, fontWeight: 500, color: '#2563EB' }}>
-                        Lihat Semua
-                    </Link>
-                </div>
-
+                </header>
                 {reminderList.length === 0 ? (
-                    <div style={{ padding: 32, textAlign: 'center', color: '#94A3B8', fontSize: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                        <span style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(31,143,91,0.10)', color: 'var(--success)', display: 'grid', placeItems: 'center' }}>
-                            <Icon name="sparkles" size={22} />
-                        </span>
-                        Tidak ada tagihan yang perlu diingatkan.
+                    <div style={{ padding: '24px 22px 28px', textAlign: 'center', color: 'var(--ink-500)' }}>
+                        <Icon name="check" size={22} style={{ color: 'var(--success)' }} stroke={2.4} />
+                        <p style={{ margin: '6px 0 0', fontSize: 14 }}>Tidak ada tagihan mendesak. Semua tagihan dalam horizon H-3 sudah diproses.</p>
                     </div>
                 ) : (
-                    <div style={{ overflow: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                    <div>
+                        {reminderList.map((item) => {
+                            const status = reminderStatus(item);
+                            const isUrgent = status.label.startsWith('Terlambat') || status.label.includes('Hari Ini');
+                            return (
+                                <div key={item.id} style={{
+                                    padding: '14px 22px',
+                                    display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+                                    borderTop: '1px solid rgba(11,13,26,0.06)',
+                                }}>
+                                    <Avatar name={item.penyewa_nama} />
+                                    <div style={{ flex: 1, minWidth: 180 }}>
+                                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>{item.penyewa_nama}</div>
+                                        <div style={{ fontSize: 12.5, color: 'var(--ink-500)' }}>
+                                            Kamar {item.kamar_nomor} · {formatRp(item.jumlah)}
+                                        </div>
+                                    </div>
+                                    <Pill tone={status.tone} dot={isUrgent ? 'pulse' : true}>{status.label}</Pill>
+                                    <a href={item.wa_link} target="_blank" rel="noopener noreferrer"
+                                        style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                                            padding: '8px 14px', borderRadius: 8,
+                                            background: 'var(--success)', color: 'white',
+                                            fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                                            transition: 'all 180ms var(--ease)',
+                                        }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.background = '#176f44')}
+                                        onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--success)')}>
+                                        <Icon name="logo-wa" size={14} />
+                                        {isUrgent ? 'Tagih Sekarang' : 'Ingatkan'}
+                                    </a>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </section>
+
+            {/* ───── Pembayaran Terbaru ───── */}
+            <section style={{
+                background: 'white', borderRadius: 14, overflow: 'hidden',
+                border: '1px solid rgba(11,13,26,0.06)',
+                boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+            }}>
+                <header style={{
+                    padding: '18px 22px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    flexWrap: 'wrap', gap: 12,
+                }}>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--ink-900)' }}>Pembayaran Terbaru</h2>
+                    {pembayaranPendingCount > 0 && (
+                        <Link href={route('admin.pembayaran.index')} style={{ fontSize: 13, color: 'var(--blue-600)', fontWeight: 500 }}>
+                            {pembayaranPendingCount} menunggu konfirmasi →
+                        </Link>
+                    )}
+                </header>
+
+                {pembayaranTerbaru.length === 0 ? (
+                    <div style={{ padding: '24px 22px 32px', textAlign: 'center', color: 'var(--ink-500)' }}>
+                        <p style={{ margin: 0, fontSize: 14 }}>Belum ada pembayaran masuk.</p>
+                    </div>
+                ) : (
+                    <div style={{ overflow: 'auto', borderTop: '1px solid rgba(11,13,26,0.06)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr style={{ background: '#F8FAFC' }}>
-                                    {['Nama Penyewa', 'Kamar', 'Jumlah', 'Status', 'Aksi'].map((h) => (
-                                        <th key={h} style={{ padding: '12px 24px', textAlign: h === 'Aksi' ? 'right' : 'left', fontSize: 11, color: '#64748B', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{h}</th>
+                                <tr>
+                                    {['Nama Penyewa', 'Kamar', 'Jumlah', 'Jatuh Tempo', 'Status', 'Aksi'].map((h, i) => (
+                                        <th key={h} style={{
+                                            padding: '12px 20px', textAlign: i === 5 ? 'center' : 'left',
+                                            fontSize: 11, fontWeight: 600, color: 'var(--ink-500)',
+                                            textTransform: 'uppercase', letterSpacing: '0.06em',
+                                            background: 'var(--ink-50)',
+                                        }}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
-                                {reminderList.slice(0, 5).map((t) => (
-                                    <tr key={t.id} style={{ borderTop: '1px solid #F1F5F9' }}>
-                                        <td style={{ padding: '14px 24px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                <Avatar name={t.penyewa_nama} />
-                                                <span style={{ fontWeight: 500, color: '#0F172A' }}>{t.penyewa_nama}</span>
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '14px 24px', color: '#475569' }}>{t.kamar_nomor}</td>
-                                        <td style={{ padding: '14px 24px', color: '#0F172A', fontWeight: 500 }}>{formatRp(t.jumlah)}</td>
-                                        <td style={{ padding: '14px 24px' }}><StatusPill status={t.status} /></td>
-                                        <td style={{ padding: '14px 24px', textAlign: 'right' }}>
-                                            {t.wa_link ? (
-                                                <a href={t.wa_link} target="_blank" rel="noopener noreferrer"
+                                {pembayaranTerbaru.map((p) => {
+                                    const meta = verifikasiPill(p.status_verifikasi, p.tagihan_status);
+                                    return (
+                                        <tr key={p.id} style={{ borderTop: '1px solid rgba(11,13,26,0.06)' }}>
+                                            <td style={{ padding: '12px 20px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <Avatar name={p.penyewa_nama} />
+                                                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink-900)' }}>{p.penyewa_nama}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '12px 20px', fontSize: 13.5, color: 'var(--ink-700)' }}>{p.kamar_nomor}</td>
+                                            <td style={{ padding: '12px 20px', fontSize: 14, fontWeight: 600, color: 'var(--ink-900)', fontVariantNumeric: 'tabular-nums' }}>
+                                                {formatRp(p.jumlah_bayar)}
+                                            </td>
+                                            <td style={{ padding: '12px 20px', fontSize: 12.5, color: 'var(--ink-500)', fontVariantNumeric: 'tabular-nums' }}>
+                                                {formatDate(p.tgl_jatuh_tempo)}
+                                            </td>
+                                            <td style={{ padding: '12px 20px' }}>
+                                                <Pill tone={meta.tone}>{meta.label}</Pill>
+                                            </td>
+                                            <td style={{ padding: '12px 20px', textAlign: 'center' }}>
+                                                <Link href={route('admin.pembayaran.show', p.id)}
+                                                    aria-label={`Detail pembayaran ${p.penyewa_nama}`}
                                                     style={{
-                                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                        width: 32, height: 32, borderRadius: 8,
-                                                        background: '#DCFCE7', color: '#16A34A',
-                                                    }} aria-label="Kirim WhatsApp">
-                                                    <Icon name="logo-wa" size={16} />
-                                                </a>
-                                            ) : (
-                                                <span style={{ color: '#CBD5E1', fontSize: 12 }}>—</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
+                                                        display: 'inline-grid', placeItems: 'center',
+                                                        width: 34, height: 34, borderRadius: 8,
+                                                        background: 'var(--blue-50)', color: 'var(--blue-700)',
+                                                        transition: 'all 160ms var(--ease)',
+                                                    }}>
+                                                    <Icon name="send" size={15} stroke={2} />
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
                 )}
-            </div>
-
-            <style>{`
-                @media (max-width: 1024px) {
-                    .charts-row { grid-template-columns: 1fr !important; }
-                }
-            `}</style>
+            </section>
         </AdminLayout>
     );
 }
-
-/* ============================================================
-   KPI inline icons
-   ============================================================ */
-const BlueHomeIcon = () => (
-    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#EFF6FF', color: '#2563EB', display: 'grid', placeItems: 'center' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" />
-        </svg>
-    </div>
-);
-const GreenCheckIcon = () => (
-    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#D1FAE5', color: '#10B981', display: 'grid', placeItems: 'center' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" />
-            <path d="M16 11l2 2 4-4" stroke="#15803D" />
-        </svg>
-    </div>
-);
-const YellowKeyIcon = () => (
-    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#FEF3C7', color: '#D97706', display: 'grid', placeItems: 'center' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="7.5" cy="15.5" r="3.5" /><path d="M21 2l-9.6 9.6M15.5 7.5l3 3" />
-        </svg>
-    </div>
-);
-const RedWalletIcon = () => (
-    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#FEE2E2', color: '#EF4444', display: 'grid', placeItems: 'center' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="6" width="18" height="14" rx="2" /><path d="M3 10h18M16 14h2" />
-        </svg>
-    </div>
-);

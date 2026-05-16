@@ -56,4 +56,9 @@ class Kamar extends Model
     {
         return $this->hasMany(FotoKamar::class)->orderBy('urutan');
     }
+
+    public function komplain(): HasMany
+    {
+        return $this->hasMany(Komplain::class)->latest();
+    }
 }

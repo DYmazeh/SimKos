@@ -1,7 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import type { FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { Field } from '@/components/ui';
+import { Field, Icon } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type KamarItem = {
@@ -29,7 +29,12 @@ export default function KamarForm() {
     const { mode, kamar } = props;
     const isEdit = mode === 'edit' && kamar !== null;
 
-    const form = useForm({
+    const form = useForm<{
+        nomor_kamar: string; tipe: string; harga_bulanan: number;
+        status: string; deskripsi: string; fasilitas: string[];
+        luas_m2: number | string; lantai: number | string;
+        foto: File[];
+    }>({
         nomor_kamar: kamar?.nomor_kamar ?? '',
         tipe: kamar?.tipe ?? 'standar',
         harga_bulanan: kamar?.harga_bulanan ?? 0,
@@ -38,7 +43,10 @@ export default function KamarForm() {
         fasilitas: kamar?.fasilitas ?? [],
         luas_m2: kamar?.luas_m2 ?? '',
         lantai: kamar?.lantai ?? '',
+        foto: [],
     });
+
+    const [fotoPreviews, setFotoPreviews] = useState<Array<{ url: string; name: string }>>([]);
 
     const toggleFasilitas = (f: string) => {
         const next = form.data.fasilitas.includes(f)
@@ -47,47 +55,65 @@ export default function KamarForm() {
         form.setData('fasilitas', next);
     };
 
+    const onFotoInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        const merged = [...form.data.foto, ...files].slice(0, 5);
+        form.setData('foto', merged);
+        setFotoPreviews(merged.map((f) => ({ url: URL.createObjectURL(f), name: f.name })));
+    };
+
+    const removeFotoCreate = (idx: number) => {
+        const next = form.data.foto.filter((_, i) => i !== idx);
+        form.setData('foto', next);
+        setFotoPreviews(next.map((f) => ({ url: URL.createObjectURL(f), name: f.name })));
+    };
+
     const submit = (e: FormEvent) => {
         e.preventDefault();
         if (isEdit && kamar) {
             form.put(route('admin.kamar.update', kamar.id));
         } else {
-            form.post(route('admin.kamar.store'));
+            form.post(route('admin.kamar.store'), { forceFormData: true });
         }
     };
 
     return (
-        <AdminLayout
-            title={isEdit ? 'Edit Kamar' : 'Tambah Kamar Baru'}
-            breadcrumb={
-                <span>
-                    <Link href={route('admin.kamar.index')} style={{ color: '#64748B' }}>Kamar</Link>
-                    {' / '}
-                    <span style={{ color: '#2563EB' }}>{isEdit ? `Edit ${kamar?.nomor_kamar}` : 'Tambah Kamar'}</span>
-                </span>
-            }
-        >
+        <AdminLayout title={isEdit ? 'Edit Kamar' : 'Tambah Kamar Baru'}>
             <Head title={isEdit ? `Edit Kamar ${kamar?.nomor_kamar}` : 'Tambah Kamar'} />
 
-            <form onSubmit={submit}>
-                <div style={{ background: 'white', borderRadius: 14, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    <h3 style={{ margin: '0 0 24px', fontSize: 17, fontWeight: 700, color: '#0F172A' }}>Detail Kamar</h3>
+            {/* Header: breadcrumb + back button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
+                <nav aria-label="Breadcrumb" style={{ fontSize: 13, color: 'var(--ink-500)' }}>
+                    <Link href={route('admin.kamar.index')} style={{ color: 'var(--ink-500)' }}>Manajemen Kamar</Link>
+                    <span style={{ color: 'var(--ink-300)', margin: '0 8px' }}>/</span>
+                    <span style={{ color: 'var(--blue-600)', fontWeight: 500 }}>{isEdit ? `Edit ${kamar?.nomor_kamar}` : 'Tambah Kamar'}</span>
+                </nav>
+                <Link href={route('admin.kamar.index')} className="btn btn-ghost btn-sm">
+                    <Icon name="arrow-left" size={14} /> Kembali
+                </Link>
+            </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }} className="kamar-form-grid">
+            <form onSubmit={submit}>
+                <section style={{
+                    background: 'white', borderRadius: 14, padding: 28,
+                    border: '1px solid rgba(11,13,26,0.06)',
+                    boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                }}>
+                    <h3 style={{ margin: '0 0 22px', fontSize: 17, fontWeight: 700, color: 'var(--ink-900)' }}>Detail Kamar</h3>
+
+                    <div className="kamar-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
                         {/* LEFT column */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                             <Field label="Nomor Kamar" htmlFor="nomor_kamar" error={form.errors.nomor_kamar}>
                                 <input id="nomor_kamar" type="text" className="input"
                                     value={form.data.nomor_kamar}
                                     onChange={(e) => form.setData('nomor_kamar', e.target.value)}
-                                    placeholder="Contoh: A01" required
-                                    style={{ borderRadius: 10 }} />
+                                    placeholder="Contoh: A01" required />
                             </Field>
 
                             <Field label="Tipe" htmlFor="tipe" error={form.errors.tipe}>
                                 <select id="tipe" className="input"
-                                    value={form.data.tipe} onChange={(e) => form.setData('tipe', e.target.value)}
-                                    style={{ borderRadius: 10 }}>
+                                    value={form.data.tipe} onChange={(e) => form.setData('tipe', e.target.value)}>
                                     <option value="standar">Standar</option>
                                     <option value="deluxe">Deluxe</option>
                                     <option value="vip">VIP</option>
@@ -96,12 +122,12 @@ export default function KamarForm() {
 
                             <Field label="Harga Sewa / Bulan" htmlFor="harga" error={form.errors.harga_bulanan}>
                                 <div style={{ position: 'relative' }}>
-                                    <span style={{ position: 'absolute', left: 14, top: 12, fontSize: 14, color: '#94A3B8' }}>Rp</span>
+                                    <span style={{ position: 'absolute', left: 14, top: 12, fontSize: 14, color: 'var(--ink-400)' }}>Rp</span>
                                     <input id="harga" type="number" className="input"
                                         value={form.data.harga_bulanan || ''}
                                         onChange={(e) => form.setData('harga_bulanan', Number(e.target.value))}
                                         placeholder="0" min="0"
-                                        style={{ borderRadius: 10, paddingLeft: 40 }} />
+                                        style={{ paddingLeft: 40, fontVariantNumeric: 'tabular-nums' }} />
                                 </div>
                             </Field>
 
@@ -110,55 +136,40 @@ export default function KamarForm() {
                                     <input id="luas" type="number" className="input"
                                         value={form.data.luas_m2 || ''}
                                         onChange={(e) => form.setData('luas_m2', e.target.value ? Number(e.target.value) : '')}
-                                        placeholder="0" min="0"
-                                        style={{ borderRadius: 10 }} />
+                                        placeholder="0" min="0" />
                                 </Field>
                                 <Field label="Lantai" htmlFor="lantai" error={form.errors.lantai}>
                                     <input id="lantai" type="number" className="input"
                                         value={form.data.lantai || ''}
                                         onChange={(e) => form.setData('lantai', e.target.value ? Number(e.target.value) : '')}
-                                        placeholder="0" min="0"
-                                        style={{ borderRadius: 10 }} />
+                                        placeholder="0" min="0" />
                                 </Field>
                             </div>
-
-                            <Field label="Status" htmlFor="status" error={form.errors.status}>
-                                <select id="status" className="input"
-                                    value={form.data.status} onChange={(e) => form.setData('status', e.target.value)}
-                                    style={{ borderRadius: 10 }}>
-                                    <option value="tersedia">Kosong (Tersedia)</option>
-                                    <option value="terisi">Terisi</option>
-                                    <option value="maintenance">Maintenance</option>
-                                </select>
-                            </Field>
                         </div>
 
                         {/* RIGHT column */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                             <Field label="Fasilitas" htmlFor="fasilitas">
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 2 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 2 }}>
                                     {FASILITAS_OPTIONS.map((f) => {
                                         const checked = form.data.fasilitas.includes(f);
                                         return (
                                             <label key={f} style={{
                                                 display: 'flex', alignItems: 'center', gap: 10,
-                                                cursor: 'pointer', userSelect: 'none', fontSize: 14, color: '#475569',
+                                                cursor: 'pointer', userSelect: 'none', fontSize: 14, color: 'var(--ink-700)',
+                                                position: 'relative',
                                             }}>
                                                 <span style={{
                                                     width: 18, height: 18, borderRadius: 4,
-                                                    background: checked ? '#2563EB' : 'transparent',
-                                                    border: checked ? 'none' : '1.5px solid #CBD5E1',
-                                                    display: 'inline-grid', placeItems: 'center',
-                                                    transition: 'all 180ms',
+                                                    background: checked ? 'var(--blue-600)' : 'transparent',
+                                                    border: checked ? 'none' : '1.5px solid rgba(11,13,26,0.18)',
+                                                    display: 'inline-grid', placeItems: 'center', flex: '0 0 auto',
+                                                    transition: 'all 180ms var(--ease)',
                                                 }}>
-                                                    {checked && (
-                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                                            <path d="M5 12l5 5L20 7" />
-                                                        </svg>
-                                                    )}
+                                                    {checked && <Icon name="check" size={11} stroke={3} style={{ color: 'white' }} />}
                                                 </span>
                                                 <input type="checkbox" checked={checked} onChange={() => toggleFasilitas(f)}
-                                                    style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }} />
+                                                    style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }} />
                                                 {f}
                                             </label>
                                         );
@@ -167,97 +178,115 @@ export default function KamarForm() {
                             </Field>
 
                             <Field label="Deskripsi" htmlFor="deskripsi" error={form.errors.deskripsi}>
-                                <textarea id="deskripsi"
+                                <textarea id="deskripsi" className="input"
                                     value={form.data.deskripsi}
                                     onChange={(e) => form.setData('deskripsi', e.target.value)}
-                                    placeholder="Tuliskan deskripsi lengkap kamar di sini..."
+                                    placeholder="Tuliskan deskripsi lengkap kamar di sini…"
                                     rows={5} maxLength={1000}
                                     style={{
-                                        width: '100%', padding: 14, borderRadius: 10,
-                                        border: '1px solid #E5E7EB', fontSize: 14, color: '#0F172A',
-                                        fontFamily: 'inherit', resize: 'vertical',
+                                        fontFamily: 'inherit', resize: 'vertical', height: 'auto', padding: 12,
                                     }} />
                             </Field>
                         </div>
                     </div>
 
-                    {/* Foto upload section (visible only in edit mode) */}
-                    {isEdit && kamar && (
-                        <div style={{ marginTop: 28, paddingTop: 28, borderTop: '1px solid #F1F5F9' }}>
-                            <label style={{ fontSize: 14, fontWeight: 600, color: '#0F172A', display: 'block', marginBottom: 10 }}>
-                                Foto Kamar ({kamar.foto.length}/5)
-                            </label>
-                            <div style={{
-                                border: '2px dashed #CBD5E1', borderRadius: 12,
-                                padding: 24, textAlign: 'center', background: '#F8FAFC',
-                            }}>
-                                <div style={{
-                                    width: 48, height: 48, borderRadius: 12,
-                                    background: '#EFF6FF', color: '#2563EB',
-                                    display: 'inline-grid', placeItems: 'center', marginBottom: 8,
-                                }}>
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                                    </svg>
-                                </div>
-                                <div style={{ fontSize: 14, fontWeight: 500, color: '#0F172A' }}>Upload Foto (maks. 5)</div>
-                                <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>JPG, PNG maks 5MB</div>
-                                <form action={route('admin.kamar.foto.store', kamar.id)} method="POST" encType="multipart/form-data" style={{ marginTop: 12 }}>
-                                    <input type="hidden" name="_token" value={(document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content ?? ''} />
-                                    <input type="file" name="foto" accept="image/jpeg,image/png,image/webp"
-                                        onChange={(e) => (e.currentTarget.form as HTMLFormElement).submit()}
-                                        style={{ fontSize: 13 }} />
-                                </form>
-                            </div>
+                    {/* ───── Foto Kamar section (FULL WIDTH, untuk create + edit) ───── */}
+                    <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid rgba(11,13,26,0.06)' }}>
+                        <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)', display: 'block', marginBottom: 12 }}>
+                            Foto Kamar
+                        </label>
 
-                            {kamar.foto.length > 0 && (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginTop: 14 }}>
-                                    {kamar.foto.map((f) => (
-                                        <div key={f.id} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
-                                            <img src={f.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            <Link
-                                                href={route('admin.kamar.foto.destroy', { kamar: kamar.id, foto_kamar: f.id })}
-                                                method="delete"
-                                                as="button"
-                                                style={{
-                                                    position: 'absolute', top: 6, right: 6,
-                                                    width: 22, height: 22, borderRadius: 999,
-                                                    background: '#EF4444', color: 'white', border: 0,
-                                                    display: 'grid', placeItems: 'center', cursor: 'pointer',
-                                                }} aria-label="Hapus foto">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M18 6L6 18M6 6l12 12" />
-                                                </svg>
-                                            </Link>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                        {/* Upload area */}
+                        <label htmlFor="foto_input" style={{
+                            display: 'block', cursor: 'pointer', textAlign: 'center',
+                            border: '2px dashed rgba(11,13,26,0.15)', borderRadius: 12,
+                            padding: 36, background: 'var(--ink-50)',
+                            transition: 'all 180ms var(--ease)',
+                        }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--blue-400)'; e.currentTarget.style.background = 'rgba(96,165,250,0.05)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(11,13,26,0.15)'; e.currentTarget.style.background = 'var(--ink-50)'; }}>
+                            <div style={{
+                                width: 56, height: 56, borderRadius: 14,
+                                background: 'white', color: 'var(--blue-600)',
+                                display: 'inline-grid', placeItems: 'center', marginBottom: 12,
+                                border: '1px solid rgba(11,13,26,0.06)',
+                            }}>
+                                <Icon name="upload" size={26} />
+                            </div>
+                            <div style={{ fontSize: 14.5, color: 'var(--ink-900)', fontWeight: 500 }}>Upload Foto (maks. 5)</div>
+                            <div style={{ fontSize: 12.5, color: 'var(--ink-400)', marginTop: 4 }}>JPG, PNG maks 5MB</div>
+                        </label>
+                        <input id="foto_input" type="file" multiple
+                            accept="image/jpeg,image/png,image/webp"
+                            style={{ display: 'none' }}
+                            onChange={onFotoInput} />
+
+                        {/* CREATE mode preview thumbnails */}
+                        {!isEdit && fotoPreviews.length > 0 && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, marginTop: 16 }}>
+                                {fotoPreviews.map((preview, idx) => (
+                                    <div key={idx} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
+                                        <img src={preview.url} alt={`Preview ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <button type="button" onClick={() => removeFotoCreate(idx)}
+                                            aria-label="Hapus foto"
+                                            style={{
+                                                position: 'absolute', top: 6, right: 6,
+                                                width: 24, height: 24, borderRadius: 999,
+                                                background: 'rgba(210,68,50,0.95)', color: 'white', border: 0,
+                                                display: 'grid', placeItems: 'center', cursor: 'pointer',
+                                            }}>
+                                            <Icon name="x" size={13} stroke={2.5} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* EDIT mode existing thumbnails */}
+                        {isEdit && kamar && kamar.foto.length > 0 && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, marginTop: 16 }}>
+                                {kamar.foto.map((f) => (
+                                    <div key={f.id} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
+                                        <img src={f.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <Link href={route('admin.kamar.foto.destroy', { kamar: kamar.id, foto_kamar: f.id })}
+                                            method="delete" as="button"
+                                            aria-label="Hapus foto"
+                                            style={{
+                                                position: 'absolute', top: 6, right: 6,
+                                                width: 24, height: 24, borderRadius: 999,
+                                                background: 'rgba(210,68,50,0.95)', color: 'white', border: 0,
+                                                display: 'grid', placeItems: 'center', cursor: 'pointer',
+                                            }}>
+                                            <Icon name="x" size={13} stroke={2.5} />
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Status field at bottom (per Figma) */}
+                    <div style={{ marginTop: 20, maxWidth: 320 }}>
+                        <Field label="Status" htmlFor="status" error={form.errors.status}>
+                            <select id="status" className="input"
+                                value={form.data.status} onChange={(e) => form.setData('status', e.target.value)}>
+                                <option value="tersedia">Kosong (Tersedia)</option>
+                                <option value="terisi">Terisi</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </Field>
+                    </div>
+                </section>
 
                 {/* Footer buttons */}
                 <div style={{
-                    background: 'white', borderRadius: 14, padding: 20,
-                    marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 12,
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    background: 'white', borderRadius: 14, padding: 18,
+                    marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 12, alignItems: 'center',
+                    border: '1px solid rgba(11,13,26,0.06)',
+                    boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
                 }}>
-                    <Link href={route('admin.kamar.index')}
-                        style={{
-                            padding: '11px 22px', borderRadius: 10,
-                            border: '1px solid #E5E7EB', color: '#475569',
-                            fontSize: 14, fontWeight: 500,
-                        }}>
-                        Batal
-                    </Link>
-                    <button type="submit" disabled={form.processing}
-                        style={{
-                            padding: '11px 28px', borderRadius: 10,
-                            background: '#2563EB', color: 'white',
-                            border: 0, cursor: 'pointer',
-                            fontSize: 14, fontWeight: 600,
-                        }}>
+                    <Link href={route('admin.kamar.index')} className="btn btn-ghost btn-sm">Batal</Link>
+                    <button type="submit" disabled={form.processing} className="btn btn-primary">
                         {form.processing ? 'Menyimpan…' : isEdit ? 'Simpan Perubahan' : 'Simpan'}
                     </button>
                 </div>

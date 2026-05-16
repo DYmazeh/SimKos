@@ -88,4 +88,33 @@ class NotifikasiService
             route('admin.penyewa.index')
         );
     }
+
+    /**
+     * Penyewa submit komplen baru → notif ke admin.
+     * Counter ke-pickup di sidebar_counts.komplen_aktif (admin sidebar nav).
+     */
+    public static function notifyKomplenBaru(string $namaPenyewa, string $kamar, string $judul): void
+    {
+        self::notifyRole(
+            'admin',
+            'Komplen Baru Masuk',
+            "{$namaPenyewa} (Kamar {$kamar}) mengajukan komplen: {$judul}",
+            Notifikasi::TIPE_KOMPLEN,
+            route('admin.kamar.index')
+        );
+    }
+
+    /**
+     * Admin mark komplen selesai → notif ke penyewa.
+     */
+    public static function notifyKomplenSelesai(int $userId, string $judul): void
+    {
+        self::create(
+            $userId,
+            'Komplen Selesai',
+            "Komplen '{$judul}' telah ditandai selesai oleh pengelola.",
+            Notifikasi::TIPE_KOMPLEN,
+            route('penyewa.komplen.index')
+        );
+    }
 }

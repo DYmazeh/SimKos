@@ -8,8 +8,15 @@ type NavItem = {
     href: string;
     icon: 'home' | 'bed' | 'user' | 'wallet' | 'receipt' | 'shield';
     active?: boolean;
-    children?: Array<{ label: string; href: string; active?: boolean }>;
+    badge?: number;
+    children?: Array<{ label: string; href: string; active?: boolean; badge?: number }>;
 };
+
+type SidebarCounts = {
+    tagihan_belum: number;
+    konfirmasi_pending: number;
+    komplen_aktif: number;
+} | null;
 
 const PIN_KEY = 'simkos.sidebar.pinned';
 
@@ -22,9 +29,10 @@ export default function AdminLayout({
     children: ReactNode;
     breadcrumb?: ReactNode;
 }) {
-    const { props, url } = usePage<PageProps>();
+    const { props, url } = usePage<PageProps & { sidebar_counts?: SidebarCounts }>();
     const { auth, flash } = props;
     const user = auth.user;
+    const counts = props.sidebar_counts ?? null;
 
     const [pembayaranOpen, setPembayaranOpen] = useState(
         url.startsWith('/admin/tagihan') || url.startsWith('/admin/pembayaran'),
@@ -53,23 +61,30 @@ export default function AdminLayout({
 
     const logout = () => router.post(route('logout'));
 
+    const tagihanCount = counts?.tagihan_belum ?? 0;
+    const konfirmasiCount = counts?.konfirmasi_pending ?? 0;
+    const komplenCount = counts?.komplen_aktif ?? 0;
+
+    // Parent "Pembayaran" badge = sum sub-items kalau collapsed, hidden kalau expanded
+    const pembayaranParentBadge = pembayaranOpen ? 0 : (tagihanCount + konfirmasiCount);
+
     const navItems: NavItem[] = [
         { label: 'Dashboard', href: route('admin.dashboard'), icon: 'home', active: url === '/admin/dashboard' },
-        { label: 'Kamar', href: route('admin.kamar.index'), icon: 'bed', active: url.startsWith('/admin/kamar') },
+        { label: 'Kamar', href: route('admin.kamar.index'), icon: 'bed', active: url.startsWith('/admin/kamar'), badge: komplenCount },
         { label: 'Penyewa', href: route('admin.penyewa.index'), icon: 'user', active: url.startsWith('/admin/penyewa') },
         {
             label: 'Pembayaran', href: route('admin.tagihan.index'), icon: 'wallet',
             active: url.startsWith('/admin/tagihan') || url.startsWith('/admin/pembayaran'),
+            badge: pembayaranParentBadge,
             children: [
-                { label: 'Tagihan', href: route('admin.tagihan.index'), active: url.startsWith('/admin/tagihan') },
-                { label: 'Konfirmasi Bayar', href: route('admin.pembayaran.index'), active: url.startsWith('/admin/pembayaran') },
+                { label: 'Tagihan', href: route('admin.tagihan.index'), active: url.startsWith('/admin/tagihan'), badge: tagihanCount },
+                { label: 'Konfirmasi Pembayaran', href: route('admin.pembayaran.index'), active: url.startsWith('/admin/pembayaran'), badge: konfirmasiCount },
             ],
         },
         { label: 'Laporan', href: route('admin.laporan.keuangan'), icon: 'receipt', active: url.startsWith('/admin/laporan') },
     ];
 
     const initial = user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-    const unreadCount = (user as { unread_notif_count?: number }).unread_notif_count ?? 0;
 
     return (
         <div style={{ minHeight: '100vh', background: '#F8FAFC' }}>
@@ -186,6 +201,7 @@ export default function AdminLayout({
                                         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                             <Icon name={item.icon} size={18} />
                                             {item.label}
+                                            {(item.badge ?? 0) > 0 && <NavBadge count={item.badge!} />}
                                         </span>
                                         <Icon name="chevron-down" size={14}
                                             style={{ transform: isOpen ? 'rotate(180deg)' : undefined, transition: 'transform 180ms' }} />
@@ -195,6 +211,7 @@ export default function AdminLayout({
                                         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                             <Icon name={item.icon} size={18} />
                                             {item.label}
+                                            {(item.badge ?? 0) > 0 && <NavBadge count={item.badge!} />}
                                         </span>
                                     </Link>
                                 )}
@@ -203,7 +220,7 @@ export default function AdminLayout({
                                         {item.children.map((sub) => (
                                             <Link key={sub.label} href={sub.href}
                                                 style={{
-                                                    display: 'block',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                                     padding: '7px 12px', fontSize: 13,
                                                     borderRadius: 6,
                                                     color: sub.active ? '#2563EB' : '#64748B',
@@ -211,7 +228,8 @@ export default function AdminLayout({
                                                     background: sub.active ? '#F1F5F9' : 'transparent',
                                                     transition: 'background 180ms',
                                                 }}>
-                                                {sub.label}
+                                                <span>{sub.label}</span>
+                                                {(sub.badge ?? 0) > 0 && <NavBadge count={sub.badge!} />}
                                             </Link>
                                         ))}
                                     </div>
@@ -279,34 +297,6 @@ export default function AdminLayout({
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        {/* Bell */}
-                        <button style={{
-                            position: 'relative', width: 40, height: 40,
-                            display: 'grid', placeItems: 'center',
-                            background: 'white', border: '1px solid #E5E7EB',
-                            borderRadius: 999, cursor: 'pointer', color: '#475569',
-                            transition: 'all 180ms',
-                        }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = '#F8FAFC')}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
-                        >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-                            </svg>
-                            {unreadCount > 0 && (
-                                <span style={{
-                                    position: 'absolute', top: -2, right: -2,
-                                    minWidth: 18, height: 18, padding: '0 5px',
-                                    borderRadius: 999,
-                                    background: '#EF4444', color: 'white',
-                                    fontSize: 10, fontWeight: 700,
-                                    display: 'grid', placeItems: 'center',
-                                    border: '2px solid #F8FAFC',
-                                }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
-                            )}
-                        </button>
-
                         {/* Profile dropdown */}
                         <div style={{ position: 'relative' }}>
                             <button onClick={() => setProfileOpen((o) => !o)}
@@ -384,6 +374,18 @@ export default function AdminLayout({
         </div>
     );
 }
+
+const NavBadge = ({ count }: { count: number }) => (
+    <span style={{
+        marginLeft: 'auto', minWidth: 18, height: 18, padding: '0 6px',
+        borderRadius: 999, background: '#EF4444', color: 'white',
+        fontSize: 10.5, fontWeight: 700, lineHeight: '18px',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 2px 6px -2px rgba(239,68,68,0.5)',
+    }}>
+        {count > 99 ? '99+' : count}
+    </span>
+);
 
 const navItemStyle = (active?: boolean): CSSProperties => ({
     width: '100%',

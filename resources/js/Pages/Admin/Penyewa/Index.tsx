@@ -208,7 +208,7 @@ const Pagination = ({ current, last, onGo }: { current: number; last: number; on
             style={{
                 minWidth: 32, height: 32, padding: '0 8px', borderRadius: 8,
                 border: active ? 0 : '1px solid rgba(11,13,26,0.10)',
-                background: active ? 'var(--ink-900)' : 'white',
+                background: active ? 'var(--blue-600)' : 'white',
                 color: active ? 'white' : 'var(--ink-700)',
                 fontWeight: active ? 600 : 500, fontSize: 13,
                 cursor: 'pointer', fontVariantNumeric: 'tabular-nums',

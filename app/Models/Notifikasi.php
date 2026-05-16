@@ -27,6 +27,7 @@ class Notifikasi extends Model
     public const TIPE_TAGIHAN = 'tagihan';
     public const TIPE_SISTEM = 'sistem';
     public const TIPE_KONTRAK = 'kontrak';
+    public const TIPE_KOMPLEN = 'komplen';
 
     public function user(): BelongsTo
     {

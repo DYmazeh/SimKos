@@ -17,7 +17,8 @@ type IconName =
     | 'shield' | 'bed' | 'wallet' | 'receipt' | 'map-pin'
     | 'wifi' | 'calendar' | 'clock' | 'upload' | 'home' | 'logo-wa'
     | 'search' | 'edit' | 'trash' | 'plus' | 'image' | 'info'
-    | 'wave' | 'card' | 'receipt-search' | 'sparkles' | 'download' | 'ban' | 'refresh' | 'menu';
+    | 'wave' | 'card' | 'receipt-search' | 'sparkles' | 'download' | 'ban' | 'refresh' | 'menu'
+    | 'ac' | 'toilet' | 'desk' | 'closet' | 'parking' | 'fan' | 'send' | 'alert-circle' | 'expand';
 
 type IconProps = {
     name: IconName;
@@ -78,6 +79,15 @@ export const Icon = ({ name, size = 18, stroke = 1.6, className = '', style }: I
         case 'ban':         return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>;
         case 'refresh':     return <svg {...props}><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5"/></svg>;
         case 'menu':        return <svg {...props}><path d="M3 6h18M3 12h18M3 18h18"/></svg>;
+        case 'ac':          return <svg {...props}><rect x="2" y="5" width="20" height="9" rx="2"/><path d="M6 14v2M10 14v3M14 14v2M18 14v3M6 9h12"/></svg>;
+        case 'toilet':      return <svg {...props}><path d="M4 3h10v9H4z"/><path d="M14 5h4l2 7h-6"/><path d="M5 12v5a3 3 0 0 0 3 3h3a3 3 0 0 0 3-3v-5"/></svg>;
+        case 'desk':        return <svg {...props}><path d="M2 9h20M5 9v11M19 9v11M8 9V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M9 14h6"/></svg>;
+        case 'closet':      return <svg {...props}><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M9 11h.01M15 11h.01"/></svg>;
+        case 'parking':     return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>;
+        case 'fan':         return <svg {...props}><circle cx="12" cy="12" r="2"/><path d="M12 10c0-4-2-7-5-7s-3 3-3 5 3 4 8 4M14 12c4 0 7-2 7-5s-3-3-5-3-4 3-4 8M12 14c0 4 2 7 5 7s3-3 3-5-3-4-8-4M10 12c-4 0-7 2-7 5s3 3 5 3 4-3 4-8"/></svg>;
+        case 'send':        return <svg {...props}><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>;
+        case 'alert-circle': return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>;
+        case 'expand':      return <svg {...props}><path d="M3 8V3h5M21 8V3h-5M3 16v5h5M21 16v5h-5"/></svg>;
         default: return null;
     }
 };
@@ -193,14 +203,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({ icon, suffix, .
     return (
         <div style={{ position: 'relative' }}>
             {icon && (
-                <span style={{ position: 'absolute', left: 14, top: 13, color: 'var(--ink-400)' }} aria-hidden="true">
-                    <Icon name={icon} size={18} />
+                <span style={{
+                    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                    color: 'var(--ink-400)', pointerEvents: 'none', display: 'inline-flex',
+                }} aria-hidden="true">
+                    <Icon name={icon} size={16} />
                 </span>
             )}
             <input
                 ref={ref}
                 className="input"
-                style={{ paddingLeft: icon ? 42 : undefined, paddingRight: suffix ? 44 : undefined }}
+                style={{ paddingLeft: icon ? 44 : undefined, paddingRight: suffix ? 44 : undefined, ...((props as { style?: React.CSSProperties }).style ?? {}) }}
                 {...props}
             />
             {suffix && <span style={{ position: 'absolute', right: 6, top: 5 }}>{suffix}</span>}

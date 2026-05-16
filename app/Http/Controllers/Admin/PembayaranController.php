@@ -23,14 +23,19 @@ class PembayaranController extends Controller
     public function index(Request $request): Response
     {
         $status = $request->string('status')->toString() ?: 'pending';
+        $search = $request->string('q')->toString();
 
         $query = Pembayaran::query()
             ->with(['tagihan.sewa.penyewa', 'tagihan.sewa.kamar'])
             ->where('status_verifikasi', $status);
 
+        if ($search) {
+            $query->whereHas('tagihan.sewa.penyewa',
+                fn ($q) => $q->whereRaw('LOWER(nama_lengkap) LIKE ?', ['%'.strtolower($search).'%']));
+        }
+
         $paginator = $query->latest()->paginate(20)->withQueryString();
 
-        // KPI counts
         $kpi = [
             'pending' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_PENDING)->count(),
             'approved' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_APPROVED)->count(),
@@ -45,7 +50,7 @@ class PembayaranController extends Controller
             'kamar_nomor' => $p->tagihan->sewa->kamar->nomor_kamar ?? '—',
             'periode' => $p->tagihan->periode->format('Y-m-d'),
             'jumlah_bayar' => (int) $p->jumlah_bayar,
-            'tgl_bayar' => $p->tgl_bayar->format('Y-m-d'),
+            'tgl_bayar' => $p->created_at->format('Y-m-d H:i:s'),  // pakai created_at = tgl upload
             'metode' => $p->metode,
             'status_verifikasi' => $p->status_verifikasi,
             'bukti_transfer_url' => $p->bukti_transfer_url,
@@ -54,13 +59,44 @@ class PembayaranController extends Controller
         return Inertia::render('Admin/Pembayaran/Index', [
             'pembayaran' => $pembayaran,
             'kpi' => $kpi,
-            'filters' => ['status' => $status],
+            'filters' => ['status' => $status, 'q' => $search],
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
                 'total' => $paginator->total(),
                 'from' => $paginator->firstItem() ?? 0,
                 'to' => $paginator->lastItem() ?? 0,
+            ],
+        ]);
+    }
+
+    /**
+     * Detail satu pembayaran untuk verifikasi (Konfirmasi Pembayaran > Detail).
+     */
+    public function show(Pembayaran $pembayaran): Response
+    {
+        $pembayaran->load(['tagihan.sewa.penyewa', 'tagihan.sewa.kamar', 'verifikator']);
+        $tagihan = $pembayaran->tagihan;
+        $kamar = $tagihan?->sewa?->kamar;
+        $penyewa = $tagihan?->sewa?->penyewa;
+
+        return Inertia::render('Admin/Pembayaran/Show', [
+            'pembayaran' => [
+                'id' => $pembayaran->id,
+                'kode_transaksi' => '#TRX-'.$pembayaran->created_at->format('Ymd').'-'.str_pad((string) $pembayaran->id, 3, '0', STR_PAD_LEFT),
+                'penyewa_nama' => $penyewa?->nama_lengkap ?? '—',
+                'kamar_nomor' => $kamar?->nomor_kamar ?? '—',
+                'kamar_lantai' => $kamar?->lantai,
+                'periode' => $tagihan?->periode?->format('Y-m-d'),
+                'jumlah_bayar' => (int) $pembayaran->jumlah_bayar,
+                'tgl_jatuh_tempo' => $tagihan?->tgl_jatuh_tempo?->format('Y-m-d'),
+                'tgl_upload' => $pembayaran->created_at->format('Y-m-d H:i'),
+                'metode' => $pembayaran->metode,
+                'status_verifikasi' => $pembayaran->status_verifikasi,
+                'bukti_transfer_url' => $pembayaran->bukti_transfer_url,
+                'catatan' => $pembayaran->catatan,
+                'verified_at' => $pembayaran->verified_at?->format('Y-m-d H:i'),
+                'verifikator_nama' => $pembayaran->verifikator?->name,
             ],
         ]);
     }

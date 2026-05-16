@@ -115,10 +115,10 @@ a { color: inherit; text-decoration: none; }
 .btn-lg { padding: 14px 26px; font-size: 16px; }
 .btn-sm { padding: 7px 14px; font-size: 13.5px; }
 .btn-primary {
-  background: var(--ink-900); color: var(--paper);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 6px 16px -6px rgba(11,13,26,0.45);
+  background: var(--blue-600); color: white;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 6px 16px -6px rgba(37,99,235,0.45);
 }
-.btn-primary:hover { transform: translateY(-1px); background: #15182b; }
+.btn-primary:hover { transform: translateY(-1px); background: var(--blue-700); }
 .btn-primary:active { transform: translateY(0); }
 .btn-ghost {
   background: rgba(255,255,255,0.6); color: var(--ink-800);

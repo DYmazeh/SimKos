@@ -38,6 +38,7 @@ export default function AuthenticatedLayout({
         ? [
             { label: 'Dashboard', href: route('penyewa.dashboard'), active: url.startsWith('/penyewa/dashboard') },
             { label: 'Riwayat', href: route('penyewa.riwayat'), active: url.startsWith('/penyewa/riwayat') },
+            { label: 'Komplen', href: route('penyewa.komplen.index'), active: url.startsWith('/penyewa/komplen') },
           ]
         : [];
 

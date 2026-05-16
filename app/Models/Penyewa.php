@@ -43,4 +43,9 @@ class Penyewa extends Model
     {
         return $this->hasOne(Sewa::class)->where('status', Sewa::STATUS_AKTIF);
     }
+
+    public function komplain(): HasMany
+    {
+        return $this->hasMany(Komplain::class)->latest();
+    }
 }

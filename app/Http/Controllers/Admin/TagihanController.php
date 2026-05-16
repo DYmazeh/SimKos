@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
+use App\Models\Penyewa;
 use App\Models\Tagihan;
 use App\Services\TagihanGenerator;
 use App\Services\WhatsappReminderLink;
@@ -18,6 +19,9 @@ class TagihanController extends Controller
 {
     public function __construct(private TagihanGenerator $generator) {}
 
+    /**
+     * Index per-penyewa: 1 row per penyewa dengan summary tagihan aktif + status terburuk.
+     */
     public function index(Request $request): Response
     {
         // Auto-mark tagihan terlambat
@@ -26,54 +30,68 @@ class TagihanController extends Controller
             ->where('tgl_jatuh_tempo', '<', Carbon::today()->toDateString())
             ->update(['status' => Tagihan::STATUS_TERLAMBAT, 'updated_at' => now()]);
 
-        $query = Tagihan::query()->with(['sewa.penyewa', 'sewa.kamar']);
+        $search = $request->string('q')->toString();
 
-        if ($status = $request->string('status')->toString()) {
-            $query->where('status', $status);
+        $query = Penyewa::query()
+            ->whereHas('sewa.tagihan')
+            ->with(['sewaAktif.kamar']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(nama_lengkap) LIKE ?', ['%'.strtolower($search).'%'])
+                  ->orWhereHas('sewa.kamar', fn ($k) => $k->whereRaw('LOWER(nomor_kamar) LIKE ?', ['%'.strtolower($search).'%']));
+            });
         }
 
-        $periode = $request->string('periode')->toString() ?: Carbon::now()->format('Y-m');
-        try {
-            $startMonth = Carbon::createFromFormat('Y-m', $periode)->startOfMonth()->toDateString();
-            $query->where('periode', $startMonth);
-        } catch (\Exception) {
-            $periode = Carbon::now()->format('Y-m');
-        }
+        $paginator = $query->orderBy('nama_lengkap')->paginate(15)->withQueryString();
 
-        $paginator = $query->orderBy('tgl_jatuh_tempo')->paginate(20)->withQueryString();
+        $rows = collect($paginator->items())->map(function (Penyewa $p) {
+            $tagihanList = Tagihan::query()
+                ->whereHas('sewa', fn ($q) => $q->where('penyewa_id', $p->id))
+                ->get();
 
-        // KPI counts untuk periode
-        $startOfMonth = Carbon::createFromFormat('Y-m', $periode)->startOfMonth();
-        $kpiQuery = Tagihan::query()->where('periode', $startOfMonth->toDateString());
+            $belumLunasTagihan = $tagihanList->whereNotIn('status', [Tagihan::STATUS_LUNAS]);
+            $totalBelumLunas = (int) $belumLunasTagihan->sum('jumlah');
+
+            $statusAggregate = 'lunas';
+            if ($tagihanList->where('status', Tagihan::STATUS_TERLAMBAT)->count() > 0
+                || $tagihanList->where('status', Tagihan::STATUS_BELUM_BAYAR)->count() > 0) {
+                $statusAggregate = 'belum_bayar';
+            } elseif ($tagihanList->where('status', Tagihan::STATUS_MENUNGGU_VERIFIKASI)->count() > 0) {
+                $statusAggregate = 'menunggu_verifikasi';
+            }
+
+            // WA link pakai tagihan paling urgent (yg belum lunas pertama)
+            $waLink = null;
+            $firstUnpaid = $belumLunasTagihan->sortBy('tgl_jatuh_tempo')->first();
+            if ($firstUnpaid) {
+                $waLink = WhatsappReminderLink::make($p, $firstUnpaid);
+            }
+
+            return [
+                'id' => $p->id,
+                'nama_lengkap' => $p->nama_lengkap,
+                'kamar_nomor' => $p->sewaAktif?->kamar?->nomor_kamar ?? '—',
+                'total_tagihan' => $tagihanList->count(),
+                'total_belum_lunas' => $totalBelumLunas,
+                'status' => $statusAggregate,
+                'wa_link' => $waLink,
+            ];
+        });
+
+        // KPI global (semua periode)
         $kpi = [
-            'total' => $kpiQuery->count(),
-            'lunas' => (clone $kpiQuery)->where('status', Tagihan::STATUS_LUNAS)->count(),
-            'belum_bayar' => (clone $kpiQuery)->whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])->count(),
+            'total_penyewa' => Penyewa::whereHas('sewa.tagihan')->count(),
+            'lunas_pembayaran' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_APPROVED)->count(),
+            'belum_bayar_tagihan' => Tagihan::whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])->count(),
         ];
 
-        $tagihan = collect($paginator->items())->map(fn ($t) => [
-            'id' => $t->id,
-            'penyewa_nama' => $t->sewa->penyewa->nama_lengkap ?? '—',
-            'kamar_nomor' => $t->sewa->kamar->nomor_kamar ?? '—',
-            'jumlah' => (int) $t->jumlah,
-            'periode' => $t->periode->format('Y-m-d'),
-            'tgl_jatuh_tempo' => $t->tgl_jatuh_tempo->format('Y-m-d'),
-            'status' => $t->status,
-            'wa_link' => WhatsappReminderLink::make($t->sewa->penyewa, $t),
-        ]);
-
-        $periodeOptions = collect(range(0, 11))->map(
-            fn ($i) => Carbon::now()->subMonths($i)->format('Y-m')
-        )->values();
-
         return Inertia::render('Admin/Tagihan/Index', [
-            'tagihan' => $tagihan,
+            'penyewaRows' => $rows,
             'kpi' => $kpi,
             'filters' => [
-                'status' => $request->string('status')->toString(),
-                'periode' => $periode,
+                'q' => $search,
             ],
-            'periodeOptions' => $periodeOptions,
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
@@ -81,6 +99,38 @@ class TagihanController extends Controller
                 'from' => $paginator->firstItem() ?? 0,
                 'to' => $paginator->lastItem() ?? 0,
             ],
+        ]);
+    }
+
+    /**
+     * Detail tagihan per penyewa — list semua tagihan untuk penyewa tertentu.
+     */
+    public function penyewa(Penyewa $penyewa): Response
+    {
+        $tagihan = Tagihan::query()
+            ->whereHas('sewa', fn ($q) => $q->where('penyewa_id', $penyewa->id))
+            ->with(['sewa.kamar', 'pembayaran' => fn ($q) => $q->latest()])
+            ->orderBy('periode', 'desc')
+            ->get()
+            ->map(fn (Tagihan $t) => [
+                'id' => $t->id,
+                'periode' => $t->periode->format('Y-m-d'),
+                'kamar_nomor' => $t->sewa->kamar->nomor_kamar ?? '—',
+                'jumlah' => (int) $t->jumlah,
+                'tgl_jatuh_tempo' => $t->tgl_jatuh_tempo->format('Y-m-d'),
+                'status' => $t->status,
+                'pembayaran_count' => $t->pembayaran->count(),
+                'wa_link' => WhatsappReminderLink::make($penyewa, $t),
+            ]);
+
+        return Inertia::render('Admin/Tagihan/Penyewa', [
+            'penyewa' => [
+                'id' => $penyewa->id,
+                'nama_lengkap' => $penyewa->nama_lengkap,
+                'no_hp' => $penyewa->no_hp,
+                'kamar_aktif' => $penyewa->sewaAktif?->kamar?->nomor_kamar,
+            ],
+            'tagihan' => $tagihan,
         ]);
     }
 

@@ -17,7 +17,9 @@ class KamarController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Kamar::query()->with(['foto' => fn ($q) => $q->orderBy('urutan')]);
+        $query = Kamar::query()
+            ->with(['foto' => fn ($q) => $q->orderBy('urutan')])
+            ->withCount(['komplain as komplen_aktif_count' => fn ($q) => $q->whereNot('status', 'selesai')]);
 
         if ($status = $request->string('status')->toString()) {
             $query->where('status', $status);
@@ -52,7 +54,17 @@ class KamarController extends Controller
 
     public function store(StoreKamarRequest $request): RedirectResponse
     {
-        $kamar = Kamar::create($request->validated());
+        $kamar = Kamar::create($request->safe()->except('foto'));
+
+        // Upload foto (kalau ada) — sekaligus saat create supaya tidak perlu redirect ke edit
+        if ($request->hasFile('foto')) {
+            $files = $request->file('foto');
+            $files = is_array($files) ? $files : [$files];
+            foreach (array_slice($files, 0, 5) as $i => $file) {
+                $path = $file->store('kamar/'.$kamar->id, config('filesystems.default'));
+                $kamar->foto()->create(['url' => $path, 'urutan' => $i]);
+            }
+        }
 
         return redirect()
             ->route('admin.kamar.show', $kamar)
@@ -61,9 +73,15 @@ class KamarController extends Controller
 
     public function show(Kamar $kamar): Response
     {
-        $kamar->load(['foto', 'sewa' => function ($q) {
-            $q->with(['penyewa', 'tagihan'])->orderBy('tgl_mulai', 'desc');
-        }]);
+        $kamar->load([
+            'foto',
+            'sewa' => function ($q) {
+                $q->with(['penyewa', 'tagihan'])->orderBy('tgl_mulai', 'desc');
+            },
+            'komplain' => function ($q) {
+                $q->with('penyewa');
+            },
+        ]);
 
         return Inertia::render('Admin/Kamar/Show', [
             'kamar' => array_merge($this->mapKamar($kamar), [
@@ -77,6 +95,15 @@ class KamarController extends Controller
                 'periode' => $s->tgl_mulai->translatedFormat('d M Y').' — '.($s->tgl_selesai ? $s->tgl_selesai->translatedFormat('d M Y') : 'Sekarang'),
                 'status' => $s->status,
                 'jumlah_tagihan' => $s->tagihan->count(),
+            ])->values(),
+            'komplenList' => $kamar->komplain->map(fn ($k) => [
+                'id' => $k->id,
+                'penyewa_nama' => $k->penyewa?->nama_lengkap ?? '—',
+                'judul' => $k->judul,
+                'deskripsi' => $k->deskripsi,
+                'status' => $k->status,
+                'created_at' => $k->created_at->format('Y-m-d'),
+                'resolved_at' => optional($k->resolved_at)->format('Y-m-d'),
             ])->values(),
         ]);
     }
@@ -169,6 +196,7 @@ class KamarController extends Controller
                     'url' => Storage::disk(config('filesystems.default'))->url($f->url),
                 ])->values()
                 : [],
+            'komplen_aktif_count' => (int) ($k->komplen_aktif_count ?? 0),
         ];
     }
 }
