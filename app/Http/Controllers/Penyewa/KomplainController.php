@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Penyewa;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Penyewa\StoreKomplainRequest;
 use App\Models\Komplain;
+use App\Services\ImageOptimizer;
 use App\Services\NotifikasiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,8 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class KomplainController extends Controller
 {
+    public function __construct(private ImageOptimizer $optimizer) {}
+
     /**
      * Daftar komplen milik penyewa yang sedang login.
      */
@@ -89,10 +92,11 @@ class KomplainController extends Controller
             'status' => Komplain::STATUS_MENUNGGU,
         ]);
 
-        // Upload foto bukti (max 3 per StoreKomplainRequest validation)
+        // Upload foto bukti (max 3 per StoreKomplainRequest validation).
+        // Foto di-optimize ke WebP supaya hemat storage.
         if ($request->hasFile('foto')) {
             foreach ($request->file('foto') as $file) {
-                $path = $file->store('komplain/'.$komplain->id, config('filesystems.default'));
+                $path = $this->optimizer->optimizeAndStore($file, 'komplain/'.$komplain->id);
                 $komplain->foto()->create(['url' => $path]);
             }
         }

@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreKamarRequest;
 use App\Http\Requests\Admin\UpdateKamarRequest;
 use App\Models\FotoKamar;
 use App\Models\Kamar;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,8 @@ use Inertia\Response;
 
 class KamarController extends Controller
 {
+    public function __construct(private ImageOptimizer $optimizer) {}
+
     public function index(Request $request): Response
     {
         $query = Kamar::query()
@@ -56,12 +59,13 @@ class KamarController extends Controller
     {
         $kamar = Kamar::create($request->safe()->except('foto'));
 
-        // Upload foto (kalau ada) — sekaligus saat create supaya tidak perlu redirect ke edit
+        // Upload foto (kalau ada) — sekaligus saat create supaya tidak perlu redirect ke edit.
+        // Foto di-optimize: resize max 1920px + convert ke WebP (~70% lebih kecil dari JPEG).
         if ($request->hasFile('foto')) {
             $files = $request->file('foto');
             $files = is_array($files) ? $files : [$files];
             foreach (array_slice($files, 0, 5) as $i => $file) {
-                $path = $file->store('kamar/'.$kamar->id, config('filesystems.default'));
+                $path = $this->optimizer->optimizeAndStore($file, 'kamar/'.$kamar->id);
                 $kamar->foto()->create(['url' => $path, 'urutan' => $i]);
             }
         }
@@ -158,7 +162,7 @@ class KamarController extends Controller
             'foto.max' => 'Ukuran foto maksimal 5MB.',
         ]);
 
-        $path = $request->file('foto')->store('kamar/'.$kamar->id, config('filesystems.default'));
+        $path = $this->optimizer->optimizeAndStore($request->file('foto'), 'kamar/'.$kamar->id);
 
         $kamar->foto()->create([
             'url' => $path,
