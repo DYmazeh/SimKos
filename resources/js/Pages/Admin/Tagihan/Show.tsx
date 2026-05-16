@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { formatRp } from '@/components/ui';
+import { Icon, formatRp } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type Pembayaran = {
@@ -128,8 +128,8 @@ export default function TagihanShow() {
                                         </div>
                                         {p.bukti_transfer_url && (
                                             <a href={p.bukti_transfer_url} target="_blank" rel="noopener noreferrer"
-                                                style={{ fontSize: 13, color: '#2563EB', textDecoration: 'underline' }}>
-                                                🧾 Lihat bukti transfer
+                                                style={{ fontSize: 13, color: '#2563EB', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                                <Icon name="receipt" size={14} /> Lihat bukti transfer
                                             </a>
                                         )}
                                     </div>
@@ -148,8 +148,9 @@ export default function TagihanShow() {
                                                     background: '#16A34A', color: 'white',
                                                     border: 0, cursor: 'pointer',
                                                     fontSize: 13, fontWeight: 600,
+                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
                                                 }}>
-                                                ✓ Terima &amp; Konfirmasi Lunas
+                                                <Icon name="check" size={14} stroke={2.4} /> Terima &amp; Konfirmasi Lunas
                                             </button>
                                             <button onClick={() => setRejectingId(p.id)}
                                                 style={{
@@ -157,8 +158,9 @@ export default function TagihanShow() {
                                                     background: 'white', color: '#EF4444',
                                                     border: '1px solid #EF4444', cursor: 'pointer',
                                                     fontSize: 13, fontWeight: 600,
+                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
                                                 }}>
-                                                ✗ Tolak Pembayaran
+                                                <Icon name="x" size={14} stroke={2.4} /> Tolak Pembayaran
                                             </button>
                                         </div>
                                     )}

@@ -304,13 +304,128 @@ html.lenis, html.lenis body { height: auto; }
 .h-2 { font-size: 20px; line-height: 1.25; letter-spacing: -0.015em; font-weight: 600; }
 .h-3 { font-size: 17px; line-height: 1.35; letter-spacing: -0.005em; font-weight: 600; }
 
-/* ——— Nav scrim ——— */
+/* ——— Nav scrim (legacy) ——— */
 .nav-scrim {
   background: rgba(255,255,255,0.55);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom: 1px solid rgba(11,13,26,0.06);
 }
+
+/* ——— Floating capsule nav (Perplexity-inspired) ——— */
+.nav-capsule-wrap {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  max-width: calc(100vw - 24px);
+  animation: capsule-in 480ms var(--ease) both;
+}
+@keyframes capsule-in {
+  from { opacity: 0; transform: translate(-50%, -16px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.nav-capsule {
+  background: rgba(11, 13, 26, 0.78);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 6px 8px 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 8px 32px -10px rgba(11, 13, 26, 0.45), 0 2px 8px rgba(0,0,0,0.12);
+  color: rgba(255, 255, 255, 0.92);
+}
+.nav-capsule .nav-link {
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  transition: all 180ms var(--ease);
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+.nav-capsule .nav-link:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+}
+.nav-capsule .nav-link.active {
+  color: var(--ink-900);
+  background: white;
+  font-weight: 600;
+}
+.nav-capsule-cta {
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: white;
+  color: var(--ink-900);
+  border: 0;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-capsule-cta:hover {
+  background: rgba(255, 255, 255, 0.92);
+  transform: translateY(-1px);
+}
+.nav-capsule-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.10);
+  margin: 0 4px;
+}
+.nav-capsule-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  font-size: 13px;
+  border: 0;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+}
+.nav-capsule-user:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.nav-capsule-user .avatar {
+  width: 28px; height: 28px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--blue-400), var(--blue-700));
+  color: white;
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 600;
+  flex: 0 0 auto;
+}
+.nav-capsule-icon {
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  border: 0; cursor: pointer;
+  display: grid; place-items: center;
+  transition: all 180ms var(--ease);
+}
+.nav-capsule-icon:hover { background: rgba(255, 255, 255, 0.12); }
+@media (max-width: 720px) {
+  .nav-capsule { padding: 6px 8px 6px 12px; gap: 2px; }
+  .nav-capsule .nav-link.hide-on-mobile { display: none; }
+  .nav-capsule-user .name { display: none; }
+}
+
+/* Body offset to compensate for fixed floating capsule */
+.has-floating-nav { padding-top: 72px; }
 
 /* ——— Brand mark ——— */
 .brand-mark {

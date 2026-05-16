@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/components/AdminLayout';
+import { Icon } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type PenghuniRow = {
@@ -40,8 +41,8 @@ export default function LaporanPenghuni() {
                         ← Laporan Keuangan
                     </Link>
                     <a href={route('admin.laporan.pdf', { type: 'penghuni', periode: filters.periode })}
-                        style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #2563EB', color: '#2563EB', fontSize: 13, fontWeight: 600 }}>
-                        📄 Export PDF
+                        style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #2563EB', color: '#2563EB', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <Icon name="download" size={15} /> Export PDF
                     </a>
                 </div>
             </div>

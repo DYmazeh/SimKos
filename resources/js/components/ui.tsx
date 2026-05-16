@@ -16,7 +16,8 @@ type IconName =
     | 'lock' | 'mail' | 'user' | 'phone' | 'eye' | 'eye-off'
     | 'shield' | 'bed' | 'wallet' | 'receipt' | 'map-pin'
     | 'wifi' | 'calendar' | 'clock' | 'upload' | 'home' | 'logo-wa'
-    | 'search' | 'edit' | 'trash' | 'plus' | 'image' | 'info';
+    | 'search' | 'edit' | 'trash' | 'plus' | 'image' | 'info'
+    | 'wave' | 'card' | 'receipt-search' | 'sparkles' | 'download' | 'ban' | 'refresh' | 'menu';
 
 type IconProps = {
     name: IconName;
@@ -69,6 +70,14 @@ export const Icon = ({ name, size = 18, stroke = 1.6, className = '', style }: I
         case 'plus':        return <svg {...props}><path d="M12 5v14M5 12h14"/></svg>;
         case 'image':       return <svg {...props}><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="1.5"/><path d="M21 15l-4.5-4.5L7 21"/></svg>;
         case 'info':        return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>;
+        case 'wave':        return <svg {...props}><path d="M7 11V6a1.5 1.5 0 1 1 3 0v4M10 10V4.5a1.5 1.5 0 1 1 3 0V10M13 9.5V5a1.5 1.5 0 1 1 3 0v7"/><path d="M16 7.5a1.5 1.5 0 0 1 3 0v6.5a8 8 0 0 1-8 8h-1a8 8 0 0 1-7.16-4.42L2 15.5a1.5 1.5 0 0 1 2.7-1.3l1.3 2.3"/></svg>;
+        case 'card':        return <svg {...props}><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>;
+        case 'receipt-search': return <svg {...props}><path d="M4 4h12v16l-3-2-3 2-3-2-3 2V4z"/><circle cx="18" cy="14" r="3"/><path d="M20.5 16.5L23 19"/></svg>;
+        case 'sparkles':    return <svg {...props}><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5z"/><path d="M19 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2zM5 4l.7 1.5L7 6.2 5.7 6.9 5 8.4l-.7-1.5L3 6.2l1.3-.7z"/></svg>;
+        case 'download':    return <svg {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>;
+        case 'ban':         return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>;
+        case 'refresh':     return <svg {...props}><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5"/></svg>;
+        case 'menu':        return <svg {...props}><path d="M3 6h18M3 12h18M3 18h18"/></svg>;
         default: return null;
     }
 };
@@ -253,32 +262,29 @@ export const Checkbox = ({
 );
 
 /* ============================================================
-   TOP NAV (guest)
+   TOP NAV (guest) — floating capsule (Perplexity-inspired)
    ============================================================ */
 export const TopNav = ({ authenticated = false }: { authenticated?: boolean }) => (
-    <header className="nav-scrim" style={{ position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px' }}>
-            <Link href="/" style={{ background: 'none', border: 0, padding: 0 }} aria-label="SimKos beranda">
-                <Brand size={40} />
+    <div className="nav-capsule-wrap">
+        <nav className="nav-capsule" aria-label="Navigasi utama">
+            <Link href="/" aria-label="SimKos beranda" style={{ display: 'inline-flex', padding: '2px 6px 2px 2px' }}>
+                <Brand size={32} light showText={false} />
             </Link>
-            <nav aria-label="Navigasi utama" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-                <Link href={route('guest.kamar.index')} className="nav-a">Kamar</Link>
-                <a href="#cara-kerja" className="nav-a">Cara Kerja</a>
-                <a href="#lokasi" className="nav-a">Lokasi</a>
-                <a href="#kontak" className="nav-a">Kontak</a>
-                {authenticated ? (
-                    <Link href={route('dashboard')} className="btn btn-ghost btn-sm">Dashboard</Link>
-                ) : (
-                    <Link href={route('login')} className="btn btn-ghost btn-sm">Masuk</Link>
-                )}
-            </nav>
-        </div>
-        <style>{`
-            .nav-a { color: var(--ink-500); font-size: 14.5px; padding: 6px 4px; border-radius: 6px; transition: color 180ms; }
-            .nav-a:hover { color: var(--ink-900); }
-            @media (max-width: 640px) { .nav-a { display: none; } }
-        `}</style>
-    </header>
+            <div className="nav-capsule-divider" />
+            <Link href={route('guest.kamar.index')} className="nav-link">Kamar</Link>
+            <a href="#cara-kerja" className="nav-link hide-on-mobile">Cara Kerja</a>
+            <a href="#lokasi" className="nav-link hide-on-mobile">Lokasi</a>
+            <a href="#kontak" className="nav-link hide-on-mobile">Kontak</a>
+            <div className="nav-capsule-divider" />
+            {authenticated ? (
+                <Link href={route('dashboard')} className="nav-capsule-cta">
+                    Dashboard <Icon name="arrow-right" size={14} stroke={2.2} />
+                </Link>
+            ) : (
+                <Link href={route('login')} className="nav-capsule-cta">Masuk</Link>
+            )}
+        </nav>
+    </div>
 );
 
 /* ============================================================

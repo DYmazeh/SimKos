@@ -29,7 +29,7 @@ export default function Reveal({
     duration = 600,
     distance = 24,
     threshold = 0.15,
-    once = true,
+    once = false,
     className = '',
     style,
     as: Tag = 'div',

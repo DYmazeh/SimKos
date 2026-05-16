@@ -11,7 +11,8 @@ use App\Services\NotifikasiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class PembayaranController extends Controller
@@ -21,12 +22,27 @@ class PembayaranController extends Controller
     /**
      * Form upload bukti transfer untuk satu tagihan.
      */
-    public function create(Tagihan $tagihan): View
+    public function create(Tagihan $tagihan): Response
     {
         $this->ensureOwned($tagihan);
         $tagihan->load('sewa.kamar');
 
-        return view('penyewa.pembayaran.create', compact('tagihan'));
+        return Inertia::render('Penyewa/Pembayaran/Create', [
+            'tagihan' => [
+                'id' => $tagihan->id,
+                'periode' => $tagihan->periode->toDateString(),
+                'tgl_jatuh_tempo' => $tagihan->tgl_jatuh_tempo->toDateString(),
+                'jumlah' => $tagihan->jumlah,
+                'status' => $tagihan->status,
+                'kamar_nomor' => $tagihan->sewa->kamar->nomor_kamar ?? '-',
+                'tipe' => $tagihan->sewa->kamar->tipe ?? '-',
+            ],
+            'rekening' => [
+                'bank' => config('simkos.rekening_bank'),
+                'nomor' => config('simkos.rekening_nomor'),
+                'nama' => config('simkos.rekening_nama'),
+            ],
+        ]);
     }
 
     /**
@@ -74,21 +90,45 @@ class PembayaranController extends Controller
     /**
      * FR-030: Riwayat semua pembayaran penyewa
      */
-    public function riwayat(): View
+    public function riwayat(): Response
     {
         $user = Auth::user();
         $penyewa = $user->penyewa;
 
-        $pembayaran = collect();
+        $rows = [];
+        $pagination = ['current_page' => 1, 'last_page' => 1, 'total' => 0, 'from' => 0, 'to' => 0];
+
         if ($penyewa) {
-            $pembayaran = Pembayaran::query()
+            $paginated = Pembayaran::query()
                 ->whereHas('tagihan.sewa', fn ($q) => $q->where('penyewa_id', $penyewa->id))
                 ->with(['tagihan.sewa.kamar'])
                 ->latest('tgl_bayar')
                 ->paginate(20);
+
+            $rows = collect($paginated->items())->map(fn ($p) => [
+                'id' => $p->id,
+                'tgl_bayar' => optional($p->tgl_bayar)->toDateString(),
+                'periode' => optional($p->tagihan?->periode)->toDateString(),
+                'kamar_nomor' => $p->tagihan?->sewa?->kamar?->nomor_kamar ?? '-',
+                'jumlah_bayar' => $p->jumlah_bayar,
+                'metode' => $p->metode,
+                'status_verifikasi' => $p->status_verifikasi,
+                'catatan' => $p->catatan,
+            ])->all();
+
+            $pagination = [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'total' => $paginated->total(),
+                'from' => $paginated->firstItem() ?? 0,
+                'to' => $paginated->lastItem() ?? 0,
+            ];
         }
 
-        return view('penyewa.riwayat', compact('pembayaran'));
+        return Inertia::render('Penyewa/Riwayat', [
+            'pembayaran' => $rows,
+            'pagination' => $pagination,
+        ]);
     }
 
     /**

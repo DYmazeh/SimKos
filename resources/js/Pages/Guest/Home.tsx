@@ -1,6 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import { TopNav, Footer, waLink } from '@/components/ui';
 import { Slide } from '@/components/guest/parts';
+import Reveal from '@/components/Reveal';
 import {
     Hero,
     GaleriSection,
@@ -44,43 +45,63 @@ export default function Home() {
 
             <main className="snap-scroll-root bg-radial">
                 <Slide id="top" bgImage="/images/kos/hero-exterior.jpg">
-                    <Hero available={kamarTersediaCount} startingPrice={priceRange.min} waUrl={waUrl} />
+                    <Reveal direction="up" distance={18} duration={520}>
+                        <Hero available={kamarTersediaCount} startingPrice={priceRange.min} waUrl={waUrl} />
+                    </Reveal>
                 </Slide>
 
                 <Slide>
-                    <KamarFeaturedSection kamar={kamarFeatured} />
+                    <Reveal direction="up" distance={20}>
+                        <KamarFeaturedSection kamar={kamarFeatured} />
+                    </Reveal>
                 </Slide>
 
                 <Slide>
-                    <GaleriSection />
+                    <Reveal direction="up" distance={20}>
+                        <GaleriSection />
+                    </Reveal>
                 </Slide>
 
                 <Slide>
-                    <LokasiSection alamat={profil.alamat} />
+                    <Reveal direction="up" distance={20}>
+                        <LokasiSection alamat={profil.alamat} />
+                    </Reveal>
                 </Slide>
 
                 <Slide dark>
-                    <CaraKerjaSection />
+                    <Reveal direction="up" distance={20}>
+                        <CaraKerjaSection />
+                    </Reveal>
                 </Slide>
 
                 <Slide>
-                    <BiayaSection minPrice={priceRange.min} maxPrice={priceRange.max} />
+                    <Reveal direction="up" distance={20}>
+                        <BiayaSection minPrice={priceRange.min} maxPrice={priceRange.max} />
+                    </Reveal>
                 </Slide>
 
                 <Slide>
-                    <TestimoniSection items={testimoni} />
+                    <Reveal direction="up" distance={20}>
+                        <TestimoniSection items={testimoni} />
+                    </Reveal>
                 </Slide>
 
                 <Slide>
-                    <PeraturanSection items={faqPeraturan} />
+                    <Reveal direction="up" distance={20}>
+                        <PeraturanSection items={faqPeraturan} />
+                    </Reveal>
                 </Slide>
 
                 <Slide>
-                    <FaqSection items={faqUmum} />
+                    <Reveal direction="up" distance={20}>
+                        <FaqSection items={faqUmum} />
+                    </Reveal>
                 </Slide>
 
                 <Slide>
-                    <KontakSection waUrl={waUrl} phone={profil.wa_number} />
+                    <Reveal direction="up" distance={20}>
+                        <KontakSection waUrl={waUrl} phone={profil.wa_number} />
+                    </Reveal>
                 </Slide>
 
                 <Footer dark />

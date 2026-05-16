@@ -367,7 +367,7 @@ export default function AdminLayout({
                                 padding: 12, borderRadius: 10, marginBottom: 12,
                                 background: '#DCFCE7', color: '#166534',
                                 border: '1px solid #BBF7D0', fontSize: 14,
-                            }}>✓ {flash.success}</div>
+                            }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Icon name="check" size={15} stroke={2.4} /> {flash.success}</span></div>
                         )}
                         {flash.error && (
                             <div className="toast-enter" role="alert" style={{

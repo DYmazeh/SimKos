@@ -1,6 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState, type FormEvent } from 'react';
-import AdminLayout from '@/components/AdminLayout';
+import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { Icon, Field, PasswordInput } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
@@ -70,7 +70,7 @@ export default function ProfileEdit() {
     const initial = user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
     return (
-        <AdminLayout title="Profil Saya">
+        <AuthenticatedLayout header={<h2 className="h-2" style={{ margin: 0 }}>Profil Saya</h2>}>
             <Head title="Profil Saya" />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 920, margin: '0 auto' }}>
@@ -125,8 +125,9 @@ export default function ProfileEdit() {
                                     <div style={{ fontSize: 12, color: '#EF4444', marginTop: 6 }}>{profil.errors.avatar}</div>
                                 )}
                                 {profil.data.avatar && (
-                                    <div style={{ fontSize: 12, color: '#10B981', marginTop: 6 }}>
-                                        ✓ Foto siap diunggah saat Simpan Perubahan diklik
+                                    <div style={{ fontSize: 12, color: 'var(--success)', marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                        <Icon name="check" size={14} stroke={2.4} />
+                                        Foto siap diunggah saat Simpan Perubahan diklik
                                     </div>
                                 )}
                             </div>
@@ -248,6 +249,6 @@ export default function ProfileEdit() {
                     .profil-row { grid-template-columns: 1fr !important; }
                 }
             `}</style>
-        </AdminLayout>
+        </AuthenticatedLayout>
     );
 }

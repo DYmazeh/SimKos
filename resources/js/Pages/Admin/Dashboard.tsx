@@ -190,8 +190,11 @@ export default function AdminDashboard() {
                 </div>
 
                 {reminderList.length === 0 ? (
-                    <div style={{ padding: 32, textAlign: 'center', color: '#94A3B8', fontSize: 14 }}>
-                        🎉 Tidak ada tagihan yang perlu diingatkan.
+                    <div style={{ padding: 32, textAlign: 'center', color: '#94A3B8', fontSize: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                        <span style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(31,143,91,0.10)', color: 'var(--success)', display: 'grid', placeItems: 'center' }}>
+                            <Icon name="sparkles" size={22} />
+                        </span>
+                        Tidak ada tagihan yang perlu diingatkan.
                     </div>
                 ) : (
                     <div style={{ overflow: 'auto' }}>
