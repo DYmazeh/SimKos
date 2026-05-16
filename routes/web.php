@@ -13,6 +13,7 @@ use App\Http\Controllers\Guest\HomeController as GuestHomeController;
 use App\Http\Controllers\Guest\KamarController as GuestKamarController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\Penyewa\DashboardController as PenyewaDashboardController;
+use App\Http\Controllers\Penyewa\KamarController as PenyewaKamarController;
 use App\Http\Controllers\Penyewa\KomplainController as PenyewaKomplainController;
 use App\Http\Controllers\Penyewa\PembayaranController as PenyewaPembayaranController;
 use App\Http\Controllers\ProfileController;
@@ -74,10 +75,13 @@ Route::middleware(['auth', 'verified', 'role:penyewa'])
     ->group(function () {
         Route::get('/dashboard', PenyewaDashboardController::class)->name('dashboard');
         Route::get('/riwayat', [PenyewaPembayaranController::class, 'riwayat'])->name('riwayat');
+        Route::get('/pembayaran/{pembayaran}/kuitansi', [PenyewaPembayaranController::class, 'kuitansi'])->name('pembayaran.kuitansi');
         Route::get('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'create'])->name('tagihan.bayar.create');
         Route::post('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'store'])
             ->middleware('throttle:upload-bukti')
             ->name('tagihan.bayar.store');
+
+        Route::get('/kamar-saya', [PenyewaKamarController::class, 'show'])->name('kamar.show');
 
         Route::get('/komplen', [PenyewaKomplainController::class, 'index'])->name('komplen.index');
         Route::get('/komplen/create', [PenyewaKomplainController::class, 'create'])->name('komplen.create');

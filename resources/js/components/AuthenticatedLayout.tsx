@@ -37,6 +37,7 @@ export default function AuthenticatedLayout({
         : isPenyewa
         ? [
             { label: 'Dashboard', href: route('penyewa.dashboard'), active: url.startsWith('/penyewa/dashboard') },
+            { label: 'Kamar Saya', href: route('penyewa.kamar.show'), active: url.startsWith('/penyewa/kamar-saya') },
             { label: 'Riwayat', href: route('penyewa.riwayat'), active: url.startsWith('/penyewa/riwayat') },
             { label: 'Komplen', href: route('penyewa.komplen.index'), active: url.startsWith('/penyewa/komplen') },
           ]

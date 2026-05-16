@@ -112,9 +112,10 @@ export default function PenyewaRiwayat() {
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr>
-                                    {['Tgl Bayar', 'Periode', 'Kamar', 'Jumlah', 'Metode', 'Status', 'Catatan'].map((h) => (
+                                    {['Tgl Bayar', 'Periode', 'Kamar', 'Jumlah', 'Metode', 'Status', 'Catatan', 'Aksi'].map((h, i) => (
                                         <th key={h} style={{
-                                            padding: '14px 20px', textAlign: 'left',
+                                            padding: '14px 20px',
+                                            textAlign: i === 7 ? 'right' : 'left',
                                             fontSize: 11, fontWeight: 600, color: 'var(--ink-500)',
                                             textTransform: 'uppercase', letterSpacing: '0.06em',
                                             background: 'var(--ink-50)',
@@ -154,6 +155,16 @@ export default function PenyewaRiwayat() {
                                                 {p.catatan
                                                     ? <span style={{ fontStyle: 'italic' }}>"{p.catatan}"</span>
                                                     : <span style={{ color: 'var(--ink-300)' }}>—</span>}
+                                            </td>
+                                            <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                                                {p.status_verifikasi === 'approved' ? (
+                                                    <a href={route('penyewa.pembayaran.kuitansi', p.id)}
+                                                        className="btn btn-ghost btn-sm"
+                                                        style={{ padding: '6px 12px', fontSize: 12 }}
+                                                        title="Download kuitansi PDF">
+                                                        <Icon name="download" size={13} /> PDF
+                                                    </a>
+                                                ) : <span style={{ color: 'var(--ink-300)', fontSize: 12 }}>—</span>}
                                             </td>
                                         </tr>
                                     );

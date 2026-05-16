@@ -44,6 +44,10 @@ export default function LaporanPenghuni() {
                         style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #2563EB', color: '#2563EB', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                         <Icon name="download" size={15} /> Export PDF
                     </a>
+                    <a href={route('admin.laporan.excel', { type: 'penghuni', periode: filters.periode })}
+                        style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--success)', color: 'var(--success)', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <Icon name="download" size={15} /> Export Excel
+                    </a>
                 </div>
             </div>
 

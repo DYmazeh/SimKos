@@ -8,7 +8,9 @@ use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use App\Services\BuktiTransferUploader;
 use App\Services\NotifikasiService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -129,6 +131,35 @@ class PembayaranController extends Controller
             'pembayaran' => $rows,
             'pagination' => $pagination,
         ]);
+    }
+
+    /**
+     * Download kuitansi PDF untuk pembayaran lunas milik penyewa login.
+     */
+    public function kuitansi(Pembayaran $pembayaran): HttpResponse
+    {
+        $pembayaran->load(['tagihan.sewa.penyewa', 'tagihan.sewa.kamar']);
+
+        $penyewa = Auth::user()->penyewa;
+        if (! $penyewa || $pembayaran->tagihan?->sewa?->penyewa_id !== $penyewa->id) {
+            throw new AccessDeniedHttpException('Bukan kuitansi milik Anda.');
+        }
+
+        if ($pembayaran->status_verifikasi !== Pembayaran::STATUS_APPROVED) {
+            throw new AccessDeniedHttpException('Kuitansi hanya tersedia untuk pembayaran yang sudah dikonfirmasi.');
+        }
+
+        $pdf = Pdf::loadView('penyewa.kuitansi', [
+            'pembayaran' => $pembayaran,
+            'kos' => [
+                'nama' => config('simkos.nama'),
+                'alamat' => config('simkos.alamat'),
+                'pengelola_nama' => config('simkos.pengelola_nama'),
+            ],
+        ]);
+
+        $filename = 'kuitansi-'.$pembayaran->id.'-'.$pembayaran->tgl_bayar->format('Y-m').'.pdf';
+        return $pdf->download($filename);
     }
 
     /**
