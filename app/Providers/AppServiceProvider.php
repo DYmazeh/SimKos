@@ -8,8 +8,11 @@ use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use App\Observers\SidebarCountsInvalidator;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,6 +44,14 @@ class AppServiceProvider extends ServiceProvider
         Tagihan::observe(SidebarCountsInvalidator::class);
         Pembayaran::observe(SidebarCountsInvalidator::class);
         Komplain::observe(SidebarCountsInvalidator::class);
+
+        // Rate limit: upload bukti transfer max 5 per menit per user (anti-spam).
+        RateLimiter::for('upload-bukti', fn (Request $request) =>
+            Limit::perMinute(5)->by($request->user()?->id ?: $request->ip())
+                ->response(fn () => response()->json([
+                    'message' => 'Terlalu banyak upload. Coba lagi dalam 1 menit.',
+                ], 429))
+        );
     }
 }
 

@@ -75,7 +75,9 @@ Route::middleware(['auth', 'verified', 'role:penyewa'])
         Route::get('/dashboard', PenyewaDashboardController::class)->name('dashboard');
         Route::get('/riwayat', [PenyewaPembayaranController::class, 'riwayat'])->name('riwayat');
         Route::get('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'create'])->name('tagihan.bayar.create');
-        Route::post('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'store'])->name('tagihan.bayar.store');
+        Route::post('/tagihan/{tagihan}/bayar', [PenyewaPembayaranController::class, 'store'])
+            ->middleware('throttle:upload-bukti')
+            ->name('tagihan.bayar.store');
 
         Route::get('/komplen', [PenyewaKomplainController::class, 'index'])->name('komplen.index');
         Route::get('/komplen/create', [PenyewaKomplainController::class, 'create'])->name('komplen.create');
