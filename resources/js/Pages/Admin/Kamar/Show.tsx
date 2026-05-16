@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { Icon, Pill, formatRp } from '@/components/ui';
+import { confirmDialog } from '@/components/ConfirmDialog';
 import type { PageProps } from '@/types/inertia';
 
 type KamarDetail = {
@@ -90,8 +91,14 @@ export default function KamarShow() {
     const mainFoto = kamar.foto[activeFoto] ?? null;
     const statusMeta = statusKamarMeta(kamar.status);
 
-    const onDelete = () => {
-        if (!confirm(`Hapus kamar ${kamar.nomor_kamar}? Tindakan ini tidak bisa dibatalkan.`)) return;
+    const onDelete = async () => {
+        const ok = await confirmDialog({
+            title: `Hapus kamar ${kamar.nomor_kamar}?`,
+            description: 'Kamar di-soft-delete — bisa di-restore dari halaman audit log dalam 30 hari.',
+            tone: 'danger',
+            confirmLabel: 'Ya, hapus',
+        });
+        if (!ok) return;
         router.delete(route('admin.kamar.destroy', kamar.id));
     };
 

@@ -13,7 +13,7 @@ export default function AuthenticatedLayout({
     children: ReactNode;
 }) {
     const { props, url } = usePage<PageProps>();
-    const { auth, flash } = props;
+    const { auth } = props;
     const user = auth.user;
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -116,31 +116,9 @@ export default function AuthenticatedLayout({
                 </header>
             )}
 
-            {/* ───── Main content ───── */}
+            {/* ───── Main content (flash ditangani via global Toast) ───── */}
             <main className={header ? '' : 'has-floating-nav'} style={{ flex: 1, padding: '24px' }}>
                 <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-                    {flash.success && (
-                        <div role="status" className="toast-enter" style={{
-                            marginBottom: 16, padding: '12px 14px', borderRadius: 12,
-                            background: 'rgba(31,143,91,0.08)', border: '1px solid rgba(31,143,91,0.18)',
-                            color: 'var(--success)', fontSize: 14,
-                            display: 'flex', alignItems: 'center', gap: 10,
-                        }}>
-                            <Icon name="check" size={16} stroke={2.4} />
-                            {flash.success}
-                        </div>
-                    )}
-                    {flash.error && (
-                        <div role="alert" className="toast-enter" style={{
-                            marginBottom: 16, padding: '12px 14px', borderRadius: 12,
-                            background: 'rgba(210,68,50,0.06)', border: '1px solid rgba(210,68,50,0.18)',
-                            color: 'var(--danger)', fontSize: 14,
-                            display: 'flex', alignItems: 'center', gap: 10,
-                        }}>
-                            <Icon name="info" size={16} />
-                            {flash.error}
-                        </div>
-                    )}
                     {children}
                 </div>
             </main>

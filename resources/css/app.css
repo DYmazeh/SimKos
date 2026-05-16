@@ -251,6 +251,12 @@ html.lenis, html.lenis body { height: auto; }
 }
 .toast-enter { animation: toast-in 280ms var(--ease) both; }
 
+/* ——— Skeleton shimmer (loading placeholder) ——— */
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* ——— KPI counter shimmer (initial loading vibe) ——— */
 @keyframes shimmer {
   0% { background-position: -200% 0; }

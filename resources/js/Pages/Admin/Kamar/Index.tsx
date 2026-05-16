@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { Icon, formatRp } from '@/components/ui';
+import { confirmDialog } from '@/components/ConfirmDialog';
 import type { PageProps } from '@/types/inertia';
 
 type Kamar = {
@@ -60,8 +61,14 @@ export default function KamarIndex() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [q, status, tipe]);
 
-    const onDelete = (k: Kamar) => {
-        if (!confirm(`Hapus kamar ${k.nomor_kamar}?`)) return;
+    const onDelete = async (k: Kamar) => {
+        const ok = await confirmDialog({
+            title: `Hapus kamar ${k.nomor_kamar}?`,
+            description: 'Riwayat sewa terkait kamar ini akan ikut terhapus. Tindakan ini bisa dibatalkan dari log audit dalam 30 hari.',
+            tone: 'danger',
+            confirmLabel: 'Ya, hapus',
+        });
+        if (!ok) return;
         router.delete(route('admin.kamar.destroy', k.id));
     };
 

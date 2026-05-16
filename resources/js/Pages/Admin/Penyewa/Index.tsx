@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { Icon, Pill } from '@/components/ui';
+import { confirmDialog } from '@/components/ConfirmDialog';
 import type { PageProps } from '@/types/inertia';
 
 type PenyewaRow = {
@@ -59,8 +60,14 @@ export default function PenyewaIndex() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [q]);
 
-    const onDelete = (p: PenyewaRow) => {
-        if (!confirm(`Hapus penyewa ${p.nama_lengkap}?`)) return;
+    const onDelete = async (p: PenyewaRow) => {
+        const ok = await confirmDialog({
+            title: `Hapus penyewa ${p.nama_lengkap}?`,
+            description: 'Data sewa & tagihan terkait penyewa ini akan tetap tercatat di audit log.',
+            tone: 'danger',
+            confirmLabel: 'Ya, hapus',
+        });
+        if (!ok) return;
         router.delete(route('admin.penyewa.destroy', p.id));
     };
 

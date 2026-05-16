@@ -2,6 +2,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { Icon, formatRp } from '@/components/ui';
+import { confirmDialog } from '@/components/ConfirmDialog';
 import type { PageProps } from '@/types/inertia';
 
 type Pembayaran = {
@@ -46,8 +47,14 @@ export default function TagihanShow() {
     const [rejectingId, setRejectingId] = useState<number | null>(null);
     const rejectForm = useForm({ catatan: '' });
 
-    const approve = (p: Pembayaran) => {
-        if (!confirm('Setujui pembayaran ini?')) return;
+    const approve = async (p: Pembayaran) => {
+        const ok = await confirmDialog({
+            title: 'Setujui pembayaran ini?',
+            description: 'Tagihan akan ditandai lunas.',
+            tone: 'info',
+            confirmLabel: 'Setujui',
+        });
+        if (!ok) return;
         router.patch(route('admin.pembayaran.approve', p.id), {}, { preserveScroll: true });
     };
 

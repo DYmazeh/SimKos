@@ -4,6 +4,9 @@ import { createRoot } from 'react-dom/client';
 import type { ReactElement } from 'react';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
+import ToastContainer from '@/components/Toast';
+import ConfirmContainer from '@/components/ConfirmDialog';
+import FlashToastWatcher from '@/components/FlashToastWatcher';
 
 const appName = import.meta.env.VITE_APP_NAME || 'SIMKOS';
 
@@ -44,7 +47,14 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
-        root.render(<App {...props} /> as ReactElement);
+        root.render(
+            <>
+                <App {...props} />
+                <ToastContainer />
+                <ConfirmContainer />
+                <FlashToastWatcher />
+            </> as ReactElement,
+        );
     },
     progress: {
         color: '#2563eb',
