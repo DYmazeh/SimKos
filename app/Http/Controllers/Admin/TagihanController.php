@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
 use App\Models\Penyewa;
 use App\Models\Tagihan;
+use App\Services\StorageUrl;
 use App\Services\TagihanGenerator;
 use App\Services\WhatsappReminderLink;
 use Carbon\Carbon;
@@ -171,7 +172,7 @@ class TagihanController extends Controller
                     'tgl_bayar' => $p->tgl_bayar->format('Y-m-d'),
                     'jumlah_bayar' => (int) $p->jumlah_bayar,
                     'metode' => $p->metode,
-                    'bukti_transfer_url' => $p->bukti_transfer_url,
+                    'bukti_transfer_url' => StorageUrl::for($p->bukti_transfer_url),
                     'status_verifikasi' => $p->status_verifikasi,
                     'verified_at' => $p->verified_at?->format('Y-m-d H:i'),
                     'verifikator_nama' => $p->verifikator?->name,

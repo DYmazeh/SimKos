@@ -69,17 +69,20 @@ export default function TagihanShow() {
     const meta = statusMeta(tagihan.status);
 
     return (
-        <AdminLayout
-            title={`Tagihan #${tagihan.id}`}
-            breadcrumb={
-                <span>
-                    <Link href={route('admin.tagihan.index')} style={{ color: '#64748B' }}>Tagihan</Link>
-                    {' / '}
-                    <span style={{ color: '#2563EB' }}>Detail #{tagihan.id}</span>
-                </span>
-            }
-        >
+        <AdminLayout title={`Tagihan #${tagihan.id}`}>
             <Head title={`Tagihan #${tagihan.id}`} />
+
+            {/* Header: breadcrumb + back button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
+                <nav aria-label="Breadcrumb" style={{ fontSize: 13, color: 'var(--ink-500)' }}>
+                    <Link href={route('admin.tagihan.index')} style={{ color: 'var(--ink-500)' }}>Tagihan</Link>
+                    <span style={{ color: 'var(--ink-300)', margin: '0 8px' }}>/</span>
+                    <span style={{ color: 'var(--blue-600)', fontWeight: 500 }}>Detail #{tagihan.id}</span>
+                </nav>
+                <Link href={route('admin.tagihan.index')} className="btn btn-ghost btn-sm">
+                    <Icon name="arrow-left" size={14} /> Kembali
+                </Link>
+            </div>
 
             {/* Info card */}
             <div style={{ background: 'white', borderRadius: 14, padding: 28, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>

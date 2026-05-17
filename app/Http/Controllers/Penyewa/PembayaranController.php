@@ -53,15 +53,15 @@ class PembayaranController extends Controller
     {
         $this->authorize('pay', $tagihan);
 
-        $url = $this->uploader->upload($request->file('bukti'), $tagihan->id);
+        $buktiPath = $this->uploader->upload($request->file('bukti'), $tagihan->id);
 
-        DB::transaction(function () use ($request, $tagihan, $url) {
+        DB::transaction(function () use ($request, $tagihan, $buktiPath) {
             Pembayaran::create([
                 'tagihan_id' => $tagihan->id,
                 'tgl_bayar' => $request->input('tgl_bayar'),
                 'jumlah_bayar' => $request->input('jumlah_bayar'),
                 'metode' => $request->input('metode'),
-                'bukti_transfer_url' => $url,
+                'bukti_transfer_url' => $buktiPath,
                 'catatan' => $request->input('catatan'),
                 'status_verifikasi' => Pembayaran::STATUS_PENDING,
             ]);

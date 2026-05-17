@@ -27,9 +27,7 @@ class HandleInertiaRequests extends Middleware
                         'name' => $request->user()->name,
                         'email' => $request->user()->email,
                         'phone' => $request->user()->phone,
-                        'avatar_url' => $request->user()->avatar_url
-                            ? \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($request->user()->avatar_url)
-                            : null,
+                        'avatar_url' => \App\Services\StorageUrl::for($request->user()->avatar_url),
                         'roles' => $request->user()->getRoleNames()->all(),
                         'unread_notif_count' => $request->user()->unreadNotifikasi()->count(),
                     ]

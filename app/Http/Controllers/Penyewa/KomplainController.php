@@ -7,9 +7,9 @@ use App\Http\Requests\Penyewa\StoreKomplainRequest;
 use App\Models\Komplain;
 use App\Services\ImageOptimizer;
 use App\Services\NotifikasiService;
+use App\Services\StorageUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,7 +44,7 @@ class KomplainController extends Controller
                 'resolved_at' => optional($k->resolved_at)->toDateString(),
                 'foto' => $k->foto->map(fn ($f) => [
                     'id' => $f->id,
-                    'url' => Storage::disk(config('filesystems.default'))->url($f->url),
+                    'url' => StorageUrl::for($f->url),
                 ])->values(),
             ])->all();
 

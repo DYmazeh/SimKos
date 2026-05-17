@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\StorageUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,9 +21,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $avatarUrl = $user->avatar_url
-            ? Storage::disk(config('filesystems.default'))->url($user->avatar_url)
-            : null;
+        $avatarUrl = StorageUrl::for($user->avatar_url);
 
         return Inertia::render('Profile/Edit', [
             'user' => [

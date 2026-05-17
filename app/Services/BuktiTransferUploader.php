@@ -13,7 +13,10 @@ class BuktiTransferUploader
      * - Dev (FILESYSTEM_DISK=public): simpan ke storage/app/public/bukti-transfer/
      * - Prod (FILESYSTEM_DISK=supabase): simpan ke bucket Supabase
      *
-     * @return string URL publik bukti transfer
+     * Return relative path (bukan full URL) — URL signed di-generate
+     * saat ditampilkan via App\Services\StorageUrl::for($path).
+     *
+     * @return string Relative path file di disk (mis. "bukti-transfer/tagihan-1-...-abc.jpg")
      */
     public function upload(UploadedFile $file, int $tagihanId): string
     {
@@ -26,16 +29,14 @@ class BuktiTransferUploader
             $ext
         );
 
-        $path = "bukti-transfer/{$filename}";
         $disk = config('filesystems.default');
 
         Storage::disk($disk)->putFileAs(
             'bukti-transfer',
             $file,
             $filename,
-            ['visibility' => 'public']
         );
 
-        return Storage::disk($disk)->url($path);
+        return "bukti-transfer/{$filename}";
     }
 }

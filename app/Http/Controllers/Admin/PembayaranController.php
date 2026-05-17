@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use App\Services\NotifikasiService;
+use App\Services\StorageUrl;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -53,7 +54,7 @@ class PembayaranController extends Controller
             'tgl_bayar' => $p->created_at->format('Y-m-d H:i:s'),  // pakai created_at = tgl upload
             'metode' => $p->metode,
             'status_verifikasi' => $p->status_verifikasi,
-            'bukti_transfer_url' => $p->bukti_transfer_url,
+            'bukti_transfer_url' => StorageUrl::for($p->bukti_transfer_url),
         ]);
 
         return Inertia::render('Admin/Pembayaran/Index', [
@@ -93,7 +94,7 @@ class PembayaranController extends Controller
                 'tgl_upload' => $pembayaran->created_at->format('Y-m-d H:i'),
                 'metode' => $pembayaran->metode,
                 'status_verifikasi' => $pembayaran->status_verifikasi,
-                'bukti_transfer_url' => $pembayaran->bukti_transfer_url,
+                'bukti_transfer_url' => StorageUrl::for($pembayaran->bukti_transfer_url),
                 'catatan' => $pembayaran->catatan,
                 'verified_at' => $pembayaran->verified_at?->format('Y-m-d H:i'),
                 'verifikator_nama' => $pembayaran->verifikator?->name,

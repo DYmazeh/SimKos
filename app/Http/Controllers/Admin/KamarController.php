@@ -8,9 +8,9 @@ use App\Http\Requests\Admin\UpdateKamarRequest;
 use App\Models\FotoKamar;
 use App\Models\Kamar;
 use App\Services\ImageOptimizer;
+use App\Services\StorageUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -116,7 +116,7 @@ class KamarController extends Controller
                 'resolved_at' => optional($k->resolved_at)->format('Y-m-d'),
                 'foto' => $k->foto->map(fn ($f) => [
                     'id' => $f->id,
-                    'url' => Storage::disk(config('filesystems.default'))->url($f->url),
+                    'url' => StorageUrl::for($f->url),
                 ])->values(),
             ])->values(),
         ]);
@@ -207,7 +207,7 @@ class KamarController extends Controller
             'foto' => $k->relationLoaded('foto')
                 ? $k->foto->map(fn ($f) => [
                     'id' => $f->id,
-                    'url' => Storage::disk(config('filesystems.default'))->url($f->url),
+                    'url' => StorageUrl::for($f->url),
                 ])->values()
                 : [],
             'komplen_aktif_count' => (int) ($k->komplen_aktif_count ?? 0),

@@ -93,17 +93,20 @@ export default function PenyewaForm() {
     };
 
     return (
-        <AdminLayout
-            title={isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa Baru'}
-            breadcrumb={
-                <span>
+        <AdminLayout title={isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa Baru'}>
+            <Head title={isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa'} />
+
+            {/* Header: breadcrumb + back button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
+                <nav aria-label="Breadcrumb" style={{ fontSize: 13, color: 'var(--ink-500)' }}>
                     <Link href={route('admin.penyewa.index')} style={{ color: 'var(--ink-500)' }}>Penyewa</Link>
                     <span style={{ color: 'var(--ink-300)', margin: '0 8px' }}>/</span>
-                    <span style={{ color: 'var(--blue-600)' }}>{isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa'}</span>
-                </span>
-            }
-        >
-            <Head title={isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa'} />
+                    <span style={{ color: 'var(--blue-600)', fontWeight: 500 }}>{isEdit ? `Edit ${penyewa?.nama_lengkap}` : 'Tambah Penyewa'}</span>
+                </nav>
+                <Link href={route('admin.penyewa.index')} className="btn btn-ghost btn-sm">
+                    <Icon name="arrow-left" size={14} /> Kembali
+                </Link>
+            </div>
 
             <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1000, margin: '0 auto' }}>
                 {/* ───── Data Pribadi ───── */}
@@ -313,18 +316,13 @@ export default function PenyewaForm() {
                     background: 'white', borderRadius: 16, padding: 18,
                     border: '1px solid rgba(11,13,26,0.06)',
                     boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
-                    display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap',
+                    display: 'flex', justifyContent: 'flex-end', gap: 12, alignItems: 'center', flexWrap: 'wrap',
                 }}>
-                    <Link href={route('admin.penyewa.index')} className="btn btn-ghost btn-sm">
-                        <Icon name="arrow-left" size={14} /> Kembali
-                    </Link>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <Link href={route('admin.penyewa.index')} className="btn btn-link">Batal</Link>
-                        <button type="submit" disabled={form.processing} className="btn btn-primary">
-                            {form.processing ? 'Menyimpan…' : (isEdit ? 'Simpan perubahan' : 'Simpan penyewa')}
-                            {!form.processing && <Icon name="arrow-right" size={15} />}
-                        </button>
-                    </div>
+                    <Link href={route('admin.penyewa.index')} className="btn btn-link">Batal</Link>
+                    <button type="submit" disabled={form.processing} className="btn btn-primary">
+                        {form.processing ? 'Menyimpan…' : (isEdit ? 'Simpan perubahan' : 'Simpan penyewa')}
+                        {!form.processing && <Icon name="arrow-right" size={15} />}
+                    </button>
                 </div>
             </form>
 

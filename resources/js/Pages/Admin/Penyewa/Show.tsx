@@ -54,17 +54,20 @@ export default function PenyewaShow() {
     const sewaAktif = penyewa.sewa.find((s) => s.status === 'aktif');
 
     return (
-        <AdminLayout
-            title={penyewa.nama_lengkap}
-            breadcrumb={
-                <span>
+        <AdminLayout title={penyewa.nama_lengkap}>
+            <Head title={penyewa.nama_lengkap} />
+
+            {/* Header: breadcrumb + back button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
+                <nav aria-label="Breadcrumb" style={{ fontSize: 13, color: 'var(--ink-500)' }}>
                     <Link href={route('admin.penyewa.index')} style={{ color: 'var(--ink-500)' }}>Penyewa</Link>
                     <span style={{ color: 'var(--ink-300)', margin: '0 8px' }}>/</span>
-                    <span style={{ color: 'var(--blue-600)' }}>Detail</span>
-                </span>
-            }
-        >
-            <Head title={penyewa.nama_lengkap} />
+                    <span style={{ color: 'var(--blue-600)', fontWeight: 500 }}>Detail</span>
+                </nav>
+                <Link href={route('admin.penyewa.index')} className="btn btn-ghost btn-sm">
+                    <Icon name="arrow-left" size={14} /> Kembali
+                </Link>
+            </div>
 
             <div className="penyewa-show-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
                 {/* ───── Profile card ───── */}

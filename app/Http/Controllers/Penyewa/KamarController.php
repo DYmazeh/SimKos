@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Penyewa;
 
 use App\Http\Controllers\Controller;
+use App\Services\StorageUrl;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -43,7 +43,7 @@ class KamarController extends Controller
                 'deposit' => (int) $kamar->deposit,
                 'foto' => $kamar->foto->map(fn ($f) => [
                     'id' => $f->id,
-                    'url' => Storage::disk(config('filesystems.default'))->url($f->url),
+                    'url' => StorageUrl::for($f->url),
                 ])->values(),
             ],
             'sewa' => [
