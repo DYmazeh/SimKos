@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { Icon, Pill } from '@/components/ui';
+import { KomplenFotoGrid } from '@/components/KomplenFotoGrid';
 import type { PageProps } from '@/types/inertia';
 
 type KomplenItem = {
@@ -151,8 +152,9 @@ const KomplenCard = ({ komplen }: { komplen: KomplenItem }) => {
             border: '1px solid rgba(11,13,26,0.06)',
             boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
             borderLeftWidth: 4, borderLeftColor: accentColor, borderLeftStyle: 'solid',
+            display: 'flex', flexDirection: 'column', gap: 12,
         }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                     <h3 style={{ margin: 0, fontSize: 15.5, fontWeight: 600, color: 'var(--ink-900)' }}>{komplen.judul}</h3>
                     <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 4 }}>
@@ -166,14 +168,7 @@ const KomplenCard = ({ komplen }: { komplen: KomplenItem }) => {
             </header>
             <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink-700)', lineHeight: 1.6 }}>{komplen.deskripsi}</p>
             {komplen.foto.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                    {komplen.foto.map((f) => (
-                        <a key={f.id} href={f.url} target="_blank" rel="noopener noreferrer"
-                            style={{ display: 'block', width: 80, height: 60, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.08)' }}>
-                            <img src={f.url} alt="Foto bukti" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </a>
-                    ))}
-                </div>
+                <KomplenFotoGrid foto={komplen.foto} height={komplen.foto.length === 1 ? 240 : 200} />
             )}
         </article>
     );

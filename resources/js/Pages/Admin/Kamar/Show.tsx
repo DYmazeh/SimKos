@@ -3,6 +3,7 @@ import { useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { Icon, Pill, formatRp } from '@/components/ui';
 import { confirmDialog } from '@/components/ConfirmDialog';
+import { KomplenFotoGrid } from '@/components/KomplenFotoGrid';
 import type { PageProps } from '@/types/inertia';
 
 type KamarDetail = {
@@ -338,68 +339,20 @@ export default function KamarShow() {
                         Belum ada komplen untuk kamar ini.
                     </div>
                 ) : (
-                    <div style={{ overflow: 'auto', borderTop: '1px solid rgba(11,13,26,0.06)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr>
-                                    {['Tgl', 'Penyewa', 'Judul', 'Status', 'Aksi'].map((h, i) => (
-                                        <th key={h} style={{
-                                            padding: '12px 22px',
-                                            textAlign: i === 4 ? 'right' : 'left',
-                                            fontSize: 11, fontWeight: 600, color: 'var(--ink-500)',
-                                            textTransform: 'uppercase', letterSpacing: '0.06em',
-                                            background: 'var(--ink-50)',
-                                        }}>{h}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {komplenList.map((k) => (
-                                    <tr key={k.id} style={{ borderTop: '1px solid rgba(11,13,26,0.06)', verticalAlign: 'top' }}>
-                                        <td style={{ padding: '14px 22px', color: 'var(--ink-500)', fontSize: 13, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                                            {fmt(k.created_at)}
-                                        </td>
-                                        <td style={{ padding: '14px 22px', fontWeight: 500, color: 'var(--ink-900)', fontSize: 14 }}>{k.penyewa_nama}</td>
-                                        <td style={{ padding: '14px 22px', fontSize: 13, color: 'var(--ink-700)', maxWidth: 380 }}>
-                                            <div style={{ fontWeight: 500, color: 'var(--ink-900)', marginBottom: 4 }}>{k.judul}</div>
-                                            <div style={{ fontSize: 12.5, color: 'var(--ink-500)', lineHeight: 1.55 }}>{k.deskripsi}</div>
-                                            {k.foto.length > 0 && (
-                                                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                                                    {k.foto.map((f) => (
-                                                        <a key={f.id} href={f.url} target="_blank" rel="noopener noreferrer"
-                                                            style={{ display: 'block', width: 56, height: 42, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.08)' }}>
-                                                            <img src={f.url} alt="Foto bukti komplen" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                        </a>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '14px 22px' }}>
-                                            <Pill tone={komplenTone(k.status)}>{komplenLabel(k.status)}</Pill>
-                                        </td>
-                                        <td style={{ padding: '14px 22px', textAlign: 'right' }}>
-                                            {k.status === 'menunggu' && (
-                                                <button onClick={() => onUpdateKomplenStatus(k, 'diproses')}
-                                                    className="btn btn-ghost btn-sm">
-                                                    Tandai Diproses
-                                                </button>
-                                            )}
-                                            {k.status === 'diproses' && (
-                                                <button onClick={() => onUpdateKomplenStatus(k, 'selesai')}
-                                                    className="btn btn-primary btn-sm">
-                                                    <Icon name="check" size={13} stroke={2.4} /> Tandai Selesai
-                                                </button>
-                                            )}
-                                            {k.status === 'selesai' && (
-                                                <span style={{ fontSize: 12, color: 'var(--ink-400)' }}>
-                                                    Selesai {k.resolved_at ? fmt(k.resolved_at) : ''}
-                                                </span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div style={{
+                        padding: '12px 18px 18px',
+                        borderTop: '1px solid rgba(11,13,26,0.06)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 12,
+                    }}>
+                        {komplenList.map((k) => (
+                            <KomplenAdminCard
+                                key={k.id}
+                                komplen={k}
+                                onUpdateStatus={onUpdateKomplenStatus}
+                            />
+                        ))}
                     </div>
                 )}
             </section>
@@ -407,8 +360,98 @@ export default function KamarShow() {
             <style>{`
                 @media (max-width: 900px) {
                     .kamar-hero { grid-template-columns: 1fr !important; }
+                    .komplen-admin-card { grid-template-columns: 1fr !important; }
+                    .komplen-admin-card-media { max-width: 100% !important; }
                 }
             `}</style>
         </AdminLayout>
+    );
+}
+
+/* ───── Admin Komplen Card ───── */
+function KomplenAdminCard({
+    komplen,
+    onUpdateStatus,
+}: {
+    komplen: KomplenItem;
+    onUpdateStatus: (k: KomplenItem, next: 'diproses' | 'selesai') => void;
+}) {
+    const accent = komplen.status === 'menunggu' ? '#c89e2a'
+        : komplen.status === 'diproses' ? 'var(--blue-600)'
+        : 'var(--success)';
+    const hasFoto = komplen.foto.length > 0;
+
+    return (
+        <article style={{
+            background: 'white',
+            borderRadius: 12,
+            padding: 16,
+            border: '1px solid rgba(11,13,26,0.08)',
+            borderLeft: `4px solid ${accent}`,
+            display: 'grid',
+            gridTemplateColumns: hasFoto ? 'minmax(0, 1fr) minmax(220px, 320px)' : '1fr',
+            gap: 18,
+            alignItems: 'flex-start',
+        }} className="komplen-admin-card">
+
+            {/* ─── Content side ─── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
+                {/* Header: status + meta + action */}
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <Pill tone={komplenTone(komplen.status)} dot={komplen.status === 'menunggu' ? 'pulse' : true}>
+                            {komplenLabel(komplen.status)}
+                        </Pill>
+                        <span style={{ fontSize: 12.5, color: 'var(--ink-500)' }}>
+                            <span style={{ fontWeight: 500, color: 'var(--ink-800)' }}>{komplen.penyewa_nama}</span>
+                            <span style={{ margin: '0 6px', color: 'var(--ink-300)' }}>·</span>
+                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(komplen.created_at)}</span>
+                        </span>
+                    </div>
+
+                    {komplen.status === 'menunggu' && (
+                        <button onClick={() => onUpdateStatus(komplen, 'diproses')}
+                            className="btn btn-ghost btn-sm">
+                            Tandai Diproses
+                        </button>
+                    )}
+                    {komplen.status === 'diproses' && (
+                        <button onClick={() => onUpdateStatus(komplen, 'selesai')}
+                            className="btn btn-primary btn-sm">
+                            <Icon name="check" size={13} stroke={2.4} /> Tandai Selesai
+                        </button>
+                    )}
+                    {komplen.status === 'selesai' && komplen.resolved_at && (
+                        <span style={{ fontSize: 11.5, color: 'var(--ink-400)' }}>
+                            Selesai {fmt(komplen.resolved_at)}
+                        </span>
+                    )}
+                </header>
+
+                {/* Title + description */}
+                <div>
+                    <h4 style={{
+                        margin: 0,
+                        fontSize: 15.5,
+                        fontWeight: 600,
+                        color: 'var(--ink-900)',
+                        letterSpacing: '-0.01em',
+                    }}>{komplen.judul}</h4>
+                    <p style={{
+                        margin: '6px 0 0',
+                        fontSize: 13.5,
+                        color: 'var(--ink-600)',
+                        lineHeight: 1.6,
+                    }}>{komplen.deskripsi}</p>
+                </div>
+            </div>
+
+            {/* ─── Media side (adaptive grid) ─── */}
+            {hasFoto && (
+                <div className="komplen-admin-card-media" style={{ width: '100%' }}>
+                    <KomplenFotoGrid foto={komplen.foto} height={komplen.foto.length === 1 ? 180 : 200} />
+                </div>
+            )}
+        </article>
     );
 }
