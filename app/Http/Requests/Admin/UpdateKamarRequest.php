@@ -24,6 +24,9 @@ class UpdateKamarRequest extends FormRequest
             ],
             'tipe' => ['required', 'string', 'in:standar,deluxe,vip'],
             'harga_bulanan' => ['required', 'integer', 'min:0', 'max:99999999'],
+            // Status 'terisi' boleh muncul di payload (untuk kamar yang sudah terisi),
+            // tapi controller enforce: admin tidak boleh ubah dari tersedia/maintenance → terisi
+            // (itu hanya lewat flow daftar penyewa baru).
             'status' => ['required', 'string', Rule::in([
                 Kamar::STATUS_TERSEDIA,
                 Kamar::STATUS_TERISI,

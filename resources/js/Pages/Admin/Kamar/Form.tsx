@@ -265,15 +265,28 @@ export default function KamarForm() {
                         )}
                     </div>
 
-                    {/* Status field at bottom (per Figma) */}
+                    {/* Status field at bottom (per Figma).
+                        Catatan: opsi 'Terisi' sengaja tidak ada — status itu dikelola
+                        otomatis oleh sistem saat admin daftarkan penyewa baru + kontrak.
+                        Kalau kamar saat ini 'terisi', dropdown disabled & nampilkan readonly. */}
                     <div style={{ marginTop: 20, maxWidth: 320 }}>
                         <Field label="Status" htmlFor="status" error={form.errors.status}>
-                            <select id="status" className="input"
-                                value={form.data.status} onChange={(e) => form.setData('status', e.target.value)}>
-                                <option value="tersedia">Kosong (Tersedia)</option>
-                                <option value="terisi">Terisi</option>
-                                <option value="maintenance">Maintenance</option>
-                            </select>
+                            {form.data.status === 'terisi' ? (
+                                <div className="input" style={{
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    background: 'var(--ink-50)', color: 'var(--ink-500)',
+                                    cursor: 'not-allowed',
+                                }} title="Status 'Terisi' dikelola otomatis oleh sistem">
+                                    <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--success)' }} />
+                                    Terisi (dikelola otomatis)
+                                </div>
+                            ) : (
+                                <select id="status" className="input"
+                                    value={form.data.status} onChange={(e) => form.setData('status', e.target.value)}>
+                                    <option value="tersedia">Kosong (Tersedia)</option>
+                                    <option value="maintenance">Maintenance</option>
+                                </select>
+                            )}
                         </Field>
                     </div>
                 </section>

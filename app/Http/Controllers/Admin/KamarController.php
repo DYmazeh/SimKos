@@ -147,7 +147,18 @@ class KamarController extends Controller
 
     public function update(UpdateKamarRequest $request, Kamar $kamar): RedirectResponse
     {
-        $kamar->update($request->validated());
+        $data = $request->validated();
+
+        // Enforce: status 'terisi' SOLELY managed by sistem.
+        // - Kalau current status 'terisi', preserve apapun yang admin kirim.
+        // - Kalau current bukan 'terisi' tapi admin coba set ke 'terisi', tolak.
+        if ($kamar->status === Kamar::STATUS_TERISI) {
+            $data['status'] = Kamar::STATUS_TERISI;
+        } elseif (($data['status'] ?? null) === Kamar::STATUS_TERISI) {
+            return back()->with('error', 'Status "Terisi" hanya dapat di-set lewat flow daftar penyewa baru.');
+        }
+
+        $kamar->update($data);
 
         return redirect()
             ->route('admin.kamar.show', $kamar)
@@ -159,7 +170,7 @@ class KamarController extends Controller
         if ($kamar->status !== Kamar::STATUS_TERSEDIA || $kamar->sewaAktif()->exists()) {
             return redirect()
                 ->route('admin.kamar.index')
-                ->withErrors(['delete' => "Kamar {$kamar->nomor_kamar} tidak bisa dihapus — hanya kamar berstatus kosong yang dapat dihapus."]);
+                ->with('error', "Kamar {$kamar->nomor_kamar} tidak bisa dihapus — hanya kamar berstatus kosong yang dapat dihapus.");
         }
 
         $kamar->delete();
