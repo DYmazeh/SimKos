@@ -36,6 +36,13 @@ if (typeof window !== 'undefined') {
         window.scrollTo(0, 0);
         initLenis();
     });
+    // Partial reload (filter/sort di halaman yang sama, router.get dgn preserveState):
+    // 'navigate' tidak fire, jadi Lenis listener jadi stale & anchor link kehilangan
+    // smooth-scroll. Re-init di 'success' (fire di setiap success navigasi) tanpa
+    // scroll-to-top supaya posisi user di-preserve.
+    router.on('success', () => {
+        initLenis();
+    });
 
     // Global 429 handler: rate limiter responds dgn JSON { message, retry_after }.
     // Inertia treat response non-Inertia sebagai 'invalid' event.
