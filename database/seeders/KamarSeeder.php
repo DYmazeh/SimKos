@@ -67,15 +67,33 @@ class KamarSeeder extends Seeder
         ];
 
         foreach ($kamar as $data) {
-            Kamar::updateOrCreate(
-                ['nomor_kamar' => $data['nomor_kamar']],
-                array_merge($data, [
+            $attrs = array_merge($data, [
+                'peraturan' => 'Tidak merokok di dalam kamar. Tamu lawan jenis tidak diperkenankan masuk kamar.',
+                'deposit' => $data['harga_bulanan'], // 1× sewa bulanan
+                'min_sewa_bulan' => $data['tipe'] === 'standar' ? 3 : 1,
+            ]);
+
+            // Pakai withTrashed() supaya seeder idempotent walau ada baris soft-deleted —
+            // tanpa ini, default scope skip soft-deleted → updateOrCreate akan INSERT
+            // dan tabrak unique constraint nomor_kamar.
+            $existing = Kamar::withTrashed()->where('nomor_kamar', $data['nomor_kamar'])->first();
+
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+                // Jangan overwrite status kalau kamar sudah terisi/maintenance —
+                // operator mungkin sudah punya kontrak aktif di sana.
+                if ($existing->status === Kamar::STATUS_TERSEDIA) {
+                    $attrs['status'] = Kamar::STATUS_TERSEDIA;
+                }
+                $existing->update($attrs);
+            } else {
+                Kamar::create(array_merge($attrs, [
+                    'nomor_kamar' => $data['nomor_kamar'],
                     'status' => Kamar::STATUS_TERSEDIA,
-                    'peraturan' => 'Tidak merokok di dalam kamar. Tamu lawan jenis tidak diperkenankan masuk kamar.',
-                    'deposit' => $data['harga_bulanan'], // 1× sewa bulanan
-                    'min_sewa_bulan' => $data['tipe'] === 'standar' ? 3 : 1,
-                ])
-            );
+                ]));
+            }
         }
     }
 }
