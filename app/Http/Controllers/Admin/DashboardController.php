@@ -91,12 +91,42 @@ class DashboardController extends Controller
 
         $pembayaranPendingCount = Pembayaran::where('status_verifikasi', Pembayaran::STATUS_PENDING)->count();
 
+        // FR-047: Kamar akan kosong dalam 30 hari ke depan (sewa aktif yang tgl_selesai
+        // jatuh di rentang today..today+30).
+        $horizon30 = $now->copy()->addDays(30)->toDateString();
+        $today = $now->toDateString();
+        $kamarAkanKosong = Sewa::query()
+            ->with(['kamar:id,nomor_kamar,tipe', 'penyewa:id,nama_lengkap'])
+            ->where('status', Sewa::STATUS_AKTIF)
+            ->whereNotNull('tgl_selesai')
+            ->whereBetween('tgl_selesai', [$today, $horizon30])
+            ->orderBy('tgl_selesai')
+            ->limit(8)
+            ->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'kamar_id' => $s->kamar?->id,
+                'kamar_nomor' => $s->kamar?->nomor_kamar ?? '—',
+                'tipe' => $s->kamar?->tipe ?? '',
+                'penyewa_nama' => $s->penyewa?->nama_lengkap ?? '—',
+                'tgl_selesai' => $s->tgl_selesai->format('Y-m-d'),
+                'sisa_hari' => max(0, (int) $now->copy()->startOfDay()->diffInDays($s->tgl_selesai->startOfDay(), false)),
+            ]);
+
+        $kamarAkanKosongTotal = Sewa::query()
+            ->where('status', Sewa::STATUS_AKTIF)
+            ->whereNotNull('tgl_selesai')
+            ->whereBetween('tgl_selesai', [$today, $horizon30])
+            ->count();
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'reminderList' => $reminderList,
             'reminderTotalCount' => $reminderTotalCount,
             'pembayaranTerbaru' => $pembayaranTerbaru,
             'pembayaranPendingCount' => $pembayaranPendingCount,
+            'kamarAkanKosong' => $kamarAkanKosong,
+            'kamarAkanKosongTotal' => $kamarAkanKosongTotal,
         ]);
     }
 }

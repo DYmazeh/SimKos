@@ -46,6 +46,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::delete('kamar/{kamar}/foto/{foto_kamar}', [AdminKamarController::class, 'deleteFoto'])->name('kamar.foto.destroy');
 
         Route::resource('penyewa', AdminPenyewaController::class);
+        Route::patch('penyewa/{penyewa}/deactivate', [AdminPenyewaController::class, 'deactivate'])->name('penyewa.deactivate');
+        Route::patch('penyewa/{penyewa}/reactivate', [AdminPenyewaController::class, 'reactivate'])->name('penyewa.reactivate');
         Route::post('penyewa/{penyewa}/sewa', [AdminSewaController::class, 'store'])->name('penyewa.sewa.store');
         Route::patch('sewa/{sewa}/end', [AdminSewaController::class, 'end'])->name('sewa.end');
 

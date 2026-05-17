@@ -223,4 +223,47 @@ class PenyewaController extends Controller
             ->route('admin.penyewa.index')
             ->with('success', 'Penyewa dihapus.');
     }
+
+    /**
+     * FR-018: Nonaktifkan penyewa yang sudah keluar dari kos.
+     * Mengakhiri sewa aktif (jika ada), set kamar ke tersedia, dan set
+     * status_aktif penyewa ke 'nonaktif'. Data tetap ada untuk riwayat.
+     */
+    public function deactivate(Penyewa $penyewa): RedirectResponse
+    {
+        if ($penyewa->status_aktif === Penyewa::STATUS_NONAKTIF) {
+            return back()->withErrors(['deactivate' => 'Penyewa sudah berstatus nonaktif.']);
+        }
+
+        DB::transaction(function () use ($penyewa) {
+            $sewaAktif = $penyewa->sewa()->where('status', Sewa::STATUS_AKTIF)->lockForUpdate()->get();
+            foreach ($sewaAktif as $sewa) {
+                $sewa->update([
+                    'status' => Sewa::STATUS_SELESAI,
+                    'tgl_selesai' => $sewa->tgl_selesai ?: Carbon::today()->toDateString(),
+                ]);
+                if ($sewa->kamar) {
+                    $sewa->kamar->update(['status' => Kamar::STATUS_TERSEDIA]);
+                }
+            }
+
+            $penyewa->update(['status_aktif' => Penyewa::STATUS_NONAKTIF]);
+        });
+
+        return back()->with('success', "Penyewa {$penyewa->nama_lengkap} telah dinonaktifkan.");
+    }
+
+    /**
+     * Aktifkan kembali penyewa yang sebelumnya nonaktif (tanpa membuat sewa baru).
+     */
+    public function reactivate(Penyewa $penyewa): RedirectResponse
+    {
+        if ($penyewa->status_aktif === Penyewa::STATUS_AKTIF) {
+            return back()->withErrors(['reactivate' => 'Penyewa sudah aktif.']);
+        }
+
+        $penyewa->update(['status_aktif' => Penyewa::STATUS_AKTIF]);
+
+        return back()->with('success', "Penyewa {$penyewa->nama_lengkap} diaktifkan kembali.");
+    }
 }

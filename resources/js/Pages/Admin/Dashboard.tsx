@@ -37,12 +37,24 @@ type PembayaranTerbaruItem = {
     tagihan_status: 'belum_bayar' | 'terlambat' | 'menunggu_verifikasi' | 'lunas' | null;
 };
 
+type KamarAkanKosongItem = {
+    id: number;
+    kamar_id: number | null;
+    kamar_nomor: string;
+    tipe: string;
+    penyewa_nama: string;
+    tgl_selesai: string;
+    sisa_hari: number;
+};
+
 type DashboardProps = PageProps<{
     stats: Stats;
     reminderList: ReminderItem[];
     reminderTotalCount: number;
     pembayaranTerbaru: PembayaranTerbaruItem[];
     pembayaranPendingCount: number;
+    kamarAkanKosong: KamarAkanKosongItem[];
+    kamarAkanKosongTotal: number;
 }>;
 
 const formatDate = (s: string | null) => s
@@ -124,7 +136,7 @@ const KPI = ({ label, value, accent, icon }: {
 
 export default function AdminDashboard() {
     const { props } = usePage<DashboardProps>();
-    const { stats, reminderList, reminderTotalCount, pembayaranTerbaru, pembayaranPendingCount } = props;
+    const { stats, reminderList, reminderTotalCount, pembayaranTerbaru, pembayaranPendingCount, kamarAkanKosong, kamarAkanKosongTotal } = props;
 
     return (
         <AdminLayout title="Dashboard">
@@ -208,6 +220,85 @@ export default function AdminDashboard() {
                                         <Icon name="logo-wa" size={14} />
                                         {isUrgent ? 'Tagih Sekarang' : 'Ingatkan'}
                                     </a>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </section>
+
+            {/* ───── Kamar Akan Kosong (30 hari) ───── */}
+            <section style={{
+                background: 'white', borderRadius: 14, marginBottom: 22, overflow: 'hidden',
+                border: '1px solid rgba(11,13,26,0.06)',
+                boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                position: 'relative',
+            }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'var(--blue-600)' }} />
+                <header style={{
+                    padding: '18px 22px 14px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    flexWrap: 'wrap', gap: 12,
+                }}>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--ink-900)', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        <Icon name="bed" size={18} style={{ color: 'var(--blue-600)' }} />
+                        Kamar Akan Kosong (30 Hari ke Depan)
+                    </h2>
+                    {kamarAkanKosongTotal > 0 && (
+                        <span style={{
+                            padding: '4px 10px', borderRadius: 999,
+                            background: 'var(--blue-50)', color: 'var(--blue-700)',
+                            fontSize: 11.5, fontWeight: 600,
+                        }}>
+                            {kamarAkanKosongTotal} kamar
+                        </span>
+                    )}
+                </header>
+                {kamarAkanKosong.length === 0 ? (
+                    <div style={{ padding: '24px 22px 28px', textAlign: 'center', color: 'var(--ink-500)' }}>
+                        <p style={{ margin: 0, fontSize: 14 }}>Tidak ada kontrak sewa yang akan berakhir dalam 30 hari ke depan.</p>
+                    </div>
+                ) : (
+                    <div>
+                        {kamarAkanKosong.map((item) => {
+                            const isUrgent = item.sisa_hari <= 7;
+                            return (
+                                <div key={item.id} style={{
+                                    padding: '14px 22px',
+                                    display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+                                    borderTop: '1px solid rgba(11,13,26,0.06)',
+                                }}>
+                                    <div style={{
+                                        width: 36, height: 36, borderRadius: 10,
+                                        background: 'var(--blue-50)', color: 'var(--blue-700)',
+                                        display: 'grid', placeItems: 'center', flex: '0 0 auto',
+                                        fontWeight: 700, fontSize: 13, letterSpacing: '-0.02em',
+                                    }}>{item.kamar_nomor}</div>
+                                    <div style={{ flex: 1, minWidth: 180 }}>
+                                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>
+                                            Kamar {item.kamar_nomor}
+                                            <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--ink-400)', fontWeight: 500, letterSpacing: '0.04em' }}>
+                                                {item.tipe.toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div style={{ fontSize: 12.5, color: 'var(--ink-500)' }}>
+                                            {item.penyewa_nama} · Sewa s/d {formatDate(item.tgl_selesai)}
+                                        </div>
+                                    </div>
+                                    <Pill tone={isUrgent ? 'warning' : 'info'} dot={isUrgent ? 'pulse' : true}>
+                                        {item.sisa_hari === 0 ? 'Berakhir Hari Ini' : `Sisa ${item.sisa_hari} hari`}
+                                    </Pill>
+                                    {item.kamar_id && (
+                                        <Link href={route('admin.kamar.show', item.kamar_id)}
+                                            style={{
+                                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                padding: '8px 14px', borderRadius: 8,
+                                                background: 'var(--blue-50)', color: 'var(--blue-700)',
+                                                fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                                            }}>
+                                            <Icon name="send" size={14} /> Detail
+                                        </Link>
+                                    )}
                                 </div>
                             );
                         })}

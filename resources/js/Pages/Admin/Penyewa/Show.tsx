@@ -1,6 +1,7 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/components/AdminLayout';
 import { Icon, Pill, formatRp } from '@/components/ui';
+import { confirmDialog } from '@/components/ConfirmDialog';
 import type { PageProps } from '@/types/inertia';
 
 type SewaItem = {
@@ -52,6 +53,32 @@ export default function PenyewaShow() {
     const { penyewa } = props;
     const initial = penyewa.nama_lengkap.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
     const sewaAktif = penyewa.sewa.find((s) => s.status === 'aktif');
+    const isAktif = penyewa.status_aktif === 'aktif';
+
+    const onDeactivate = async () => {
+        const desc = sewaAktif
+            ? `Sewa aktif (Kamar ${sewaAktif.kamar_nomor}) akan diakhiri otomatis dan kamar ditandai kosong. Data riwayat tetap tersimpan.`
+            : 'Penyewa akan ditandai nonaktif. Data riwayat tetap tersimpan.';
+        const ok = await confirmDialog({
+            title: `Nonaktifkan ${penyewa.nama_lengkap}?`,
+            description: desc,
+            tone: 'warning',
+            confirmLabel: 'Ya, nonaktifkan',
+        });
+        if (!ok) return;
+        router.patch(route('admin.penyewa.deactivate', penyewa.id), {}, { preserveScroll: true });
+    };
+
+    const onReactivate = async () => {
+        const ok = await confirmDialog({
+            title: `Aktifkan kembali ${penyewa.nama_lengkap}?`,
+            description: 'Status penyewa akan kembali "aktif". Buat kontrak sewa baru kalau penyewa kembali menempati kamar.',
+            tone: 'info',
+            confirmLabel: 'Ya, aktifkan',
+        });
+        if (!ok) return;
+        router.patch(route('admin.penyewa.reactivate', penyewa.id), {}, { preserveScroll: true });
+    };
 
     return (
         <AdminLayout title={penyewa.nama_lengkap}>
@@ -112,6 +139,25 @@ export default function PenyewaShow() {
                         style={{ width: '100%', marginTop: 20, justifyContent: 'center' }}>
                         <Icon name="edit" size={14} /> Edit profil
                     </Link>
+                    {isAktif ? (
+                        <button onClick={onDeactivate}
+                            className="btn btn-ghost btn-sm"
+                            style={{
+                                width: '100%', marginTop: 8, justifyContent: 'center',
+                                color: 'var(--danger)', borderColor: 'rgba(210,68,50,0.20)',
+                            }}>
+                            <Icon name="user" size={14} /> Nonaktifkan penyewa
+                        </button>
+                    ) : (
+                        <button onClick={onReactivate}
+                            className="btn btn-ghost btn-sm"
+                            style={{
+                                width: '100%', marginTop: 8, justifyContent: 'center',
+                                color: 'var(--blue-700)',
+                            }}>
+                            <Icon name="user" size={14} /> Aktifkan kembali
+                        </button>
+                    )}
                 </aside>
 
                 {/* ───── Sewa stack ───── */}
