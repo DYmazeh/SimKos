@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { Icon, Pill, formatRp } from '@/components/ui';
+import { Icon, Pill, formatRp, formatDate, formatDateTime } from '@/components/ui';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import type { PageProps } from '@/types/inertia';
 
@@ -27,13 +27,11 @@ type ShowProps = PageProps<{
     pembayaran: Pembayaran;
 }>;
 
-const fmt = (s: string | null) => s
-    ? new Date(s).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '—';
+const fmt = (s: string | null) => s ? formatDate(s) : '—';
 const fmtMonth = (s: string | null) => s
     ? new Date(s).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
     : '—';
-const fmtDateTime = (s: string) => new Date(s).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const fmtDateTime = (s: string) => formatDateTime(s);
 
 export default function PembayaranShow() {
     const { props } = usePage<ShowProps>();

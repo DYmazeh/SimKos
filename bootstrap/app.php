@@ -3,10 +3,13 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Inertia\Inertia;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,7 +29,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Render branded Inertia error pages untuk 403/404/419/500/503.
+        // Di local/testing biarkan default Laravel error page biar lebih informatif.
+        $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
+            if (app()->environment(['local', 'testing'])) {
+                return $response;
+            }
+            $status = $response->getStatusCode();
+            if (in_array($status, [403, 404, 419, 500, 503], true)) {
+                return Inertia::render('Error', ['status' => $status])
+                    ->toResponse($request)
+                    ->setStatusCode($status);
+            }
+            return $response;
+        });
     })
     ->booted(function () {
         if (app()->environment('production')) {

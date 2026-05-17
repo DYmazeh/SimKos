@@ -19,8 +19,11 @@ type Kamar = {
     komplen_aktif_count: number;
 };
 
+type Pagination = { current_page: number; last_page: number; total: number; from: number; to: number };
+
 type IndexProps = PageProps<{
     kamar: Kamar[];
+    pagination: Pagination;
     filters: { q: string; status: string; tipe: string };
 }>;
 
@@ -46,7 +49,7 @@ const fasilitasIcon = (label: string): React.ComponentProps<typeof Icon>['name']
 
 export default function KamarIndex() {
     const { props } = usePage<IndexProps>();
-    const { kamar, filters } = props;
+    const { kamar, filters, pagination } = props;
     const [q, setQ] = useState(filters.q || '');
     const [status, setStatus] = useState(filters.status || '');
     const [tipe, setTipe] = useState(filters.tipe || '');
@@ -112,15 +115,48 @@ export default function KamarIndex() {
                     <Link href={route('admin.kamar.create')} style={{ color: 'var(--blue-600)', fontWeight: 500 }}>Tambah sekarang →</Link>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 16 }}>
-                    {kamar.map((k) => (
-                        <KamarCard key={k.id} kamar={k} onDelete={onDelete} />
-                    ))}
-                </div>
+                <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 16 }}>
+                        {kamar.map((k) => (
+                            <KamarCard key={k.id} kamar={k} onDelete={onDelete} />
+                        ))}
+                    </div>
+                    {pagination.last_page > 1 && (
+                        <div style={{
+                            marginTop: 16, padding: 14, background: 'white', borderRadius: 12,
+                            border: '1px solid rgba(11,13,26,0.06)',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            flexWrap: 'wrap', gap: 12,
+                        }}>
+                            <div style={{ fontSize: 13, color: 'var(--ink-500)', fontVariantNumeric: 'tabular-nums' }}>
+                                Menampilkan {pagination.from}–{pagination.to} dari {pagination.total} kamar
+                            </div>
+                            <div style={{ display: 'flex', gap: 4 }}>
+                                <button disabled={pagination.current_page <= 1}
+                                    onClick={() => router.get(route('admin.kamar.index'), { q, status, tipe, page: pagination.current_page - 1 }, { preserveScroll: true })}
+                                    style={pageBtnStyle(pagination.current_page <= 1)} aria-label="Halaman sebelumnya">
+                                    <Icon name="arrow-left" size={14} />
+                                </button>
+                                <button disabled={pagination.current_page >= pagination.last_page}
+                                    onClick={() => router.get(route('admin.kamar.index'), { q, status, tipe, page: pagination.current_page + 1 }, { preserveScroll: true })}
+                                    style={pageBtnStyle(pagination.current_page >= pagination.last_page)} aria-label="Halaman berikutnya">
+                                    <Icon name="arrow-right" size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </AdminLayout>
     );
 }
+
+const pageBtnStyle = (disabled: boolean): React.CSSProperties => ({
+    width: 44, height: 44, borderRadius: 10,
+    border: '1px solid rgba(11,13,26,0.10)',
+    background: 'white', color: disabled ? 'var(--ink-300)' : 'var(--ink-700)',
+    display: 'grid', placeItems: 'center', cursor: disabled ? 'not-allowed' : 'pointer',
+});
 
 const KamarCard = ({ kamar, onDelete }: { kamar: Kamar; onDelete: (k: Kamar) => void }) => {
     const meta = statusMeta[kamar.status];
@@ -218,20 +254,20 @@ const KamarCard = ({ kamar, onDelete }: { kamar: Kamar; onDelete: (k: Kamar) => 
                     <div style={{ display: 'flex', gap: 6 }}>
                         <Link href={route('admin.kamar.edit', kamar.id)}
                             style={{
-                                width: 30, height: 30, borderRadius: 8,
+                                width: 44, height: 44, borderRadius: 10,
                                 background: 'var(--blue-50)', color: 'var(--blue-700)',
                                 display: 'grid', placeItems: 'center',
                             }} aria-label="Edit">
-                            <Icon name="edit" size={14} />
+                            <Icon name="edit" size={18} />
                         </Link>
                         <button onClick={() => onDelete(kamar)}
                             style={{
-                                width: 30, height: 30, borderRadius: 8,
+                                width: 44, height: 44, borderRadius: 10,
                                 background: 'rgba(210,68,50,0.10)', color: 'var(--danger)',
                                 display: 'grid', placeItems: 'center',
                                 border: 0, cursor: 'pointer',
                             }} aria-label="Hapus">
-                            <Icon name="trash" size={14} />
+                            <Icon name="trash" size={18} />
                         </button>
                     </div>
                 </div>

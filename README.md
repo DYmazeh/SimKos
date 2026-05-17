@@ -2,7 +2,7 @@
 
 Aplikasi web untuk pengelolaan kos: manajemen kamar & penyewa, generate tagihan bulanan, reminder pembayaran via WhatsApp, verifikasi bukti transfer, dan laporan keuangan.
 
-Project tugas Manajemen Proyek TI — Kelompok 4 (deadline: 18 Mei 2026).
+Project tugas Manajemen Proyek TI — Kelompok 4. Submission final: 16 Mei 2026 (delivered on time).
 
 ---
 

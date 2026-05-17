@@ -112,7 +112,23 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 - Alasan penolakan tampil di bawah status (mis. "Nominal tidak sesuai")
 - Upload ulang bukti yang benar dengan klik tombol **💳 Bayar / Upload Bukti** lagi
 
-### 6. Ganti Password
+### 6. Download Kuitansi PDF
+- Untuk pembayaran yang sudah disetujui admin (status **Lunas**), tersedia tombol **Download Kuitansi**
+- File PDF berisi rincian pembayaran, info kamar, dan info kos
+- Bisa disimpan untuk arsip pribadi atau klaim reimburse
+
+### 7. Halaman Kamar Saya
+- Menu **Kamar Saya** menampilkan detail kamar yang sedang disewa: nomor, tipe, fasilitas, foto
+- Termasuk info kontrak: tgl mulai, tgl selesai (kalau ada), nominal sewa/bulan
+
+### 8. Komplen / Keluhan
+- Menu **Komplen** untuk melaporkan masalah kamar atau fasilitas
+- Klik **Buat komplen baru** → isi judul + deskripsi
+- Upload max 3 foto bukti (JPG/PNG, max 2MB per file)
+- Status komplen: **Menunggu → Sedang diproses → Selesai** (di-update oleh admin)
+- Riwayat komplen aktif dan selesai bisa dilihat di halaman yang sama
+
+### 9. Ganti Password
 - Klik nama Anda di kanan atas → **Profile**
 - Bagian **Update Password** — isi password lama + password baru
 

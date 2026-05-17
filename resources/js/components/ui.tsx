@@ -410,6 +410,30 @@ export const AuthShell = ({
 export const formatRp = (n: number) => 'Rp ' + n.toLocaleString('id-ID');
 
 /**
+ * Format tanggal ke "17 Mei 2026" — pakai untuk tampilan tanggal saja.
+ */
+export const formatDate = (input: string | Date | null | undefined): string => {
+    if (!input) return '-';
+    const d = typeof input === 'string' ? new Date(input) : input;
+    if (Number.isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+/**
+ * Format tanggal+waktu ke "17 Mei 2026, 14:35" — gunakan untuk timestamp event/log.
+ * Konsisten dgn backend `format('Y-m-d H:i')` (tanpa detik).
+ */
+export const formatDateTime = (input: string | Date | null | undefined): string => {
+    if (!input) return '-';
+    const d = typeof input === 'string' ? new Date(input) : input;
+    if (Number.isNaN(d.getTime())) return '-';
+    return d.toLocaleString('id-ID', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+    });
+};
+
+/**
  * Normalize Indonesian phone → 62xxx (untuk wa.me link).
  * "081234..." → "6281234..."
  */

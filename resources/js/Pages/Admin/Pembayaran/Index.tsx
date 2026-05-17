@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { Icon, Pill, formatRp } from '@/components/ui';
+import { Icon, Pill, formatRp, formatDateTime } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type PembayaranRow = {
@@ -25,7 +25,7 @@ type IndexProps = PageProps<{
     pagination: { current_page: number; last_page: number; total: number; from: number; to: number };
 }>;
 
-const formatDate = (s: string) => new Date(s).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const formatDate = formatDateTime;
 
 const statusMeta = (status: PembayaranRow['status_verifikasi']): { label: string; tone: 'warning' | 'success' | 'neutral' } => {
     if (status === 'approved') return { label: 'Disetujui', tone: 'success' };
@@ -99,7 +99,7 @@ export default function PembayaranIndex() {
             </div>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+            <div role="tablist" aria-label="Filter status pembayaran" style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                 {([
                     { v: 'pending', l: `Menunggu (${kpi.pending})` },
                     { v: 'approved', l: 'Disetujui' },
@@ -108,6 +108,11 @@ export default function PembayaranIndex() {
                     const active = currentStatus === t.v;
                     return (
                         <button key={t.v} onClick={() => switchTab(t.v)}
+                            role="tab"
+                            aria-selected={active}
+                            aria-controls="pembayaran-tabpanel"
+                            id={`pembayaran-tab-${t.v}`}
+                            tabIndex={active ? 0 : -1}
                             style={{
                                 padding: '8px 18px', borderRadius: 999,
                                 background: active ? 'var(--blue-600)' : 'white',
@@ -121,11 +126,15 @@ export default function PembayaranIndex() {
             </div>
 
             {/* Table card */}
-            <section style={{
-                background: 'white', borderRadius: 14, overflow: 'hidden',
-                border: '1px solid rgba(11,13,26,0.06)',
-                boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
-            }}>
+            <section
+                role="tabpanel"
+                id="pembayaran-tabpanel"
+                aria-labelledby={`pembayaran-tab-${currentStatus}`}
+                style={{
+                    background: 'white', borderRadius: 14, overflow: 'hidden',
+                    border: '1px solid rgba(11,13,26,0.06)',
+                    boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                }}>
                 <header style={{ padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                     <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--ink-900)' }}>
                         Daftar {currentStatus === 'pending' ? 'Tunggu Pembayaran' : currentStatus === 'approved' ? 'Pembayaran Disetujui' : 'Pembayaran Ditolak'}

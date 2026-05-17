@@ -34,11 +34,17 @@ class KamarController extends Controller
             $query->whereRaw('LOWER(nomor_kamar) LIKE ?', ['%'.strtolower($search).'%']);
         }
 
-        $kamar = $query->orderBy('nomor_kamar')->get()
-            ->map(fn ($k) => $this->mapKamar($k));
+        $paginated = $query->orderBy('nomor_kamar')->paginate(24)->withQueryString();
 
         return Inertia::render('Admin/Kamar/Index', [
-            'kamar' => $kamar,
+            'kamar' => collect($paginated->items())->map(fn ($k) => $this->mapKamar($k))->all(),
+            'pagination' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'total' => $paginated->total(),
+                'from' => $paginated->firstItem() ?? 0,
+                'to' => $paginated->lastItem() ?? 0,
+            ],
             'filters' => [
                 'q' => $request->string('q')->toString(),
                 'status' => $request->string('status')->toString(),

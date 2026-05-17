@@ -12,6 +12,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Idempotent: kalau column sudah dibuat di create_kamar_table (initial schema),
+        // skip supaya `migrate:fresh` di environment baru (SQLite test) tidak gagal.
+        if (Schema::hasColumn('kamar', 'deleted_at')) {
+            return;
+        }
         Schema::table('kamar', function (Blueprint $table) {
             $table->softDeletes()->after('updated_at');
         });
@@ -19,6 +24,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasColumn('kamar', 'deleted_at')) {
+            return;
+        }
         Schema::table('kamar', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });

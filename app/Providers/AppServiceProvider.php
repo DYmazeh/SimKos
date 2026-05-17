@@ -46,11 +46,16 @@ class AppServiceProvider extends ServiceProvider
         Komplain::observe(SidebarCountsInvalidator::class);
 
         // Rate limit: upload bukti transfer max 5 per menit per user (anti-spam).
+        // Sertakan header Retry-After (RFC 6585) supaya client tahu kapan boleh retry.
         RateLimiter::for('upload-bukti', fn (Request $request) =>
             Limit::perMinute(5)->by($request->user()?->id ?: $request->ip())
-                ->response(fn () => response()->json([
-                    'message' => 'Terlalu banyak upload. Coba lagi dalam 1 menit.',
-                ], 429))
+                ->response(function (Request $request, array $headers) {
+                    $retryAfter = $headers['Retry-After'] ?? 60;
+                    return response()->json([
+                        'message' => "Terlalu banyak upload. Coba lagi dalam {$retryAfter} detik.",
+                        'retry_after' => (int) $retryAfter,
+                    ], 429, $headers);
+                })
         );
     }
 }

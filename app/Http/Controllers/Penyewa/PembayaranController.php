@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class PembayaranController extends Controller
 {
@@ -26,7 +25,7 @@ class PembayaranController extends Controller
      */
     public function create(Tagihan $tagihan): Response
     {
-        $this->ensureOwned($tagihan);
+        $this->authorize('pay', $tagihan);
         $tagihan->load('sewa.kamar');
 
         return Inertia::render('Penyewa/Pembayaran/Create', [
@@ -52,7 +51,7 @@ class PembayaranController extends Controller
      */
     public function store(StoreBuktiTransferRequest $request, Tagihan $tagihan): RedirectResponse
     {
-        $this->ensureOwned($tagihan);
+        $this->authorize('pay', $tagihan);
 
         $url = $this->uploader->upload($request->file('bukti'), $tagihan->id);
 
@@ -140,14 +139,7 @@ class PembayaranController extends Controller
     {
         $pembayaran->load(['tagihan.sewa.penyewa', 'tagihan.sewa.kamar']);
 
-        $penyewa = Auth::user()->penyewa;
-        if (! $penyewa || $pembayaran->tagihan?->sewa?->penyewa_id !== $penyewa->id) {
-            throw new AccessDeniedHttpException('Bukan kuitansi milik Anda.');
-        }
-
-        if ($pembayaran->status_verifikasi !== Pembayaran::STATUS_APPROVED) {
-            throw new AccessDeniedHttpException('Kuitansi hanya tersedia untuk pembayaran yang sudah dikonfirmasi.');
-        }
+        $this->authorize('downloadKuitansi', $pembayaran);
 
         $pdf = Pdf::loadView('penyewa.kuitansi', [
             'pembayaran' => $pembayaran,
@@ -160,16 +152,5 @@ class PembayaranController extends Controller
 
         $filename = 'kuitansi-'.$pembayaran->id.'-'.$pembayaran->tgl_bayar->format('Y-m').'.pdf';
         return $pdf->download($filename);
-    }
-
-    /**
-     * Pastikan tagihan ini memang milik penyewa yang sedang login.
-     */
-    private function ensureOwned(Tagihan $tagihan): void
-    {
-        $penyewa = Auth::user()->penyewa;
-        if (! $penyewa || $tagihan->sewa->penyewa_id !== $penyewa->id) {
-            throw new AccessDeniedHttpException('Tagihan ini bukan milik Anda.');
-        }
     }
 }

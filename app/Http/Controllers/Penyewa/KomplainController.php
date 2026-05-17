@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class KomplainController extends Controller
 {
@@ -26,28 +25,41 @@ class KomplainController extends Controller
         $penyewa = Auth::user()->penyewa;
 
         $items = [];
+        $pagination = ['current_page' => 1, 'last_page' => 1, 'total' => 0, 'from' => 0, 'to' => 0];
+
         if ($penyewa) {
-            $items = $penyewa->komplain()
+            $paginated = $penyewa->komplain()
                 ->with(['kamar', 'foto'])
-                ->get()
-                ->map(fn ($k) => [
-                    'id' => $k->id,
-                    'judul' => $k->judul,
-                    'deskripsi' => $k->deskripsi,
-                    'status' => $k->status,
-                    'kamar_nomor' => $k->kamar?->nomor_kamar ?? '-',
-                    'created_at' => $k->created_at->toDateString(),
-                    'resolved_at' => optional($k->resolved_at)->toDateString(),
-                    'foto' => $k->foto->map(fn ($f) => [
-                        'id' => $f->id,
-                        'url' => Storage::disk(config('filesystems.default'))->url($f->url),
-                    ])->values(),
-                ])
-                ->all();
+                ->latest('created_at')
+                ->paginate(20)
+                ->withQueryString();
+
+            $items = collect($paginated->items())->map(fn ($k) => [
+                'id' => $k->id,
+                'judul' => $k->judul,
+                'deskripsi' => $k->deskripsi,
+                'status' => $k->status,
+                'kamar_nomor' => $k->kamar?->nomor_kamar ?? '-',
+                'created_at' => $k->created_at->toDateString(),
+                'resolved_at' => optional($k->resolved_at)->toDateString(),
+                'foto' => $k->foto->map(fn ($f) => [
+                    'id' => $f->id,
+                    'url' => Storage::disk(config('filesystems.default'))->url($f->url),
+                ])->values(),
+            ])->all();
+
+            $pagination = [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'total' => $paginated->total(),
+                'from' => $paginated->firstItem() ?? 0,
+                'to' => $paginated->lastItem() ?? 0,
+            ];
         }
 
         return Inertia::render('Penyewa/Komplen/Index', [
             'komplen' => $items,
+            'pagination' => $pagination,
         ]);
     }
 
@@ -56,12 +68,9 @@ class KomplainController extends Controller
      */
     public function create(): Response
     {
-        $penyewa = Auth::user()->penyewa;
-        $kamar = $penyewa?->sewaAktif?->kamar;
+        $this->authorize('create', Komplain::class);
 
-        if (! $penyewa || ! $kamar) {
-            throw new AccessDeniedHttpException('Anda belum memiliki sewa kamar aktif. Hubungi pengelola.');
-        }
+        $kamar = Auth::user()->penyewa->sewaAktif->kamar;
 
         return Inertia::render('Penyewa/Komplen/Create', [
             'kamar' => [
@@ -77,12 +86,10 @@ class KomplainController extends Controller
      */
     public function store(StoreKomplainRequest $request): RedirectResponse
     {
-        $penyewa = Auth::user()->penyewa;
-        $kamar = $penyewa?->sewaAktif?->kamar;
+        $this->authorize('create', Komplain::class);
 
-        if (! $penyewa || ! $kamar) {
-            throw new AccessDeniedHttpException('Tidak ada sewa kamar aktif.');
-        }
+        $penyewa = Auth::user()->penyewa;
+        $kamar = $penyewa->sewaAktif->kamar;
 
         $komplain = Komplain::create([
             'kamar_id' => $kamar->id,

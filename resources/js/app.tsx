@@ -7,6 +7,7 @@ import 'lenis/dist/lenis.css';
 import ToastContainer from '@/components/Toast';
 import ConfirmContainer from '@/components/ConfirmDialog';
 import FlashToastWatcher from '@/components/FlashToastWatcher';
+import { toast } from '@/components/Toast';
 
 const appName = import.meta.env.VITE_APP_NAME || 'SIMKOS';
 
@@ -34,6 +35,17 @@ if (typeof window !== 'undefined') {
         // halaman baru: scroll ke top + re-init biar listener fresh
         window.scrollTo(0, 0);
         initLenis();
+    });
+
+    // Global 429 handler: rate limiter responds dgn JSON { message, retry_after }.
+    // Inertia treat response non-Inertia sebagai 'invalid' event.
+    router.on('invalid', (event) => {
+        const response = event.detail.response;
+        if (response?.status === 429) {
+            event.preventDefault();
+            const data = response.data as { message?: string; retry_after?: number } | undefined;
+            toast.error(data?.message ?? 'Terlalu banyak permintaan. Coba lagi sebentar.');
+        }
     });
 }
 

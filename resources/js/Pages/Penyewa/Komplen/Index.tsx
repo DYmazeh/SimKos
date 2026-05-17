@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { Icon, Pill } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
@@ -14,8 +14,11 @@ type KomplenItem = {
     foto: Array<{ id: number; url: string }>;
 };
 
+type Pagination = { current_page: number; last_page: number; total: number; from: number; to: number };
+
 type IndexProps = PageProps<{
     komplen: KomplenItem[];
+    pagination: Pagination;
 }>;
 
 const KICKER: React.CSSProperties = {
@@ -39,7 +42,7 @@ const statusLabel = (s: KomplenItem['status']) => {
 
 export default function KomplenIndex() {
     const { props } = usePage<IndexProps>();
-    const { komplen } = props;
+    const { komplen, pagination } = props;
 
     const aktif = komplen.filter((k) => k.status !== 'selesai');
     const selesai = komplen.filter((k) => k.status === 'selesai');
@@ -103,9 +106,41 @@ export default function KomplenIndex() {
                     </div>
                 ) : null}
             </section>
+
+            {komplen.length > 0 && pagination.last_page > 1 && (
+                <div style={{
+                    marginTop: 20, padding: 14, background: 'white', borderRadius: 12,
+                    border: '1px solid rgba(11,13,26,0.06)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    flexWrap: 'wrap', gap: 12,
+                }}>
+                    <div style={{ fontSize: 13, color: 'var(--ink-500)', fontVariantNumeric: 'tabular-nums' }}>
+                        Menampilkan {pagination.from}–{pagination.to} dari {pagination.total} komplen
+                    </div>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                        <button disabled={pagination.current_page <= 1}
+                            onClick={() => router.get(route('penyewa.komplen.index'), { page: pagination.current_page - 1 }, { preserveScroll: true })}
+                            style={pageBtnStyle(pagination.current_page <= 1)} aria-label="Halaman sebelumnya">
+                            <Icon name="arrow-left" size={14} />
+                        </button>
+                        <button disabled={pagination.current_page >= pagination.last_page}
+                            onClick={() => router.get(route('penyewa.komplen.index'), { page: pagination.current_page + 1 }, { preserveScroll: true })}
+                            style={pageBtnStyle(pagination.current_page >= pagination.last_page)} aria-label="Halaman berikutnya">
+                            <Icon name="arrow-right" size={14} />
+                        </button>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }
+
+const pageBtnStyle = (disabled: boolean): React.CSSProperties => ({
+    width: 44, height: 44, borderRadius: 10,
+    border: '1px solid rgba(11,13,26,0.10)',
+    background: 'white', color: disabled ? 'var(--ink-300)' : 'var(--ink-700)',
+    display: 'grid', placeItems: 'center', cursor: disabled ? 'not-allowed' : 'pointer',
+});
 
 const KomplenCard = ({ komplen }: { komplen: KomplenItem }) => {
     const accentColor = komplen.status === 'menunggu' ? '#c89e2a' :
