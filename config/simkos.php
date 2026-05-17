@@ -21,4 +21,11 @@ return [
      * Tanggal tetap jatuh tempo tagihan setiap bulan.
      */
     'jatuh_tempo_tanggal' => (int) env('SIMKOS_JATUH_TEMPO_TANGGAL', 5),
+
+    /*
+     * Token rahasia untuk endpoint /cron/run (webhook alternatif scheduler
+     * karena Render free tier tidak support cron). Wajib di-set di production —
+     * tanpa token, endpoint akan selalu abort 403.
+     */
+    'cron_token' => env('SIMKOS_CRON_TOKEN', ''),
 ];

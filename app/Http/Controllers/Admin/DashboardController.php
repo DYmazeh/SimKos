@@ -23,6 +23,17 @@ class DashboardController extends Controller
             ->where('tgl_jatuh_tempo', '<', Carbon::today()->toDateString())
             ->update(['status' => Tagihan::STATUS_TERLAMBAT, 'updated_at' => now()]);
 
+        // Auto-sync kamar.status terhadap sewa aktif (idempotent, single source of truth).
+        // Status 'maintenance' tidak disentuh — itu manual override admin.
+        Kamar::query()
+            ->where('status', Kamar::STATUS_TERSEDIA)
+            ->whereHas('sewaAktif')
+            ->update(['status' => Kamar::STATUS_TERISI]);
+        Kamar::query()
+            ->where('status', Kamar::STATUS_TERISI)
+            ->whereDoesntHave('sewaAktif')
+            ->update(['status' => Kamar::STATUS_TERSEDIA]);
+
         $now = Carbon::now();
         $awalBulan = $now->copy()->startOfMonth()->toDateString();
         $akhirBulan = $now->copy()->endOfMonth()->toDateString();

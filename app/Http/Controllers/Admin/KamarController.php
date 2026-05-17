@@ -20,6 +20,16 @@ class KamarController extends Controller
 
     public function index(Request $request): Response
     {
+        // Auto-sync kamar.status berdasarkan sewa aktif (idempotent, defensive).
+        Kamar::query()
+            ->where('status', Kamar::STATUS_TERSEDIA)
+            ->whereHas('sewaAktif')
+            ->update(['status' => Kamar::STATUS_TERISI]);
+        Kamar::query()
+            ->where('status', Kamar::STATUS_TERISI)
+            ->whereDoesntHave('sewaAktif')
+            ->update(['status' => Kamar::STATUS_TERSEDIA]);
+
         $query = Kamar::query()
             ->with([
                 'foto' => fn ($q) => $q->orderBy('urutan'),

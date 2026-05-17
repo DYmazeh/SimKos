@@ -155,13 +155,13 @@ export default function AdminLayout({
                 {/* Brand + Pin toggle */}
                 <div style={{ padding: '16px 20px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{
-                            width: 36, height: 36, borderRadius: 10,
-                            background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
-                            display: 'grid', placeItems: 'center',
-                        }}>
-                            <Icon name="home" size={18} stroke={2} style={{ color: 'white' }} />
-                        </div>
+                        <img
+                            src="/images/brand/logo.png"
+                            alt="SimKos"
+                            width={36}
+                            height={36}
+                            style={{ width: 36, height: 36, objectFit: 'contain' }}
+                        />
                         <span style={{ fontSize: 20, fontWeight: 700, color: '#2563EB', letterSpacing: '0.04em' }}>SIMKOS</span>
                     </Link>
                     <button

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PembayaranController as AdminPembayaranController
 use App\Http\Controllers\Admin\PenyewaController as AdminPenyewaController;
 use App\Http\Controllers\Admin\SewaController as AdminSewaController;
 use App\Http\Controllers\Admin\TagihanController as AdminTagihanController;
+use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\Guest\HomeController as GuestHomeController;
 use App\Http\Controllers\Guest\KamarController as GuestKamarController;
@@ -18,6 +19,11 @@ use App\Http\Controllers\Penyewa\KomplainController as PenyewaKomplainController
 use App\Http\Controllers\Penyewa\PembayaranController as PenyewaPembayaranController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
+// Webhook scheduler alternatif untuk Render free tier (no native cron support).
+// External pinger (UptimeRobot/cron-job.org) ping endpoint ini dgn token utk
+// memicu Laravel schedule:run. Token di config('simkos.cron_token').
+Route::get('/cron/run', [CronController::class, 'run'])->name('cron.run');
 
 // Root: Inertia Guest Home (React) — landing publik
 Route::get('/', GuestHomeController::class)->name('home');
