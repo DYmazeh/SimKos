@@ -21,7 +21,10 @@ class KamarController extends Controller
     public function index(Request $request): Response
     {
         $query = Kamar::query()
-            ->with(['foto' => fn ($q) => $q->orderBy('urutan')])
+            ->with([
+                'foto' => fn ($q) => $q->orderBy('urutan'),
+                'sewaAktif.penyewa:id,nama_lengkap',
+            ])
             ->withCount(['komplain as komplen_aktif_count' => fn ($q) => $q->whereNot('status', 'selesai')]);
 
         if ($status = $request->string('status')->toString()) {
@@ -143,10 +146,10 @@ class KamarController extends Controller
 
     public function destroy(Kamar $kamar): RedirectResponse
     {
-        if ($kamar->sewaAktif()->exists()) {
+        if ($kamar->status !== Kamar::STATUS_TERSEDIA || $kamar->sewaAktif()->exists()) {
             return redirect()
                 ->route('admin.kamar.index')
-                ->withErrors(['delete' => "Kamar {$kamar->nomor_kamar} sedang ditempati. Akhiri sewa dulu sebelum hapus."]);
+                ->withErrors(['delete' => "Kamar {$kamar->nomor_kamar} tidak bisa dihapus — hanya kamar berstatus kosong yang dapat dihapus."]);
         }
 
         $kamar->delete();
@@ -194,6 +197,19 @@ class KamarController extends Controller
      */
     private function mapKamar(Kamar $k): array
     {
+        $penghuni = null;
+        if ($k->relationLoaded('sewaAktif') && $k->sewaAktif && $k->sewaAktif->penyewa) {
+            $sewa = $k->sewaAktif;
+            $sisaHari = $sewa->tgl_selesai
+                ? max(0, (int) now()->startOfDay()->diffInDays($sewa->tgl_selesai->startOfDay(), false))
+                : null;
+            $penghuni = [
+                'nama' => $sewa->penyewa->nama_lengkap,
+                'tgl_selesai' => $sewa->tgl_selesai?->translatedFormat('d M Y'),
+                'sisa_hari' => $sisaHari,
+            ];
+        }
+
         return [
             'id' => $k->id,
             'nomor_kamar' => $k->nomor_kamar,
@@ -211,6 +227,7 @@ class KamarController extends Controller
                 ])->values()
                 : [],
             'komplen_aktif_count' => (int) ($k->komplen_aktif_count ?? 0),
+            'penghuni' => $penghuni,
         ];
     }
 }

@@ -17,6 +17,11 @@ type Kamar = {
     lantai: number | null;
     foto: Array<{ id: number; url: string }>;
     komplen_aktif_count: number;
+    penghuni: {
+        nama: string;
+        tgl_selesai: string | null;
+        sisa_hari: number | null;
+    } | null;
 };
 
 type Pagination = { current_page: number; last_page: number; total: number; from: number; to: number };
@@ -160,7 +165,6 @@ const pageBtnStyle = (disabled: boolean): React.CSSProperties => ({
 
 const KamarCard = ({ kamar, onDelete }: { kamar: Kamar; onDelete: (k: Kamar) => void }) => {
     const meta = statusMeta[kamar.status];
-    const isTerisi = kamar.status === 'terisi';
 
     return (
         <div style={{
@@ -241,17 +245,27 @@ const KamarCard = ({ kamar, onDelete }: { kamar: Kamar; onDelete: (k: Kamar) => 
                 )}
 
                 {/* Footer */}
-                <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid rgba(11,13,26,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    {isTerisi ? (
-                        <span style={{ fontSize: 12, color: 'var(--ink-700)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                            <Icon name="user" size={13} /> Terisi
-                        </span>
-                    ) : (
-                        <span style={{ fontSize: 12, color: 'var(--ink-400)' }}>
-                            Tersedia untuk disewa
-                        </span>
-                    )}
-                    <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid rgba(11,13,26,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        {kamar.penghuni ? (
+                            <>
+                                <div style={{ fontSize: 12, color: 'var(--ink-700)', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    <Icon name="user" size={13} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{kamar.penghuni.nama}</span>
+                                </div>
+                                {kamar.penghuni.tgl_selesai && (
+                                    <div style={{ fontSize: 11, color: 'var(--ink-400)', marginTop: 2 }}>
+                                        Sewa s/d {kamar.penghuni.tgl_selesai}
+                                        {kamar.penghuni.sisa_hari !== null && ` · sisa ${kamar.penghuni.sisa_hari} hari`}
+                                    </div>
+                                )}
+                            </>
+                        ) : kamar.status === 'maintenance' ? (
+                            <span style={{ fontSize: 12, color: 'var(--ink-400)' }}>Sedang maintenance</span>
+                        ) : (
+                            <span style={{ fontSize: 12, color: 'var(--ink-400)' }}>Tersedia untuk disewa</span>
+                        )}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                         <Link href={route('admin.kamar.edit', kamar.id)}
                             style={{
                                 width: 44, height: 44, borderRadius: 10,
@@ -260,15 +274,17 @@ const KamarCard = ({ kamar, onDelete }: { kamar: Kamar; onDelete: (k: Kamar) => 
                             }} aria-label="Edit">
                             <Icon name="edit" size={18} />
                         </Link>
-                        <button onClick={() => onDelete(kamar)}
-                            style={{
-                                width: 44, height: 44, borderRadius: 10,
-                                background: 'rgba(210,68,50,0.10)', color: 'var(--danger)',
-                                display: 'grid', placeItems: 'center',
-                                border: 0, cursor: 'pointer',
-                            }} aria-label="Hapus">
-                            <Icon name="trash" size={18} />
-                        </button>
+                        {kamar.status === 'tersedia' && !kamar.penghuni && (
+                            <button onClick={() => onDelete(kamar)}
+                                style={{
+                                    width: 44, height: 44, borderRadius: 10,
+                                    background: 'rgba(210,68,50,0.10)', color: 'var(--danger)',
+                                    display: 'grid', placeItems: 'center',
+                                    border: 0, cursor: 'pointer',
+                                }} aria-label="Hapus">
+                                <Icon name="trash" size={18} />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
