@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             AdminSeeder::class,
             KamarSeeder::class,
+            TagihanSeeder::class,
             TestimoniSeeder::class,
             FaqSeeder::class,
         ]);
