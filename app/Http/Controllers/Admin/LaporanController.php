@@ -22,10 +22,10 @@ class LaporanController extends Controller
 {
     public function keuangan(Request $request): InertiaResponse
     {
-        [$start, $end, $periode, $tahun] = $this->resolvePeriode($request);
+        [$start, $end, $periode, $tahun, $mode] = $this->resolvePeriode($request);
         $data = $this->buildKeuangan($start, $end);
 
-        // Chart pendapatan 12 bulan untuk tahun yang dipilih
+        // Chart pendapatan 12 bulan untuk tahun yang dipilih (selalu tahunan).
         $chart = [];
         for ($m = 1; $m <= 12; $m++) {
             $startM = Carbon::create($tahun, $m, 1)->startOfMonth();
@@ -40,6 +40,10 @@ class LaporanController extends Controller
                 'value_juta' => round($sum / 1_000_000, 1),
             ];
         }
+
+        $bulanFromPeriode = $mode === 'tahunan'
+            ? (string) Carbon::now()->month
+            : (string) Carbon::createFromFormat('Y-m', $periode)->month;
 
         return Inertia::render('Admin/Laporan/Keuangan', [
             'kpi' => [
@@ -58,9 +62,10 @@ class LaporanController extends Controller
                 'status' => $p->status_verifikasi,
             ])->values(),
             'filters' => [
+                'mode' => $mode,
                 'periode' => $periode,
                 'tahun' => (string) $tahun,
-                'bulan' => (string) Carbon::createFromFormat('Y-m', $periode)->month,
+                'bulan' => $bulanFromPeriode,
             ],
             'tahunOptions' => collect(range(2024, (int) Carbon::now()->format('Y') + 1))->map(fn ($y) => (string) $y)->values(),
         ]);
@@ -91,14 +96,14 @@ class LaporanController extends Controller
 
     public function exportPdf(Request $request, string $type): Response
     {
-        [$start, $end, $periode] = $this->resolvePeriode($request);
+        [$start, $end, $periode, , $mode] = $this->resolvePeriode($request);
 
         if ($type === 'keuangan') {
-            $data = array_merge($this->buildKeuangan($start, $end), ['periode' => $periode]);
+            $data = array_merge($this->buildKeuangan($start, $end), ['periode' => $periode, 'mode' => $mode]);
             $pdf = Pdf::loadView('admin.laporan.pdf.keuangan', $data)->setPaper('A4', 'portrait');
             $filename = 'laporan-keuangan-'.$periode.'.pdf';
         } elseif ($type === 'penghuni') {
-            $data = array_merge($this->buildPenghuni($start, $end), ['periode' => $periode]);
+            $data = array_merge($this->buildPenghuni($start, $end), ['periode' => $periode, 'mode' => $mode]);
             $pdf = Pdf::loadView('admin.laporan.pdf.penghuni', $data)->setPaper('A4', 'portrait');
             $filename = 'rekap-penghuni-'.$periode.'.pdf';
         } else {
@@ -128,12 +133,21 @@ class LaporanController extends Controller
     }
 
     /**
-     * @return array{0: Carbon, 1: Carbon, 2: string, 3: int}
+     * @return array{0: Carbon, 1: Carbon, 2: string, 3: int, 4: 'bulanan'|'tahunan'}
      */
     private function resolvePeriode(Request $request): array
     {
+        $mode = $request->input('mode') === 'tahunan' ? 'tahunan' : 'bulanan';
+        $tahun = $request->integer('tahun') ?: (int) now()->format('Y');
+
+        if ($mode === 'tahunan') {
+            $start = Carbon::create($tahun, 1, 1)->startOfDay();
+            $end = Carbon::create($tahun, 12, 31)->endOfDay();
+            $periode = (string) $tahun; // filename: laporan-keuangan-2026.pdf
+            return [$start, $end, $periode, $tahun, $mode];
+        }
+
         $bulan = $request->integer('bulan');
-        $tahun = $request->integer('tahun');
         if ($bulan && $tahun) {
             $periode = sprintf('%04d-%02d', $tahun, $bulan);
         } else {
@@ -148,7 +162,7 @@ class LaporanController extends Controller
         }
         $end = $start->copy()->endOfMonth();
 
-        return [$start, $end, $periode, (int) $start->format('Y')];
+        return [$start, $end, $periode, (int) $start->format('Y'), $mode];
     }
 
     private function buildKeuangan(Carbon $start, Carbon $end): array
@@ -164,7 +178,7 @@ class LaporanController extends Controller
 
         $piutang = Tagihan::query()
             ->with(['sewa.penyewa', 'sewa.kamar'])
-            ->where('periode', $start->toDateString())
+            ->whereBetween('periode', [$start->toDateString(), $end->toDateString()])
             ->whereIn('status', [
                 Tagihan::STATUS_BELUM_BAYAR,
                 Tagihan::STATUS_TERLAMBAT,

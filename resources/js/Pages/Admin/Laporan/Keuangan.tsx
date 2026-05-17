@@ -20,7 +20,7 @@ type Props = PageProps<{
     kpi: { total_pendapatan: number; kamar_terisi: number; total_kamar: number; tunggakan_count: number };
     chart: ChartPoint[];
     pemasukan: PemasukanRow[];
-    filters: { periode: string; tahun: string; bulan: string };
+    filters: { mode: 'bulanan' | 'tahunan'; periode: string; tahun: string; bulan: string };
     tahunOptions: string[];
 }>;
 
@@ -38,13 +38,21 @@ export default function LaporanKeuangan() {
     const { kpi, chart, pemasukan, filters, tahunOptions } = props;
     const [tab, setTab] = useState<'ringkasan' | 'riwayat'>('ringkasan');
 
-    const applyFilter = (next: { bulan?: string; tahun?: string }) => {
+    const applyFilter = (next: { mode?: 'bulanan' | 'tahunan'; bulan?: string; tahun?: string }) => {
+        const mode = next.mode ?? filters.mode;
         const bulan = next.bulan ?? filters.bulan;
         const tahun = next.tahun ?? filters.tahun;
-        router.get(route('admin.laporan.keuangan'), { bulan, tahun }, { preserveState: true, preserveScroll: true, replace: true });
+        const params: Record<string, string> = { mode, tahun };
+        if (mode === 'bulanan') params.bulan = bulan;
+        router.get(route('admin.laporan.keuangan'), params, { preserveState: true, preserveScroll: true, replace: true });
     };
 
-    const periodeLabel = `${BULAN.find((b) => b.v === filters.bulan)?.l ?? 'Bulan'} ${filters.tahun}`;
+    const periodeLabel = filters.mode === 'tahunan'
+        ? `Tahun ${filters.tahun}`
+        : `${BULAN.find((b) => b.v === filters.bulan)?.l ?? 'Bulan'} ${filters.tahun}`;
+
+    const exportParams: Record<string, string> = { mode: filters.mode, tahun: filters.tahun };
+    if (filters.mode === 'bulanan') exportParams.bulan = filters.bulan;
 
     return (
         <AdminLayout title="Laporan Keuangan">
@@ -52,9 +60,36 @@ export default function LaporanKeuangan() {
 
             {/* Filter bar */}
             <div style={{ background: 'white', borderRadius: 14, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {/* Segmented toggle: Bulanan / Tahunan */}
+                    <div style={{ display: 'inline-flex', background: '#F1F5F9', borderRadius: 10, padding: 3 }}>
+                        {(['bulanan', 'tahunan'] as const).map((m) => {
+                            const active = filters.mode === m;
+                            return (
+                                <button key={m} type="button" onClick={() => applyFilter({ mode: m })}
+                                    style={{
+                                        padding: '8px 16px', borderRadius: 8,
+                                        background: active ? 'white' : 'transparent',
+                                        color: active ? '#2563EB' : '#64748B',
+                                        border: 0, cursor: 'pointer',
+                                        fontSize: 13, fontWeight: active ? 700 : 500,
+                                        boxShadow: active ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                                        transition: 'all 150ms',
+                                    }}>
+                                    {m === 'bulanan' ? 'Bulanan' : 'Tahunan'}
+                                </button>
+                            );
+                        })}
+                    </div>
                     <select value={filters.bulan} onChange={(e) => applyFilter({ bulan: e.target.value })}
-                        style={{ height: 40, padding: '0 14px', borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 14, background: 'white', color: '#0F172A', fontWeight: 500, minWidth: 140 }}>
+                        disabled={filters.mode === 'tahunan'}
+                        style={{
+                            height: 40, padding: '0 14px', borderRadius: 10, border: '1px solid #E5E7EB',
+                            fontSize: 14, background: filters.mode === 'tahunan' ? '#F8FAFC' : 'white',
+                            color: filters.mode === 'tahunan' ? '#94A3B8' : '#0F172A',
+                            fontWeight: 500, minWidth: 140,
+                            cursor: filters.mode === 'tahunan' ? 'not-allowed' : 'pointer',
+                        }}>
                         {BULAN.map((b) => <option key={b.v} value={b.v}>{b.l}</option>)}
                     </select>
                     <select value={filters.tahun} onChange={(e) => applyFilter({ tahun: e.target.value })}
@@ -63,7 +98,7 @@ export default function LaporanKeuangan() {
                     </select>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                    <a href={route('admin.laporan.pdf', { type: 'keuangan', bulan: filters.bulan, tahun: filters.tahun })}
+                    <a href={route('admin.laporan.pdf', { type: 'keuangan', ...exportParams })}
                         style={{
                             display: 'inline-flex', alignItems: 'center', gap: 6,
                             padding: '10px 18px', borderRadius: 10,
@@ -73,7 +108,7 @@ export default function LaporanKeuangan() {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                         Export PDF
                     </a>
-                    <a href={route('admin.laporan.excel', { type: 'keuangan', bulan: filters.bulan, tahun: filters.tahun })}
+                    <a href={route('admin.laporan.excel', { type: 'keuangan', ...exportParams })}
                         style={{
                             display: 'inline-flex', alignItems: 'center', gap: 6,
                             padding: '10px 18px', borderRadius: 10,

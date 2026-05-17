@@ -22,7 +22,7 @@
 <body>
     <h1>{{ config('simkos.nama', 'SIMKOS') }} — Laporan Keuangan</h1>
     <div class="meta">
-        Periode: {{ \Carbon\Carbon::createFromFormat('Y-m', $periode)->translatedFormat('F Y') }} ·
+        Periode: @if (($mode ?? 'bulanan') === 'tahunan')Tahun {{ $periode }}@else{{ \Carbon\Carbon::createFromFormat('Y-m', $periode)->translatedFormat('F Y') }}@endif ·
         Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WIB
     </div>
 
