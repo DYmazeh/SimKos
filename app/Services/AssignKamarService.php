@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\DB;
 
 class AssignKamarService
 {
+    public function __construct(private TagihanGenerator $tagihanGenerator) {}
+
     /**
-     * Tugaskan penyewa ke kamar (buat record Sewa, update status kamar).
-     * Atomik via DB transaction.
+     * Tugaskan penyewa ke kamar (buat record Sewa, update status kamar,
+     * auto-generate tagihan setoran awal). Atomik via DB transaction.
      *
      * @throws DomainException kalau penyewa sudah punya sewa aktif atau kamar tidak tersedia
      */
@@ -45,6 +47,9 @@ class AssignKamarService
             ]);
 
             $kamar->update(['status' => Kamar::STATUS_TERISI]);
+
+            // Setoran awal — auto-generate tagihan bulan pertama (jatuh tempo +3 hari)
+            $this->tagihanGenerator->generateForSewa($sewa);
 
             return $sewa->fresh(['kamar', 'penyewa']);
         });

@@ -9,6 +9,7 @@ use App\Models\Kamar;
 use App\Models\Penyewa;
 use App\Models\Sewa;
 use App\Models\User;
+use App\Services\TagihanGenerator;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ use Inertia\Response;
 
 class PenyewaController extends Controller
 {
+    public function __construct(private TagihanGenerator $tagihanGenerator) {}
+
     public function index(Request $request): Response
     {
         $query = Penyewa::query()->with(['user', 'sewaAktif.kamar']);
@@ -115,7 +118,7 @@ class PenyewaController extends Controller
             if ($request->hasKontrakSewa()) {
                 $kamar = Kamar::lockForUpdate()->find($data['kamar_id']);
                 if ($kamar && $kamar->status === Kamar::STATUS_TERSEDIA) {
-                    Sewa::create([
+                    $sewa = Sewa::create([
                         'penyewa_id' => $penyewa->id,
                         'kamar_id' => $kamar->id,
                         'tgl_mulai' => Carbon::parse($data['tgl_mulai'])->toDateString(),
@@ -124,6 +127,9 @@ class PenyewaController extends Controller
                         'status' => Sewa::STATUS_AKTIF,
                     ]);
                     $kamar->update(['status' => Kamar::STATUS_TERISI]);
+
+                    // Setoran awal — auto-generate tagihan bulan pertama (jatuh tempo +3 hari)
+                    $this->tagihanGenerator->generateForSewa($sewa);
                 }
             }
 
@@ -212,9 +218,7 @@ class PenyewaController extends Controller
     public function destroy(Penyewa $penyewa): RedirectResponse
     {
         if ($penyewa->sewa()->where('status', 'aktif')->exists()) {
-            return back()->withErrors([
-                'delete' => 'Tidak bisa hapus: penyewa masih punya sewa aktif. Akhiri dulu.',
-            ]);
+            return back()->with('error', 'Tidak bisa hapus: penyewa masih punya sewa aktif. Akhiri sewa dulu dari halaman detail penyewa.');
         }
 
         $penyewa->delete();

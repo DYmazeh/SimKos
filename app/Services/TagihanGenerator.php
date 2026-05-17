@@ -55,4 +55,26 @@ class TagihanGenerator
 
         return $created;
     }
+
+    /**
+     * Generate tagihan setoran awal untuk satu Sewa baru.
+     * Periode = bulan tgl_mulai sewa. Jatuh tempo = tgl_mulai + 3 hari
+     * (setoran awal urgent — penyewa harus bayar dalam 3 hari sejak masuk).
+     * Idempotent via firstOrCreate (sewa_id, periode unique).
+     */
+    public function generateForSewa(Sewa $sewa): ?Tagihan
+    {
+        $tglMulai = Carbon::parse($sewa->tgl_mulai);
+        $periodeStart = $tglMulai->copy()->startOfMonth();
+        $jatuhTempo = $tglMulai->copy()->addDays(3);
+
+        return Tagihan::firstOrCreate(
+            ['sewa_id' => $sewa->id, 'periode' => $periodeStart],
+            [
+                'jumlah' => $sewa->harga_disepakati,
+                'tgl_jatuh_tempo' => $jatuhTempo,
+                'status' => Tagihan::STATUS_BELUM_BAYAR,
+            ]
+        );
+    }
 }
