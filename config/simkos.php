@@ -15,7 +15,7 @@ return [
     /*
      * Berapa hari sebelum jatuh tempo tagihan masuk widget reminder admin.
      */
-    'reminder_days' => (int) env('SIMKOS_REMINDER_DAYS', 7),
+    'reminder_days' => (int) env('SIMKOS_REMINDER_DAYS', 3),
 
     /*
      * Tanggal tetap jatuh tempo tagihan setiap bulan.

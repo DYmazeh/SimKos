@@ -13,7 +13,7 @@ class UpdateExpiredSewa extends Command
 {
     protected $signature = 'sewa:update-expired';
 
-    protected $description = 'Akhiri sewa yang tgl_selesai sudah lewat, dan beri notif kontrak mendekati berakhir (7 hari)';
+    protected $description = 'Akhiri sewa yang tgl_selesai sudah lewat, dan beri notif kontrak mendekati berakhir (default 3 hari, override via SIMKOS_REMINDER_DAYS)';
 
     public function handle(): int
     {
@@ -39,8 +39,8 @@ class UpdateExpiredSewa extends Command
             $this->info("Sewa #{$sewa->id} (Kamar {$sewa->kamar?->nomor_kamar}) diakhiri otomatis.");
         }
 
-        // --- FR-021: Notif kontrak mendekati berakhir (7 hari) ---
-        $reminderDays = (int) config('simkos.reminder_days', 7);
+        // --- FR-021: Notif kontrak mendekati berakhir (default 3 hari per SRS BAB 3) ---
+        $reminderDays = (int) config('simkos.reminder_days', 3);
         $horizon = Carbon::today()->addDays($reminderDays)->toDateString();
 
         $expiringSewa = Sewa::query()
