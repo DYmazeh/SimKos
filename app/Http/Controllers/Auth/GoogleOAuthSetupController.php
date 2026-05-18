@@ -27,7 +27,7 @@ class GoogleOAuthSetupController extends Controller
 
     public function redirect(Request $request): RedirectResponse
     {
-        $this->authorize($request);
+        $this->requireSetupToken($request);
 
         $params = http_build_query([
             'client_id' => (string) config('services.google.client_id'),
@@ -44,7 +44,7 @@ class GoogleOAuthSetupController extends Controller
 
     public function callback(Request $request): Response
     {
-        $this->authorize($request);
+        $this->requireSetupToken($request);
 
         if ($error = $request->query('error')) {
             return response("OAuth error: {$error}", 400);
@@ -108,7 +108,7 @@ class GoogleOAuthSetupController extends Controller
         return response($html, 200, ['Content-Type' => 'text/html; charset=utf-8']);
     }
 
-    private function authorize(Request $request): void
+    private function requireSetupToken(Request $request): void
     {
         $expected = (string) config('simkos.oauth_setup_token');
         $provided = (string) $request->query('token', '');
