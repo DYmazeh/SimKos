@@ -116,4 +116,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Temporary route untuk melihat log laravel.log (Hapus ini nanti)
+Route::get('/debug-logs', function () {
+    $path = storage_path('logs/laravel.log');
+    if (!file_exists($path)) {
+        return 'Log file not found. Belum ada error yang terekam.';
+    }
+    return response()->file($path, ['Content-Type' => 'text/plain']);
+});
+
 require __DIR__.'/auth.php';
