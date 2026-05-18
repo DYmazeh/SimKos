@@ -72,6 +72,13 @@ return [
             'key' => env('BREVO_API_KEY'),
         ],
 
+        // SendGrid via HTTP API (port 443) — alternatif Brevo tanpa manual
+        // activation. Pakai SENDGRID_API_KEY dari SendGrid dashboard.
+        'sendgrid' => [
+            'transport' => 'sendgrid',
+            'key' => env('SENDGRID_API_KEY'),
+        ],
+
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),

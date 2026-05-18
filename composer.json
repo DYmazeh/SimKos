@@ -19,6 +19,7 @@
         "spatie/laravel-permission": "^7.4",
         "symfony/brevo-mailer": "^7.2",
         "symfony/http-client": "^7.2",
+        "symfony/sendgrid-mailer": "^7.2",
         "tightenco/ziggy": "^2.6"
     },
     "require-dev": {

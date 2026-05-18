@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoApiTransport;
+use Symfony\Component\Mailer\Bridge\Sendgrid\Transport\SendgridApiTransport;
 use Symfony\Component\HttpClient\HttpClient;
 
 class AppServiceProvider extends ServiceProvider
@@ -40,6 +41,15 @@ class AppServiceProvider extends ServiceProvider
         // yang block outbound SMTP. Mapped ke MAIL_MAILER=brevo + BREVO_API_KEY.
         Mail::extend('brevo', function (array $config) {
             return new BrevoApiTransport(
+                (string) ($config['key'] ?? ''),
+                HttpClient::create(),
+            );
+        });
+
+        // SendGrid HTTP API mailer (port 443) — alternatif Brevo tanpa
+        // manual activation. Mapped ke MAIL_MAILER=sendgrid + SENDGRID_API_KEY.
+        Mail::extend('sendgrid', function (array $config) {
+            return new SendgridApiTransport(
                 (string) ($config['key'] ?? ''),
                 HttpClient::create(),
             );
