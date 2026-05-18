@@ -12,8 +12,11 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoApiTransport;
+use Symfony\Component\HttpClient\HttpClient;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +35,15 @@ class AppServiceProvider extends ServiceProvider
     {
         // FR-006: Log login activity
         Event::listen(Login::class, LogSuccessfulLogin::class);
+
+        // Brevo HTTP API mailer (port 443) — workaround Render free tier
+        // yang block outbound SMTP. Mapped ke MAIL_MAILER=brevo + BREVO_API_KEY.
+        Mail::extend('brevo', function (array $config) {
+            return new BrevoApiTransport(
+                (string) ($config['key'] ?? ''),
+                HttpClient::create(),
+            );
+        });
 
         // FR-012 + FR-021: Auto-expire sewa & kontrak reminder (run daily)
         $this->app->booted(function () {

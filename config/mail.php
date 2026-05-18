@@ -65,6 +65,13 @@ return [
             'transport' => 'resend',
         ],
 
+        // Brevo via HTTP API (port 443) — workaround Render free tier
+        // yang block outbound SMTP. Pakai BREVO_API_KEY dari Brevo dashboard.
+        'brevo' => [
+            'transport' => 'brevo',
+            'key' => env('BREVO_API_KEY'),
+        ],
+
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
