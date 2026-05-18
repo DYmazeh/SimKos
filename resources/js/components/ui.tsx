@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     forwardRef,
     useState,
@@ -277,28 +277,37 @@ export const Checkbox = ({
 /* ============================================================
    TOP NAV (guest) — floating capsule (Perplexity-inspired)
    ============================================================ */
-export const TopNav = ({ authenticated = false }: { authenticated?: boolean }) => (
-    <div className="nav-capsule-wrap">
-        <nav className="nav-capsule" aria-label="Navigasi utama">
-            <Link href="/" aria-label="SimKos beranda" style={{ display: 'inline-flex', padding: '2px 6px 2px 2px' }}>
-                <Brand size={32} light showText={false} />
-            </Link>
-            <div className="nav-capsule-divider" />
-            <Link href={route('guest.kamar.index')} className="nav-link">Kamar</Link>
-            <a href="#cara-kerja" className="nav-link hide-on-mobile">Cara Kerja</a>
-            <a href="#lokasi" className="nav-link hide-on-mobile">Lokasi</a>
-            <a href="#kontak" className="nav-link hide-on-mobile">Kontak</a>
-            <div className="nav-capsule-divider" />
-            {authenticated ? (
-                <Link href={route('dashboard')} className="nav-capsule-cta">
-                    Dashboard <Icon name="arrow-right" size={14} stroke={2.2} />
+export const TopNav = ({ authenticated = false }: { authenticated?: boolean }) => {
+    // Anchor link ke section homepage (#cara-kerja, #lokasi, #kontak) hanya valid
+    // saat user berada di /. Di halaman lain (mis. /kamar), kita prefix dengan '/'
+    // supaya browser navigate ke home dulu, baru scroll ke hash target.
+    const url = usePage().url;
+    const onHome = url === '/' || url.startsWith('/?') || url.startsWith('/#');
+    const anchorHref = (hash: string) => onHome ? `#${hash}` : `/#${hash}`;
+
+    return (
+        <div className="nav-capsule-wrap">
+            <nav className="nav-capsule" aria-label="Navigasi utama">
+                <Link href="/" aria-label="SimKos beranda" style={{ display: 'inline-flex', padding: '2px 6px 2px 2px' }}>
+                    <Brand size={32} light showText={false} />
                 </Link>
-            ) : (
-                <Link href={route('login')} className="nav-capsule-cta">Masuk</Link>
-            )}
-        </nav>
-    </div>
-);
+                <div className="nav-capsule-divider" />
+                <Link href={route('guest.kamar.index')} className="nav-link">Kamar</Link>
+                <a href={anchorHref('cara-kerja')} className="nav-link hide-on-mobile">Cara Kerja</a>
+                <a href={anchorHref('lokasi')} className="nav-link hide-on-mobile">Lokasi</a>
+                <a href={anchorHref('kontak')} className="nav-link hide-on-mobile">Kontak</a>
+                <div className="nav-capsule-divider" />
+                {authenticated ? (
+                    <Link href={route('dashboard')} className="nav-capsule-cta">
+                        Dashboard <Icon name="arrow-right" size={14} stroke={2.2} />
+                    </Link>
+                ) : (
+                    <Link href={route('login')} className="nav-capsule-cta">Masuk</Link>
+                )}
+            </nav>
+        </div>
+    );
+};
 
 /* ============================================================
    FOOTER — 4 kolom dengan navigasi penting
