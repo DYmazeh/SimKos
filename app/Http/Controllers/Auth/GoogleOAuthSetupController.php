@@ -29,14 +29,18 @@ class GoogleOAuthSetupController extends Controller
     {
         $this->requireSetupToken($request);
 
+        // Pakai setup token sbg OAuth `state` — Google echo back ke callback,
+        // jadi callback bisa verify tanpa butuh ?token=... di URL (Google
+        // tidak forward custom query params).
         $params = http_build_query([
             'client_id' => (string) config('services.google.client_id'),
             'redirect_uri' => route('google.oauth.callback'),
             'scope' => self::SCOPE,
             'response_type' => 'code',
             'access_type' => 'offline',
-            'prompt' => 'consent', // wajib utk force refresh_token muncul setiap kali
+            'prompt' => 'consent',
             'include_granted_scopes' => 'true',
+            'state' => (string) config('simkos.oauth_setup_token'),
         ]);
 
         return redirect("https://accounts.google.com/o/oauth2/v2/auth?{$params}");
@@ -44,7 +48,12 @@ class GoogleOAuthSetupController extends Controller
 
     public function callback(Request $request): Response
     {
-        $this->requireSetupToken($request);
+        // Verify state param (echoed by Google) match setup token.
+        $expected = (string) config('simkos.oauth_setup_token');
+        $provided = (string) $request->query('state', '');
+        if ($expected === '' || ! hash_equals($expected, $provided)) {
+            abort(403, 'Invalid OAuth state. Mulai ulang dari /auth/google/setup?token=...');
+        }
 
         if ($error = $request->query('error')) {
             return response("OAuth error: {$error}", 400);
