@@ -79,6 +79,12 @@ return [
             'key' => env('SENDGRID_API_KEY'),
         ],
 
+        // Gmail API via OAuth2 (port 443) — paling resmi Google, gratis.
+        // Pakai GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN dari config services.google.
+        'gmail' => [
+            'transport' => 'gmail',
+        ],
+
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),

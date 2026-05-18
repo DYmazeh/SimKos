@@ -28,4 +28,10 @@ return [
      * tanpa token, endpoint akan selalu abort 403.
      */
     'cron_token' => env('SIMKOS_CRON_TOKEN', ''),
+
+    /*
+     * Token rahasia untuk endpoint /auth/google/setup. One-time setup utk
+     * dapat refresh_token Gmail API. Setelah selesai, token boleh di-unset.
+     */
+    'oauth_setup_token' => env('SIMKOS_OAUTH_SETUP_TOKEN', ''),
 ];

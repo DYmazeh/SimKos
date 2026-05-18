@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use App\Mail\Transport\GmailApiTransport;
 use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoApiTransport;
 use Symfony\Component\Mailer\Bridge\Sendgrid\Transport\SendgridApiTransport;
 use Symfony\Component\HttpClient\HttpClient;
@@ -51,6 +52,18 @@ class AppServiceProvider extends ServiceProvider
         Mail::extend('sendgrid', function (array $config) {
             return new SendgridApiTransport(
                 (string) ($config['key'] ?? ''),
+                HttpClient::create(),
+            );
+        });
+
+        // Gmail API via OAuth2 (port 443) — paling resmi Google, gratis,
+        // bypass SMTP. Mapped ke MAIL_MAILER=gmail.
+        // Kredensial dari config services.google (GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN).
+        Mail::extend('gmail', function () {
+            return new GmailApiTransport(
+                (string) config('services.google.client_id'),
+                (string) config('services.google.client_secret'),
+                (string) config('services.google.refresh_token'),
                 HttpClient::create(),
             );
         });

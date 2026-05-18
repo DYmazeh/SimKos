@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PembayaranController as AdminPembayaranController
 use App\Http\Controllers\Admin\PenyewaController as AdminPenyewaController;
 use App\Http\Controllers\Admin\SewaController as AdminSewaController;
 use App\Http\Controllers\Admin\TagihanController as AdminTagihanController;
+use App\Http\Controllers\Auth\GoogleOAuthSetupController;
 use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\Guest\HomeController as GuestHomeController;
@@ -24,6 +25,11 @@ use Illuminate\Support\Facades\Route;
 // External pinger (UptimeRobot/cron-job.org) ping endpoint ini dgn token utk
 // memicu Laravel schedule:run. Token di config('simkos.cron_token').
 Route::get('/cron/run', [CronController::class, 'run'])->name('cron.run');
+
+// Gmail API OAuth2 setup — one-time flow utk dapat refresh_token.
+// Protected by SIMKOS_OAUTH_SETUP_TOKEN env (?token=...).
+Route::get('/auth/google/setup', [GoogleOAuthSetupController::class, 'redirect'])->name('google.oauth.setup');
+Route::get('/auth/google/callback', [GoogleOAuthSetupController::class, 'callback'])->name('google.oauth.callback');
 
 // Root: Inertia Guest Home (React) — landing publik
 Route::get('/', GuestHomeController::class)->name('home');
