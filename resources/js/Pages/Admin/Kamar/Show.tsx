@@ -104,7 +104,16 @@ export default function KamarShow() {
         router.delete(route('admin.kamar.destroy', kamar.id));
     };
 
-    const onUpdateKomplenStatus = (komplen: KomplenItem, nextStatus: 'diproses' | 'selesai') => {
+    const onUpdateKomplenStatus = async (komplen: KomplenItem, nextStatus: 'diproses' | 'selesai') => {
+        if (nextStatus === 'selesai') {
+            const ok = await confirmDialog({
+                title: 'Tandai Selesai?',
+                description: 'Komplen ini akan ditandai sudah diselesaikan.',
+                tone: 'info',
+                confirmLabel: 'Ya, Tandai Selesai',
+            });
+            if (!ok) return;
+        }
         router.patch(route('admin.komplain.update-status', komplen.id), { status: nextStatus }, { preserveScroll: true });
     };
 

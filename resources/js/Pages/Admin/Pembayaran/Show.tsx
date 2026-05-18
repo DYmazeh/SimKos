@@ -52,12 +52,21 @@ export default function PembayaranShow() {
         router.patch(route('admin.pembayaran.approve', pembayaran.id));
     };
 
-    const reject = (e: FormEvent) => {
+    const reject = async (e: FormEvent) => {
         e.preventDefault();
         if (!rejectForm.data.catatan.trim()) {
             alert('Wajib isi alasan penolakan.');
             return;
         }
+
+        const ok = await confirmDialog({
+            title: 'Tolak Pembayaran?',
+            description: 'Yakin ingin menolak pembayaran ini? Pastikan alasan penolakan sudah jelas.',
+            tone: 'danger',
+            confirmLabel: 'Ya, Tolak',
+        });
+        if (!ok) return;
+
         rejectForm.patch(route('admin.pembayaran.reject', pembayaran.id), { preserveScroll: true });
     };
 

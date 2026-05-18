@@ -86,7 +86,8 @@ export default function PenyewaForm() {
     const submit = (e: FormEvent) => {
         e.preventDefault();
         if (isEdit && penyewa) {
-            form.put(route('admin.penyewa.update', penyewa.id));
+            form.transform((data) => ({ ...data, _method: 'put' }));
+            form.post(route('admin.penyewa.update', penyewa.id), { forceFormData: true });
         } else {
             form.post(route('admin.penyewa.store'), { forceFormData: true });
         }

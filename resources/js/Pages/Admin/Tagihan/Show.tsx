@@ -58,8 +58,17 @@ export default function TagihanShow() {
         router.patch(route('admin.pembayaran.approve', p.id), {}, { preserveScroll: true });
     };
 
-    const submitReject = (e: FormEvent, pId: number) => {
+    const submitReject = async (e: FormEvent, pId: number) => {
         e.preventDefault();
+
+        const ok = await confirmDialog({
+            title: 'Tolak Pembayaran?',
+            description: 'Yakin ingin menolak pembayaran ini?',
+            tone: 'danger',
+            confirmLabel: 'Ya, Tolak',
+        });
+        if (!ok) return;
+
         rejectForm.patch(route('admin.pembayaran.reject', pId), {
             preserveScroll: true,
             onSuccess: () => { setRejectingId(null); rejectForm.reset(); },

@@ -201,7 +201,16 @@ class PenyewaController extends Controller
 
     public function update(UpdatePenyewaRequest $request, Penyewa $penyewa): RedirectResponse
     {
-        $penyewa->update($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('foto_ktp')) {
+            if ($penyewa->foto_ktp_url) {
+                Storage::disk(config('filesystems.default'))->delete($penyewa->foto_ktp_url);
+            }
+            $data['foto_ktp_url'] = $request->file('foto_ktp')->store('ktp', config('filesystems.default'));
+        }
+
+        $penyewa->update($data);
 
         if ($penyewa->user) {
             $penyewa->user->update([
@@ -221,7 +230,19 @@ class PenyewaController extends Controller
             return back()->with('error', 'Tidak bisa hapus: penyewa masih punya sewa aktif. Akhiri sewa dulu dari halaman detail penyewa.');
         }
 
-        $penyewa->delete();
+        DB::transaction(function () use ($penyewa) {
+            // Hapus tagihan yang belum dibayar terkait penyewa ini
+            $penyewa->sewa()->each(function ($sewa) {
+                $sewa->tagihan()->where('status', 'belum_bayar')->delete();
+            });
+
+            // Hapus user untuk membersihkan notifikasi yang terkait
+            if ($penyewa->user) {
+                $penyewa->user->delete();
+            }
+
+            $penyewa->delete();
+        });
 
         return redirect()
             ->route('admin.penyewa.index')

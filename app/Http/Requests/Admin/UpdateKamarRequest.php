@@ -33,7 +33,11 @@ class UpdateKamarRequest extends FormRequest
                 Kamar::STATUS_MAINTENANCE,
             ])],
             'deskripsi' => ['nullable', 'string', 'max:1000'],
-            'fasilitas' => ['nullable', 'string', 'max:1000'],
+            'fasilitas' => ['nullable', 'array', 'max:20'],
+            'fasilitas.*' => ['string', 'max:255'],
+            'peraturan' => ['nullable', 'string', 'max:1000'],
+            'deposit' => ['nullable', 'integer', 'min:0', 'max:99999999'],
+            'min_sewa_bulan' => ['nullable', 'integer', 'min:1', 'max:120'],
             'luas_m2' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
             'lantai' => ['nullable', 'integer', 'min:1', 'max:99'],
         ];

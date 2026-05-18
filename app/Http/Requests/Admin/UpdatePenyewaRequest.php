@@ -19,6 +19,7 @@ class UpdatePenyewaRequest extends FormRequest
             'no_ktp' => ['nullable', 'string', 'max:30'],
             'alamat_asal' => ['nullable', 'string', 'max:1000'],
             'catatan' => ['nullable', 'string', 'max:1000'],
+            'foto_ktp' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
 
@@ -26,6 +27,9 @@ class UpdatePenyewaRequest extends FormRequest
     {
         return [
             'no_hp.regex' => 'Format nomor HP harus valid (08xx, 62xx, atau +62xx).',
+            'foto_ktp.max' => 'Ukuran foto KTP maksimal 5MB.',
+            'foto_ktp.mimes' => 'Format file foto KTP harus berupa JPG, JPEG, PNG, atau WebP.',
+            'foto_ktp.image' => 'File foto KTP harus berupa gambar.',
         ];
     }
 }

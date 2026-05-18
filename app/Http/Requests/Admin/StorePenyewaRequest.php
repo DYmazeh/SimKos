@@ -46,6 +46,8 @@ class StorePenyewaRequest extends FormRequest
             'email.required_if' => 'Email wajib diisi kalau membuat akun login penyewa.',
             'password.required_if' => 'Password awal wajib diisi kalau membuat akun login penyewa.',
             'foto_ktp.max' => 'Ukuran foto KTP maksimal 5MB.',
+            'foto_ktp.mimes' => 'Format file foto KTP harus berupa JPG, JPEG, PNG, atau WebP.',
+            'foto_ktp.image' => 'File foto KTP harus berupa gambar.',
             'tgl_mulai.required_with' => 'Tanggal mulai sewa wajib diisi kalau memilih kamar.',
             'tgl_selesai.after' => 'Tanggal akhir harus setelah tanggal mulai.',
         ];
