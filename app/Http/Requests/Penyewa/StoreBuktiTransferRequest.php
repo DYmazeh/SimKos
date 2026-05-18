@@ -19,7 +19,7 @@ class StoreBuktiTransferRequest extends FormRequest
             'metode' => ['required', 'string', 'in:transfer,tunai'],
             'bukti' => [
                 'required', 'file',
-                'mimes:jpg,jpeg,png,webp,pdf',
+                'mimes:jpg,jpeg,png,webp',
                 'max:5120',
             ],
             'catatan' => ['nullable', 'string', 'max:500'],
@@ -30,7 +30,7 @@ class StoreBuktiTransferRequest extends FormRequest
     {
         return [
             'bukti.required' => 'Bukti transfer wajib diunggah.',
-            'bukti.mimes' => 'Format file harus JPG, PNG, WebP, atau PDF.',
+            'bukti.mimes' => 'Format file harus JPG, PNG, atau WebP.',
             'bukti.max' => 'Ukuran file maksimal 5MB.',
         ];
     }

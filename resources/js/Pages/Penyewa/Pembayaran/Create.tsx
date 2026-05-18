@@ -174,33 +174,12 @@ export default function PembayaranCreate() {
                         </Field>
 
                         <Field label="File bukti transfer" htmlFor="bukti" error={form.errors.bukti as unknown as string}
-                            helper="JPG, PNG, atau PDF — maks 5MB">
+                            helper="JPG, PNG, atau WebP — maks 5MB">
                             <div style={{ gridColumn: 'span 2' }}>
                                 {buktiPreview ? (
                                     <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(11,13,26,0.08)' }}>
-                                        {buktiPreview.isPdf ? (
-                                            <div style={{
-                                                padding: 32, background: 'var(--ink-50)',
-                                                display: 'flex', alignItems: 'center', gap: 14,
-                                            }}>
-                                                <div style={{
-                                                    width: 48, height: 48, borderRadius: 12,
-                                                    background: 'white', color: 'var(--blue-700)',
-                                                    display: 'grid', placeItems: 'center',
-                                                }}>
-                                                    <Icon name="receipt" size={22} />
-                                                </div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                        {buktiPreview.name}
-                                                    </div>
-                                                    <div style={{ fontSize: 12, color: 'var(--ink-500)' }}>PDF · siap dikirim</div>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <img src={buktiPreview.url} alt="Preview bukti"
-                                                style={{ width: '100%', maxHeight: 360, objectFit: 'contain', background: 'var(--ink-50)', display: 'block' }} />
-                                        )}
+                                        <img src={buktiPreview.url} alt="Preview bukti"
+                                            style={{ width: '100%', maxHeight: 360, objectFit: 'contain', background: 'var(--ink-50)', display: 'block' }} />
                                         <button type="button"
                                             onClick={() => { setBuktiPreview(null); form.setData('bukti', null); }}
                                             aria-label="Ganti file"
@@ -232,17 +211,16 @@ export default function PembayaranCreate() {
                                             <Icon name="upload" size={24} />
                                         </div>
                                         <div style={{ fontSize: 14.5, color: 'var(--ink-900)', fontWeight: 500 }}>Klik untuk pilih file bukti</div>
-                                        <div style={{ fontSize: 12.5, color: 'var(--ink-400)', marginTop: 4 }}>Screenshot transfer, foto resi, atau e-receipt PDF</div>
+                                        <div style={{ fontSize: 12.5, color: 'var(--ink-400)', marginTop: 4 }}>Screenshot transfer atau foto resi</div>
                                     </label>
                                 )}
                                 <input id="bukti_input" type="file" required
-                                    accept="image/jpeg,image/png,application/pdf"
+                                    accept="image/jpeg,image/png,image/webp"
                                     style={{ display: 'none' }}
                                     onChange={(e) => {
                                         const f = e.target.files?.[0];
                                         if (f) {
-                                            const isPdf = f.type === 'application/pdf';
-                                            setBuktiPreview({ url: URL.createObjectURL(f), name: f.name, isPdf });
+                                            setBuktiPreview({ url: URL.createObjectURL(f), name: f.name, isPdf: false });
                                             form.setData('bukti', f);
                                         }
                                     }} />
