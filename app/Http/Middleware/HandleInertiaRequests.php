@@ -49,15 +49,20 @@ class HandleInertiaRequests extends Middleware
                     'sidebar_counts:admin',
                     60,
                     fn () => [
+                        // whereHas('sewa.penyewa') exclude orphan tagihan dari penyewa
+                        // soft-deleted — kalau tidak, badge nempel meskipun tabel kosong.
                         'tagihan_belum' => \App\Models\Tagihan::query()
                             ->whereIn('status', ['belum_bayar', 'terlambat'])
                             ->where('tgl_jatuh_tempo', '<=', now()->addDays(3)->toDateString())
+                            ->whereHas('sewa.penyewa')
                             ->count(),
                         'konfirmasi_pending' => \App\Models\Pembayaran::query()
                             ->where('status_verifikasi', 'pending')
+                            ->whereHas('tagihan.sewa.penyewa')
                             ->count(),
                         'komplen_aktif' => \App\Models\Komplain::query()
                             ->whereNot('status', 'selesai')
+                            ->whereHas('penyewa')
                             ->count(),
                     ],
                 )
