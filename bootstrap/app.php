@@ -32,7 +32,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Render branded Inertia error pages untuk 403/404/419/500/503.
         // Di local/testing biarkan default Laravel error page biar lebih informatif.
         $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
-            if (app()->environment(['local', 'testing'])) {
+            // Saat debug aktif (APP_DEBUG=true) atau di local/testing, biarkan
+            // default Laravel exception renderer jalan supaya stack trace lengkap
+            // ke-expose untuk troubleshooting. Branded Inertia Error page hanya
+            // aktif di production dengan debug=false.
+            if (config('app.debug') || app()->environment(['local', 'testing'])) {
                 return $response;
             }
             $status = $response->getStatusCode();
