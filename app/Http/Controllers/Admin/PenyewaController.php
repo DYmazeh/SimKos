@@ -9,6 +9,7 @@ use App\Models\Kamar;
 use App\Models\Penyewa;
 use App\Models\Sewa;
 use App\Models\User;
+use App\Services\StorageUrl;
 use App\Services\TagihanGenerator;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -163,6 +164,7 @@ class PenyewaController extends Controller
                 'no_hp' => $penyewa->no_hp,
                 'alamat_asal' => $penyewa->alamat_asal,
                 'catatan' => $penyewa->catatan,
+                'foto_ktp_url' => $penyewa->foto_ktp_url ? StorageUrl::for($penyewa->foto_ktp_url) : null,
                 'status_aktif' => $penyewa->status_aktif ?? 'aktif',
                 'user' => $penyewa->user ? [
                     'email' => $penyewa->user->email,

@@ -158,7 +158,20 @@ class KamarController extends Controller
             return back()->with('error', 'Status "Terisi" hanya dapat di-set lewat flow daftar penyewa baru.');
         }
 
-        $kamar->update($data);
+        $kamar->update(collect($data)->except('foto')->all());
+
+        // Upload foto tambahan (mirror logic store()). Validation di UpdateKamarRequest
+        // sudah cap max:5, tapi tetap cek total agar foto lama + baru ≤ 5.
+        if ($request->hasFile('foto')) {
+            $existingCount = $kamar->foto()->count();
+            $files = $request->file('foto');
+            $files = is_array($files) ? $files : [$files];
+            $slotAvailable = max(0, 5 - $existingCount);
+            foreach (array_slice($files, 0, $slotAvailable) as $i => $file) {
+                $path = $this->optimizer->optimizeAndStore($file, 'kamar/'.$kamar->id);
+                $kamar->foto()->create(['url' => $path, 'urutan' => $existingCount + $i]);
+            }
+        }
 
         return redirect()
             ->route('admin.kamar.show', $kamar)

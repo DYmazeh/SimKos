@@ -40,6 +40,8 @@ class UpdateKamarRequest extends FormRequest
             'min_sewa_bulan' => ['nullable', 'integer', 'min:1', 'max:120'],
             'luas_m2' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
             'lantai' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'foto' => ['nullable', 'array', 'max:5'],
+            'foto.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
 }

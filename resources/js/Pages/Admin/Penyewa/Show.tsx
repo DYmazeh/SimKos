@@ -23,6 +23,7 @@ type ShowProps = PageProps<{
         no_hp: string;
         alamat_asal: string | null;
         catatan: string | null;
+        foto_ktp_url: string | null;
         status_aktif: string;
         user: { email: string; verified: boolean } | null;
         sewa: SewaItem[];
@@ -133,6 +134,38 @@ export default function PenyewaShow() {
                             } />
                         )}
                     </dl>
+
+                    {/* Foto KTP — klik untuk buka full size di tab baru */}
+                    <div style={{
+                        marginTop: 20, paddingTop: 18,
+                        borderTop: '1px solid rgba(11,13,26,0.06)',
+                    }}>
+                        <div style={{
+                            fontSize: 11, color: 'var(--ink-400)', fontWeight: 500,
+                            textTransform: 'uppercase', letterSpacing: '0.06em',
+                            marginBottom: 10,
+                        }}>Foto KTP</div>
+                        {penyewa.foto_ktp_url ? (
+                            <a href={penyewa.foto_ktp_url} target="_blank" rel="noopener noreferrer"
+                                style={{
+                                    display: 'block', borderRadius: 10, overflow: 'hidden',
+                                    border: '1px solid rgba(11,13,26,0.08)', cursor: 'zoom-in',
+                                    aspectRatio: '85/54',
+                                    background: 'var(--ink-50)',
+                                }}>
+                                <img src={penyewa.foto_ktp_url} alt={`KTP ${penyewa.nama_lengkap}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </a>
+                        ) : (
+                            <div style={{
+                                padding: '18px 14px', borderRadius: 10,
+                                background: 'var(--ink-50)', border: '1px dashed rgba(11,13,26,0.12)',
+                                textAlign: 'center', color: 'var(--ink-400)', fontSize: 12.5,
+                            }}>
+                                Belum ada foto KTP diunggah.
+                            </div>
+                        )}
+                    </div>
 
                     <Link href={route('admin.penyewa.edit', penyewa.id)}
                         className="btn btn-ghost btn-sm"

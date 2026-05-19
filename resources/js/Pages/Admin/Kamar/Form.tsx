@@ -71,7 +71,11 @@ export default function KamarForm() {
     const submit = (e: FormEvent) => {
         e.preventDefault();
         if (isEdit && kamar) {
-            form.put(route('admin.kamar.update', kamar.id));
+            // Method-spoofing: PHP tidak parse multipart body untuk PUT, jadi kirim
+            // sebagai POST + _method=PUT supaya file upload tetap ke-handle Laravel.
+            form
+                .transform((data) => ({ ...data, _method: 'PUT' }))
+                .post(route('admin.kamar.update', kamar.id), { forceFormData: true });
         } else {
             form.post(route('admin.kamar.store'), { forceFormData: true });
         }

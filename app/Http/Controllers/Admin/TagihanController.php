@@ -57,6 +57,7 @@ class TagihanController extends Controller
 
             $belumLunasTagihan = $tagihanList->whereNotIn('status', [Tagihan::STATUS_LUNAS]);
             $totalBelumLunas = (int) $belumLunasTagihan->sum('jumlah');
+            $totalKeseluruhan = (int) $tagihanList->sum('jumlah');
 
             $statusAggregate = 'lunas';
             $hasTerlambat = $tagihanList->where('status', Tagihan::STATUS_TERLAMBAT)->isNotEmpty();
@@ -81,16 +82,23 @@ class TagihanController extends Controller
                 'kamar_nomor' => $p->sewaAktif?->kamar?->nomor_kamar ?? '—',
                 'total_tagihan' => $tagihanList->count(),
                 'total_belum_lunas' => $totalBelumLunas,
+                'total_tagihan_keseluruhan' => $totalKeseluruhan,
                 'status' => $statusAggregate,
                 'wa_link' => $waLink,
             ];
         });
 
-        // KPI global (semua periode)
+        // KPI global (semua periode). Filter whereHas('sewa.penyewa') untuk exclude
+        // orphan tagihan dari penyewa yang sudah soft-deleted — kalau tidak, count
+        // KPI tidak match dengan tabel di bawah yang juga di-scope ke penyewa aktif.
         $kpi = [
             'total_penyewa' => Penyewa::whereHas('sewa.tagihan')->count(),
-            'lunas_pembayaran' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_APPROVED)->count(),
-            'belum_bayar_tagihan' => Tagihan::whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])->count(),
+            'lunas_pembayaran' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_APPROVED)
+                ->whereHas('tagihan.sewa.penyewa')
+                ->count(),
+            'belum_bayar_tagihan' => Tagihan::whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])
+                ->whereHas('sewa.penyewa')
+                ->count(),
         ];
 
         return Inertia::render('Admin/Tagihan/Index', [

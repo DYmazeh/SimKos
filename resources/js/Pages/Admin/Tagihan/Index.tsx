@@ -10,6 +10,7 @@ type PenyewaRow = {
     kamar_nomor: string;
     total_tagihan: number;
     total_belum_lunas: number;
+    total_tagihan_keseluruhan: number;
     status: 'lunas' | 'menunggu_verifikasi' | 'belum_bayar';
     wa_link: string | null;
 };
@@ -164,7 +165,7 @@ export default function TagihanIndex() {
                                             </td>
                                             <td style={{ padding: '14px 22px', fontSize: 13.5, color: 'var(--ink-700)' }}>{row.kamar_nomor}</td>
                                             <td style={{ padding: '14px 22px', fontSize: 14, fontWeight: 600, color: 'var(--ink-900)', fontVariantNumeric: 'tabular-nums' }}>
-                                                {row.total_belum_lunas > 0 ? formatRp(row.total_belum_lunas) : formatRp(0)}
+                                                {formatRp(row.total_belum_lunas > 0 ? row.total_belum_lunas : row.total_tagihan_keseluruhan)}
                                             </td>
                                             <td style={{ padding: '14px 22px' }}>
                                                 <Pill tone={meta.tone}>{meta.label}</Pill>
