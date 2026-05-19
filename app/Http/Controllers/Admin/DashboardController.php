@@ -68,13 +68,15 @@ class DashboardController extends Controller
             ->get()
             ->map(fn ($t) => [
                 'id' => $t->id,
-                'penyewa_nama' => $t->sewa->penyewa->nama_lengkap,
-                'kamar_nomor' => $t->sewa->kamar->nomor_kamar,
+                'penyewa_nama' => $t->sewa?->penyewa?->nama_lengkap ?? '-',
+                'kamar_nomor' => $t->sewa?->kamar?->nomor_kamar ?? '-',
                 'periode' => $t->periode->format('Y-m-d'),
                 'jumlah' => (int) $t->jumlah,
                 'tgl_jatuh_tempo' => $t->tgl_jatuh_tempo->format('Y-m-d'),
                 'status' => $t->status,
-                'wa_link' => WhatsappReminderLink::make($t->sewa->penyewa, $t),
+                'wa_link' => $t->sewa?->penyewa
+                    ? WhatsappReminderLink::make($t->sewa->penyewa, $t)
+                    : null,
             ]);
 
         $reminderTotalCount = Tagihan::query()
