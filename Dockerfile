@@ -103,6 +103,9 @@ EXPOSE 8080
 
 COPY docker/Caddyfile /etc/caddy/Caddyfile
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+# Override default PHP settings (upload_max_filesize, memory_limit dll) supaya
+# upload foto kamar ≤5MB tidak diblok di layer PHP.
+COPY docker/php-overrides.ini /usr/local/etc/php/conf.d/zz-simkos.ini
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Jalankan sebagai non-root user agar tidak butuh capabilities khusus.

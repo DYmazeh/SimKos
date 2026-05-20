@@ -11,6 +11,8 @@ use App\Services\ImageOptimizer;
 use App\Services\StorageUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -158,27 +160,41 @@ class KamarController extends Controller
             return back()->with('error', 'Status "Terisi" hanya dapat di-set lewat flow daftar penyewa baru.');
         }
 
-        $kamar->update(collect($data)->except(['foto', 'foto_to_delete'])->all());
+        // Wrap di transaction supaya kalau upload baru gagal di tengah, delete
+        // record lama juga ke-rollback — tidak meninggalkan kamar tanpa foto.
+        try {
+            DB::transaction(function () use ($request, $kamar, $data) {
+                $kamar->update(collect($data)->except(['foto', 'foto_to_delete'])->all());
 
-        // Hapus foto yang di-stage delete di frontend. Filter ke milik kamar ini
-        // sebagai defense terhadap ID dari kamar lain (forged request).
-        $toDelete = $data['foto_to_delete'] ?? [];
-        if (! empty($toDelete)) {
-            $kamar->foto()->whereIn('id', $toDelete)->delete();
-        }
+                // Hapus foto yang di-stage delete di frontend. Filter ke milik kamar ini
+                // sebagai defense terhadap ID dari kamar lain (forged request).
+                $toDelete = $data['foto_to_delete'] ?? [];
+                if (! empty($toDelete)) {
+                    $kamar->foto()->whereIn('id', $toDelete)->delete();
+                }
 
-        // Upload foto tambahan (mirror logic store()). Validation di UpdateKamarRequest
-        // sudah cap max:5, tapi tetap cek total agar foto lama (yang tidak dihapus)
-        // + baru ≤ 5.
-        if ($request->hasFile('foto')) {
-            $existingCount = $kamar->foto()->count();
-            $files = $request->file('foto');
-            $files = is_array($files) ? $files : [$files];
-            $slotAvailable = max(0, 5 - $existingCount);
-            foreach (array_slice($files, 0, $slotAvailable) as $i => $file) {
-                $path = $this->optimizer->optimizeAndStore($file, 'kamar/'.$kamar->id);
-                $kamar->foto()->create(['url' => $path, 'urutan' => $existingCount + $i]);
-            }
+                // Upload foto tambahan. Cek total foto lama (yg tidak dihapus) + baru ≤ 5.
+                if ($request->hasFile('foto')) {
+                    $existingCount = $kamar->foto()->count();
+                    $files = $request->file('foto');
+                    $files = is_array($files) ? $files : [$files];
+                    $slotAvailable = max(0, 5 - $existingCount);
+                    foreach (array_slice($files, 0, $slotAvailable) as $i => $file) {
+                        $path = $this->optimizer->optimizeAndStore($file, 'kamar/'.$kamar->id);
+                        $kamar->foto()->create(['url' => $path, 'urutan' => $existingCount + $i]);
+                    }
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::error('KamarController.update failed', [
+                'kamar_id' => $kamar->id,
+                'has_files' => $request->hasFile('foto'),
+                'foto_to_delete' => $data['foto_to_delete'] ?? [],
+                'exception' => $e->getMessage(),
+            ]);
+            return back()
+                ->withInput()
+                ->withErrors(['foto' => 'Gagal memproses foto. Coba pakai gambar lebih kecil (di bawah 2MB) atau hubungi admin. ('.$e->getMessage().')']);
         }
 
         return redirect()

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -23,10 +24,22 @@ class StorageUrl
         $disk = config('filesystems.default');
         $storage = Storage::disk($disk);
 
-        if ($disk === 'supabase') {
-            return $storage->temporaryUrl($path, now()->addHour());
-        }
+        try {
+            if ($disk === 'supabase') {
+                return $storage->temporaryUrl($path, now()->addHour());
+            }
 
-        return $storage->url($path);
+            return $storage->url($path);
+        } catch (\Throwable $e) {
+            // temporaryUrl bisa throw kalau S3 client config rusak / signature
+            // version mismatch / credentials hilang. Log + return null supaya
+            // frontend tampilkan placeholder image, bukan crash render whole page.
+            Log::warning('StorageUrl.for failed', [
+                'path' => $path,
+                'disk' => $disk,
+                'exception' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 }
