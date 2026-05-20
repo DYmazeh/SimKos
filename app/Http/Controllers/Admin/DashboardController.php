@@ -50,19 +50,25 @@ class DashboardController extends Controller
             'tagihan_jatuh_tempo_horizon' => Tagihan::query()
                 ->whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])
                 ->where('tgl_jatuh_tempo', '<=', $reminderHorizon)
+                ->whereHas('sewa.penyewa')
                 ->count(),
-            'menunggu_verifikasi' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_PENDING)->count(),
+            'menunggu_verifikasi' => Pembayaran::where('status_verifikasi', Pembayaran::STATUS_PENDING)
+                ->whereHas('tagihan.sewa.penyewa')
+                ->count(),
             'pemasukan_bulan_ini' => (int) Pembayaran::query()
                 ->where('status_verifikasi', Pembayaran::STATUS_APPROVED)
                 ->whereBetween('tgl_bayar', [$awalBulan, $akhirBulan])
                 ->sum('jumlah_bayar'),
         ];
 
-        // Peringatan Jatuh Tempo: H-3 only, limit 5 most urgent
+        // Peringatan Jatuh Tempo: H-3 only, limit 5 most urgent.
+        // whereHas('sewa.penyewa') filter orphan tagihan (penyewa soft-deleted)
+        // supaya tidak muncul sebagai "Penyewa: -" di reminder list.
         $reminderList = Tagihan::query()
             ->with(['sewa.penyewa', 'sewa.kamar'])
             ->whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])
             ->where('tgl_jatuh_tempo', '<=', $reminderHorizon)
+            ->whereHas('sewa.penyewa')
             ->orderBy('tgl_jatuh_tempo')
             ->limit(5)
             ->get()
@@ -82,6 +88,7 @@ class DashboardController extends Controller
         $reminderTotalCount = Tagihan::query()
             ->whereIn('status', [Tagihan::STATUS_BELUM_BAYAR, Tagihan::STATUS_TERLAMBAT])
             ->where('tgl_jatuh_tempo', '<=', $reminderHorizon)
+            ->whereHas('sewa.penyewa')
             ->count();
 
         // Pembayaran Terbaru: gabungan semua pembayaran (any status), 5-10 latest

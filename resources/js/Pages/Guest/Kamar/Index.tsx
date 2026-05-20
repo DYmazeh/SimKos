@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { TopNav, Footer, formatRp, waLink } from '@/components/ui';
+import { CurrencyInput, TopNav, Footer, formatRp, waLink } from '@/components/ui';
 import { SectionHeader } from '@/components/guest/parts';
 import { KamarCard, StickyWA, type KamarSummary, type ProfilKos } from '@/components/guest/sections';
 import type { PageProps } from '@/types/inertia';
@@ -83,13 +83,13 @@ export default function KamarIndex() {
                                 </div>
                                 <div className="field">
                                     <label className="label" htmlFor="f-min">Harga min (Rp)</label>
-                                    <input id="f-min" type="number" className="input" placeholder="0"
-                                        value={minHarga} onChange={(e) => setMinHarga(e.target.value)} min={0} />
+                                    <CurrencyInput id="f-min" className="input" placeholder="0"
+                                        value={minHarga} onValueChange={(n) => setMinHarga(n === 0 ? '' : String(n))} />
                                 </div>
                                 <div className="field">
                                     <label className="label" htmlFor="f-max">Harga maks (Rp)</label>
-                                    <input id="f-max" type="number" className="input" placeholder="∞"
-                                        value={maxHarga} onChange={(e) => setMaxHarga(e.target.value)} min={0} />
+                                    <CurrencyInput id="f-max" className="input" placeholder="∞"
+                                        value={maxHarga} onValueChange={(n) => setMaxHarga(n === 0 ? '' : String(n))} />
                                 </div>
                                 <div className="field">
                                     <label className="label" htmlFor="f-sort">Urutkan</label>

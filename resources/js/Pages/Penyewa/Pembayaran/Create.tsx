@@ -1,7 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
-import { Field, Icon, Input, Pill, formatRp } from '@/components/ui';
+import { CurrencyInput, Field, Icon, Input, Pill, formatRp } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type Tagihan = {
@@ -150,9 +150,9 @@ export default function PembayaranCreate() {
                         <Field label="Jumlah dibayar" htmlFor="jumlah" error={form.errors.jumlah_bayar}>
                             <div style={{ position: 'relative' }}>
                                 <span style={{ position: 'absolute', left: 14, top: 12, fontSize: 14, color: 'var(--ink-400)' }}>Rp</span>
-                                <input id="jumlah" type="number" required min={1} className="input"
+                                <CurrencyInput id="jumlah" required className="input"
                                     value={form.data.jumlah_bayar}
-                                    onChange={(e) => form.setData('jumlah_bayar', e.target.value)}
+                                    onValueChange={(n) => form.setData('jumlah_bayar', String(n))}
                                     style={{ paddingLeft: 36, fontVariantNumeric: 'tabular-nums' }} />
                             </div>
                         </Field>

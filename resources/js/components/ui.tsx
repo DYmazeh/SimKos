@@ -419,6 +419,45 @@ export const AuthShell = ({
 export const formatRp = (n: number) => 'Rp ' + n.toLocaleString('id-ID');
 
 /**
+ * Input untuk nominal Rupiah — display pakai titik ribuan (200.000), tapi
+ * value yang di-emit lewat onValueChange selalu angka murni (200000).
+ *
+ * Pakai untuk semua field harga/jumlah supaya admin mudah baca digit besar.
+ *
+ * Contoh:
+ *   <CurrencyInput value={form.data.harga} onValueChange={(n) => form.setData('harga', n)} />
+ */
+type CurrencyInputProps = Omit<
+    InputHTMLAttributes<HTMLInputElement>,
+    'value' | 'onChange' | 'type' | 'inputMode'
+> & {
+    value: number | string;
+    onValueChange: (numeric: number) => void;
+};
+
+export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
+    ({ value, onValueChange, ...rest }, ref) => {
+        const num = value === '' || value === null || value === undefined ? null : Number(value);
+        const display = num === null || Number.isNaN(num) ? '' : num.toLocaleString('id-ID');
+
+        return (
+            <input
+                ref={ref}
+                type="text"
+                inputMode="numeric"
+                value={display}
+                onChange={(e) => {
+                    const raw = e.target.value.replace(/\D/g, '');
+                    onValueChange(raw === '' ? 0 : Number(raw));
+                }}
+                {...rest}
+            />
+        );
+    },
+);
+CurrencyInput.displayName = 'CurrencyInput';
+
+/**
  * Format tanggal ke "17 Mei 2026" — pakai untuk tampilan tanggal saja.
  */
 export const formatDate = (input: string | Date | null | undefined): string => {

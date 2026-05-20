@@ -1,7 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { Field, Icon } from '@/components/ui';
+import { CurrencyInput, Field, Icon } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type KamarItem = {
@@ -71,11 +71,9 @@ export default function KamarForm() {
     const submit = (e: FormEvent) => {
         e.preventDefault();
         if (isEdit && kamar) {
-            // Method-spoofing: PHP tidak parse multipart body untuk PUT, jadi kirim
-            // sebagai POST + _method=PUT supaya file upload tetap ke-handle Laravel.
-            form
-                .transform((data) => ({ ...data, _method: 'PUT' }))
-                .post(route('admin.kamar.update', kamar.id), { forceFormData: true });
+            // forceFormData=true bikin Inertia otomatis convert ke POST + _method=PUT
+            // (PHP tidak parse multipart body untuk PUT/PATCH).
+            form.put(route('admin.kamar.update', kamar.id), { forceFormData: true });
         } else {
             form.post(route('admin.kamar.store'), { forceFormData: true });
         }
@@ -127,10 +125,10 @@ export default function KamarForm() {
                             <Field label="Harga Sewa / Bulan" htmlFor="harga" error={form.errors.harga_bulanan}>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{ position: 'absolute', left: 14, top: 12, fontSize: 14, color: 'var(--ink-400)' }}>Rp</span>
-                                    <input id="harga" type="number" className="input"
-                                        value={form.data.harga_bulanan || ''}
-                                        onChange={(e) => form.setData('harga_bulanan', Number(e.target.value))}
-                                        placeholder="0" min="0"
+                                    <CurrencyInput id="harga" className="input"
+                                        value={form.data.harga_bulanan}
+                                        onValueChange={(n) => form.setData('harga_bulanan', n)}
+                                        placeholder="0"
                                         style={{ paddingLeft: 40, fontVariantNumeric: 'tabular-nums' }} />
                                 </div>
                             </Field>

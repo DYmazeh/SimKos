@@ -1,7 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { Field, Icon, Input, Checkbox, PasswordInput, formatRp } from '@/components/ui';
+import { CurrencyInput, Field, Icon, Input, Checkbox, PasswordInput, formatRp } from '@/components/ui';
 import type { PageProps } from '@/types/inertia';
 
 type KamarOption = { id: number; nomor_kamar: string; tipe: string; harga_bulanan: number };
@@ -245,11 +245,11 @@ export default function PenyewaForm() {
                                             position: 'absolute', left: 14, top: 12,
                                             fontSize: 14, color: 'var(--ink-400)',
                                         }}>Rp</span>
-                                        <input id="harga" type="number" className="input"
+                                        <CurrencyInput id="harga" className="input"
                                             value={overrideHarga ? form.data.harga_disepakati : effectiveHarga}
-                                            onChange={(e) => form.setData('harga_disepakati', e.target.value)}
+                                            onValueChange={(n) => form.setData('harga_disepakati', String(n))}
                                             disabled={!overrideHarga}
-                                            placeholder="1500000"
+                                            placeholder="1.500.000"
                                             style={{ paddingLeft: 36, fontVariantNumeric: 'tabular-nums', background: overrideHarga ? 'white' : 'var(--ink-50)' }} />
                                     </div>
                                     <button type="button" onClick={() => setOverrideHarga((o) => !o)}

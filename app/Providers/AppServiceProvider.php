@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Listeners\LogSuccessfulLogin;
 use App\Models\Komplain;
 use App\Models\Pembayaran;
+use App\Models\Penyewa;
 use App\Models\Tagihan;
+use App\Observers\PenyewaObserver;
 use App\Observers\SidebarCountsInvalidator;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -79,6 +81,10 @@ class AppServiceProvider extends ServiceProvider
         Tagihan::observe(SidebarCountsInvalidator::class);
         Pembayaran::observe(SidebarCountsInvalidator::class);
         Komplain::observe(SidebarCountsInvalidator::class);
+
+        // Cleanup orphan tagihan saat penyewa nonaktif/dihapus + invalidate
+        // cache sidebar. Lihat App\Observers\PenyewaObserver untuk detail.
+        Penyewa::observe(PenyewaObserver::class);
 
         // Rate limit: upload bukti transfer max 5 per menit per user (anti-spam).
         // Sertakan header Retry-After (RFC 6585) supaya client tahu kapan boleh retry.
