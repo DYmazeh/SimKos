@@ -34,6 +34,7 @@ export default function KamarForm() {
         status: string; deskripsi: string; fasilitas: string[];
         luas_m2: number | string; lantai: number | string;
         foto: File[];
+        foto_to_delete: number[];
     }>({
         nomor_kamar: kamar?.nomor_kamar ?? '',
         tipe: kamar?.tipe ?? 'standar',
@@ -44,6 +45,7 @@ export default function KamarForm() {
         luas_m2: kamar?.luas_m2 ?? '',
         lantai: kamar?.lantai ?? '',
         foto: [],
+        foto_to_delete: [],
     });
 
     const [fotoPreviews, setFotoPreviews] = useState<Array<{ url: string; name: string }>>([]);
@@ -60,12 +62,23 @@ export default function KamarForm() {
         const merged = [...form.data.foto, ...files].slice(0, 5);
         form.setData('foto', merged);
         setFotoPreviews(merged.map((f) => ({ url: URL.createObjectURL(f), name: f.name })));
+        // Reset input value supaya pilih file yang sama 2× tetap trigger onChange.
+        e.target.value = '';
     };
 
     const removeFotoCreate = (idx: number) => {
         const next = form.data.foto.filter((_, i) => i !== idx);
         form.setData('foto', next);
         setFotoPreviews(next.map((f) => ({ url: URL.createObjectURL(f), name: f.name })));
+    };
+
+    // Toggle staging delete untuk foto existing — baru di-commit saat user pencet
+    // "Simpan Perubahan". Klik "Batal" (= navigate away) → revert otomatis karena
+    // state hilang.
+    const toggleDeleteExisting = (id: number) => {
+        const list = form.data.foto_to_delete;
+        const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+        form.setData('foto_to_delete', next);
     };
 
     const submit = (e: FormEvent) => {
@@ -223,14 +236,65 @@ export default function KamarForm() {
                             style={{ display: 'none' }}
                             onChange={onFotoInput} />
 
-                        {/* CREATE mode preview thumbnails */}
-                        {!isEdit && fotoPreviews.length > 0 && (
+                        {/* Existing thumbnails (edit mode) + preview thumbnails (yang baru di-upload).
+                            Edit: klik X = stage delete (commit saat Simpan), klik lagi = undo.
+                            Create / preview baru: klik X = hapus dari queue upload. */}
+                        {((isEdit && kamar && kamar.foto.length > 0) || fotoPreviews.length > 0) && (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, marginTop: 16 }}>
+                                {/* Foto existing — staging delete pattern */}
+                                {isEdit && kamar?.foto.map((f) => {
+                                    const staged = form.data.foto_to_delete.includes(f.id);
+                                    return (
+                                        <div key={`existing-${f.id}`} style={{
+                                            position: 'relative', borderRadius: 10, overflow: 'hidden',
+                                            aspectRatio: '4/3',
+                                            outline: staged ? '2px solid var(--danger)' : 'none',
+                                            outlineOffset: -2,
+                                        }}>
+                                            <img src={f.url} alt="" style={{
+                                                width: '100%', height: '100%', objectFit: 'cover',
+                                                opacity: staged ? 0.35 : 1,
+                                                filter: staged ? 'grayscale(0.6)' : 'none',
+                                                transition: 'opacity 160ms var(--ease), filter 160ms var(--ease)',
+                                            }} />
+                                            {staged && (
+                                                <span style={{
+                                                    position: 'absolute', left: 6, bottom: 6,
+                                                    padding: '3px 8px', borderRadius: 999,
+                                                    background: 'rgba(210,68,50,0.95)', color: 'white',
+                                                    fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
+                                                    textTransform: 'uppercase',
+                                                }}>Akan dihapus</span>
+                                            )}
+                                            <button type="button" onClick={() => toggleDeleteExisting(f.id)}
+                                                aria-label={staged ? 'Batal hapus foto' : 'Tandai foto untuk dihapus'}
+                                                title={staged ? 'Klik untuk batal menghapus' : 'Tandai untuk dihapus saat Simpan'}
+                                                style={{
+                                                    position: 'absolute', top: 6, right: 6,
+                                                    width: 24, height: 24, borderRadius: 999,
+                                                    background: staged ? 'rgba(31,143,91,0.95)' : 'rgba(210,68,50,0.95)',
+                                                    color: 'white', border: 0,
+                                                    display: 'grid', placeItems: 'center', cursor: 'pointer',
+                                                }}>
+                                                <Icon name={staged ? 'refresh' : 'x'} size={13} stroke={2.5} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Foto baru (preview dari upload) — sama UX untuk create & edit */}
                                 {fotoPreviews.map((preview, idx) => (
-                                    <div key={idx} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
-                                        <img src={preview.url} alt={`Preview ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <div key={`new-${idx}`} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
+                                        <img src={preview.url} alt={`Foto baru ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{
+                                            position: 'absolute', left: 6, bottom: 6,
+                                            padding: '3px 8px', borderRadius: 999,
+                                            background: 'rgba(37,99,235,0.95)', color: 'white',
+                                            fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
+                                            textTransform: 'uppercase',
+                                        }}>Baru</span>
                                         <button type="button" onClick={() => removeFotoCreate(idx)}
-                                            aria-label="Hapus foto"
+                                            aria-label="Hapus foto dari upload queue"
                                             style={{
                                                 position: 'absolute', top: 6, right: 6,
                                                 width: 24, height: 24, borderRadius: 999,
@@ -239,28 +303,6 @@ export default function KamarForm() {
                                             }}>
                                             <Icon name="x" size={13} stroke={2.5} />
                                         </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* EDIT mode existing thumbnails */}
-                        {isEdit && kamar && kamar.foto.length > 0 && (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, marginTop: 16 }}>
-                                {kamar.foto.map((f) => (
-                                    <div key={f.id} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
-                                        <img src={f.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        <Link href={route('admin.kamar.foto.destroy', { kamar: kamar.id, foto_kamar: f.id })}
-                                            method="delete" as="button"
-                                            aria-label="Hapus foto"
-                                            style={{
-                                                position: 'absolute', top: 6, right: 6,
-                                                width: 24, height: 24, borderRadius: 999,
-                                                background: 'rgba(210,68,50,0.95)', color: 'white', border: 0,
-                                                display: 'grid', placeItems: 'center', cursor: 'pointer',
-                                            }}>
-                                            <Icon name="x" size={13} stroke={2.5} />
-                                        </Link>
                                     </div>
                                 ))}
                             </div>

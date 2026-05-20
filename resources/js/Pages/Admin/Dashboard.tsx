@@ -75,13 +75,13 @@ const reminderStatus = (item: ReminderItem) => {
     return { label: `H-${diffDays} Jatuh Tempo`, tone: 'info' as const };
 };
 
-const verifikasiPill = (status: PembayaranTerbaruItem['status_verifikasi'], tagihanStatus: PembayaranTerbaruItem['tagihan_status']) => {
+const verifikasiPill = (status: PembayaranTerbaruItem['status_verifikasi'], _tagihanStatus: PembayaranTerbaruItem['tagihan_status']) => {
     if (status === 'approved') return { label: 'Lunas', tone: 'success' as const };
     if (status === 'pending') return { label: 'Menunggu', tone: 'warning' as const };
-    if (status === 'rejected') {
-        if (tagihanStatus === 'terlambat') return { label: 'Terlambat', tone: 'warning' as const };
-        return { label: 'Belum Bayar', tone: 'warning' as const };
-    }
+    // Rejected = admin sudah explicit menolak bukti transfer. Tampilkan
+    // "Ditolak" (tone danger), bukan "Belum Bayar" — penyewa sudah coba bayar
+    // tapi diverifikasi tidak valid, jadi misleading kalau disebut belum bayar.
+    if (status === 'rejected') return { label: 'Ditolak', tone: 'danger' as const };
     return { label: 'Lunas', tone: 'success' as const };
 };
 

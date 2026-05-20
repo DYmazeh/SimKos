@@ -136,7 +136,7 @@ export const Brand = ({
 /* ============================================================
    PILL
    ============================================================ */
-type PillTone = 'neutral' | 'success' | 'warning' | 'info';
+type PillTone = 'neutral' | 'success' | 'warning' | 'info' | 'danger';
 
 export const Pill = ({
     tone = 'neutral',
@@ -160,6 +160,7 @@ export const Pill = ({
                         tone === 'success' ? 'var(--success)' :
                         tone === 'warning' ? 'var(--warning)' :
                         tone === 'info' ? 'var(--blue-500)' :
+                        tone === 'danger' ? 'var(--danger)' :
                         'var(--ink-500)',
                 }}
                 className={dot === 'pulse' ? 'pulse-dot' : ''}

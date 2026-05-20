@@ -158,10 +158,18 @@ class KamarController extends Controller
             return back()->with('error', 'Status "Terisi" hanya dapat di-set lewat flow daftar penyewa baru.');
         }
 
-        $kamar->update(collect($data)->except('foto')->all());
+        $kamar->update(collect($data)->except(['foto', 'foto_to_delete'])->all());
+
+        // Hapus foto yang di-stage delete di frontend. Filter ke milik kamar ini
+        // sebagai defense terhadap ID dari kamar lain (forged request).
+        $toDelete = $data['foto_to_delete'] ?? [];
+        if (! empty($toDelete)) {
+            $kamar->foto()->whereIn('id', $toDelete)->delete();
+        }
 
         // Upload foto tambahan (mirror logic store()). Validation di UpdateKamarRequest
-        // sudah cap max:5, tapi tetap cek total agar foto lama + baru ≤ 5.
+        // sudah cap max:5, tapi tetap cek total agar foto lama (yang tidak dihapus)
+        // + baru ≤ 5.
         if ($request->hasFile('foto')) {
             $existingCount = $kamar->foto()->count();
             $files = $request->file('foto');

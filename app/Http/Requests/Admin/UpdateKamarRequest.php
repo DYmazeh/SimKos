@@ -42,6 +42,8 @@ class UpdateKamarRequest extends FormRequest
             'lantai' => ['nullable', 'integer', 'min:1', 'max:99'],
             'foto' => ['nullable', 'array', 'max:5'],
             'foto.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'foto_to_delete' => ['nullable', 'array'],
+            'foto_to_delete.*' => ['integer'],
         ];
     }
 }
