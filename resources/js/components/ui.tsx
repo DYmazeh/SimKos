@@ -199,8 +199,8 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
     suffix?: ReactNode;
 };
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(({ icon, suffix, ...props }, ref) => {
-    if (!icon && !suffix) return <input ref={ref} className="input" {...props} />;
+export const Input = forwardRef<HTMLInputElement, InputProps>(({ icon, suffix, style, ...props }, ref) => {
+    if (!icon && !suffix) return <input ref={ref} className="input" {...props} style={style} />;
     return (
         <div style={{ position: 'relative' }}>
             {icon && (
@@ -214,8 +214,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({ icon, suffix, .
             <input
                 ref={ref}
                 className="input"
-                style={{ paddingLeft: icon ? 44 : undefined, paddingRight: suffix ? 44 : undefined, ...((props as { style?: React.CSSProperties }).style ?? {}) }}
                 {...props}
+                style={{ paddingLeft: icon ? 44 : undefined, paddingRight: suffix ? 44 : undefined, ...style }}
             />
             {suffix && <span style={{ position: 'absolute', right: 6, top: 5 }}>{suffix}</span>}
         </div>
