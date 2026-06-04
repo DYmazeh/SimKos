@@ -1,8 +1,8 @@
-# SIMKOS — Sistem Informasi Manajemen Kos-Kosan
+# SIMKOS: Sistem Informasi Manajemen Kos-Kosan
 
 Aplikasi web untuk pengelolaan kos: manajemen kamar & penyewa, generate tagihan bulanan, reminder pembayaran via WhatsApp, verifikasi bukti transfer, dan laporan keuangan.
 
-Project tugas Manajemen Proyek TI — Kelompok 4. Submission final: 16 Mei 2026 (delivered on time).
+Project tugas Manajemen Proyek TI, Kelompok 4. Submission final: 16 Mei 2026 (delivered on time).
 
 ---
 
@@ -14,7 +14,7 @@ Project tugas Manajemen Proyek TI — Kelompok 4. Submission final: 16 Mei 2026 
 - **Database**: PostgreSQL (Supabase free tier)
 - **File Storage**: Supabase Storage (S3-compatible) untuk bukti transfer
 - **PDF Export**: barryvdh/laravel-dompdf
-- **Container**: FrankenPHP (single binary, Caddy + PHP) — multi-stage Dockerfile
+- **Container**: FrankenPHP (single binary, Caddy + PHP), multi-stage Dockerfile
 - **Hosting**: Render.com free tier
 - **CI**: GitHub Actions (Pint + PHPUnit)
 
@@ -45,7 +45,7 @@ Project tugas Manajemen Proyek TI — Kelompok 4. Submission final: 16 Mei 2026 
 ## Setup Development Lokal
 
 ### Prasyarat
-- PHP 8.4 dengan ekstensi: `pdo_pgsql`, `gd`, `mbstring`, `intl`, `zip`, `bcmath`, `sodium` — Laragon sudah include
+- PHP 8.4 dengan ekstensi: `pdo_pgsql`, `gd`, `mbstring`, `intl`, `zip`, `bcmath`, `sodium` (Laragon sudah include)
 - Composer 2.x
 - Node.js 22.x + npm
 - Git
@@ -62,12 +62,12 @@ npm install
 cp .env.example .env
 php artisan key:generate
 
-# 3. Setup DB lokal — pilih salah satu:
+# 3. Setup DB lokal, pilih salah satu:
 #    a) Pakai sqlite (paling cepat untuk dev)
 #       Pastikan DB_CONNECTION=sqlite di .env (default)
-#    b) Pakai Supabase Postgres — uncomment block pgsql di .env, isi credential
+#    b) Pakai Supabase Postgres: uncomment block pgsql di .env, isi credential
 
-# 4. Migrate + seed (admin@simkos.test / password)
+# 4. Migrate + seed (akun admin otomatis dibuat)
 php artisan migrate --seed
 
 # 5. Storage symlink (untuk akses file upload via /storage/...)
@@ -82,6 +82,9 @@ npm run build
 php artisan serve
 # Buka http://localhost:8000
 ```
+
+---
+
 ## Setup Supabase (Postgres + Storage)
 
 1. **Bikin project** di [supabase.com](https://supabase.com/dashboard) (region Singapore)
@@ -103,14 +106,14 @@ php artisan serve
 2. Login [render.com](https://render.com) → **New + → Blueprint** → pilih repo `SimKos`
 3. Render akan baca [`render.yaml`](./render.yaml) otomatis
 4. **Set environment variables manual** di dashboard Render (jangan commit ke git):
-   - `APP_KEY` — generate via `php artisan key:generate --show` (lokal), copy hasilnya
-   - `APP_URL` — `https://<your-app>.onrender.com`
-   - `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD` — dari Supabase
-   - `DB_PORT=6543` (transaction pooler — lebih hemat connection di production)
+   - `APP_KEY`: generate via `php artisan key:generate --show` (lokal), copy hasilnya
+   - `APP_URL`: `https://<your-app>.onrender.com`
+   - `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`: dari Supabase
+   - `DB_PORT=6543` (transaction pooler, lebih hemat connection di production)
    - `SUPABASE_URL`, `SUPABASE_S3_KEY`, `SUPABASE_S3_SECRET`, `SUPABASE_BUCKET=simkos-uploads`
    - `FILESYSTEM_DISK=supabase`
-5. **Deploy** — Render build Docker image (FrankenPHP), jalankan migrate (via `RUN_MIGRATIONS=true` di entrypoint)
-6. **Setup UptimeRobot** (gratis) — ping `https://<your-app>.onrender.com/up` tiap 5 menit supaya container tidak tidur saat demo
+5. **Deploy**: Render build Docker image (FrankenPHP), jalankan migrate (via `RUN_MIGRATIONS=true` di entrypoint)
+6. **Setup UptimeRobot** (gratis): ping `https://<your-app>.onrender.com/up` tiap 5 menit supaya container tidak tidur saat demo
 
 ---
 
@@ -142,7 +145,7 @@ docs/USER_MANUAL.md              # Panduan pengguna
 
 ```bash
 php artisan test
-# 49 tests, 118 assertions — semua hijau
+# 49 tests, 118 assertions, semua hijau
 ```
 
 ## Code Style
@@ -178,13 +181,13 @@ pembayaran (id, tagihan_id, tgl_bayar, jumlah_bayar, metode,
 
 ## License
 
-Tugas mata kuliah Manajemen Proyek TI — internal use only.
+Tugas mata kuliah Manajemen Proyek TI, internal use only.
 
-## Tim — Kelompok 4
+## Tim Kelompok 4
 
 - Project Manager: Maura Hellena
 - Sponsor: Wahyu Aji Pulungan, S.T., M.T.I.
 
 ---
 
-> 📖 Untuk panduan pemakaian aplikasi, lihat [docs/USER_MANUAL.md](./docs/USER_MANUAL.md)
+> Untuk panduan pemakaian aplikasi, lihat [docs/USER_MANUAL.md](./docs/USER_MANUAL.md)

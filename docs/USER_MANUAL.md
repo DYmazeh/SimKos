@@ -1,4 +1,4 @@
-# SIMKOS — User Manual
+# SIMKOS: User Manual
 
 Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 
@@ -9,7 +9,7 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 ### 1. Login pertama kali
 1. Buka URL aplikasi (mis. `https://simkos.onrender.com`)
 2. Klik **Log in**
-3. Pakai akun admin default: `admin@simkos.test` / `password`
+3. Login pakai akun admin yang sudah disiapkan saat setup (kredensial diberikan terpisah ke pemilik kos, tidak dipublikasikan di sini)
 4. Setelah login berhasil, Anda akan diarahkan ke **Dashboard Admin**
 5. **PENTING**: Segera ganti password lewat menu Profile (klik nama Anda di kanan atas → Profile)
 
@@ -18,13 +18,13 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 - **Tambah kamar baru**: klik **+ Tambah Kamar** → isi nomor, tipe (standar/deluxe/vip), harga, status
 - **Edit / hapus**: klik link "Edit" / "Hapus" di baris kamar
 - **Filter**: pakai search bar atau dropdown status di atas tabel
-- ⚠️ Kamar yang sedang ditempati tidak bisa dihapus — akhiri dulu sewanya
+- Kamar yang sedang ditempati tidak bisa dihapus, akhiri dulu sewanya
 
 ### 3. Mengelola Penyewa
 - Menu **Penyewa**
 - **Tambah penyewa baru**: klik **+ Tambah Penyewa** → isi data diri
   - Centang **"Sekaligus buat akun login"** kalau penyewa juga butuh akses sistem (untuk upload bukti transfer)
-  - Catat password awal yang Anda buat — berikan ke penyewa
+  - Catat password awal yang Anda buat, berikan ke penyewa
 - **Detail penyewa**: klik **Detail** untuk lihat profil + riwayat sewa lengkap
 
 ### 4. Menugaskan Penyewa ke Kamar (Membuat Sewa)
@@ -48,14 +48,14 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 - Pilih periode (bulan & tahun) di form **Generate untuk Periode**
 - Klik **Generate Tagihan**
   - Sistem otomatis bikin tagihan untuk semua penyewa dengan sewa aktif
-  - Aman dipanggil berulang — tagihan yang sudah ada tidak akan dobel
+  - Aman dipanggil berulang, tagihan yang sudah ada tidak akan dobel
 - Default jatuh tempo: tanggal **5** setiap bulan (bisa diubah lewat env var `SIMKOS_JATUH_TEMPO_TANGGAL`)
 
 ### 7. Mengingatkan Penyewa via WhatsApp
-- Menu **Dashboard** → bagian **📋 Pengingat Pembayaran**
+- Menu **Dashboard** → bagian **Pengingat Pembayaran**
   - Tampilkan tagihan yang jatuh tempo dalam 7 hari ke depan ATAU sudah lewat
   - Tagihan terlambat ditandai merah
-- Klik tombol **🟢 Ingatkan** di baris penyewa yang ingin diingatkan
+- Klik tombol **Ingatkan** di baris penyewa yang ingin diingatkan
   - Browser akan buka WhatsApp (mobile/desktop) dengan pesan template otomatis berisi nama, kamar, jumlah, dan jatuh tempo
   - Anda tinggal review pesan & klik kirim
 
@@ -63,16 +63,16 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 - Menu **Verifikasi** → tampilkan antrian pembayaran status **Pending**
 - Klik **Detail tagihan →** untuk melihat bukti transfer
 - Di halaman detail tagihan:
-  - Klik **🧾 Lihat bukti transfer** untuk preview file (JPG/PDF)
-  - Klik **✓ Setujui** kalau valid → tagihan otomatis ditandai **Lunas** kalau jumlah cukup
-  - Klik **✗ Tolak** kalau tidak valid → wajib isi alasan; penyewa akan diminta upload ulang
+  - Klik **Lihat bukti transfer** untuk preview file (JPG/PDF)
+  - Klik **Setujui** kalau valid → tagihan otomatis ditandai **Lunas** kalau jumlah cukup
+  - Klik **Tolak** kalau tidak valid → wajib isi alasan; penyewa akan diminta upload ulang
 
 ### 9. Laporan Keuangan & Rekap Penghuni
 - Menu **Laporan**
 - Pilih periode (bulan & tahun)
 - **Laporan Keuangan**: total pemasukan + piutang, daftar transaksi disetujui
 - **Rekap Penghuni**: daftar semua sewa di periode tersebut (aktif & selesai)
-- Klik **📄 Export PDF** untuk download laporan PDF
+- Klik **Export PDF** untuk download laporan PDF
 
 ---
 
@@ -81,7 +81,7 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 ### 1. Mendaftar Akun
 1. Buka URL aplikasi
 2. Klik **Register**
-3. Isi: nama, email, **nomor HP (WhatsApp aktif — penting untuk reminder)**, password
+3. Isi: nama, email, **nomor HP (WhatsApp aktif, penting untuk reminder)**, password
 4. Setelah register, Anda otomatis login & masuk ke **Dashboard Penyewa**
 5. Hubungi pemilik kos untuk pendaftaran kamar
 
@@ -96,7 +96,7 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 
 ### 4. Membayar Tagihan & Upload Bukti Transfer
 1. Di tabel Tagihan, cari tagihan dengan status **Belum bayar** atau **Terlambat**
-2. Klik tombol **💳 Bayar / Upload Bukti**
+2. Klik tombol **Bayar / Upload Bukti**
 3. Lakukan transfer ke rekening pemilik kos (informasi rekening hubungi langsung pemilik kos)
 4. Di form upload, isi:
    - **Tanggal Bayar** (sesuai tanggal transfer)
@@ -105,12 +105,12 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
    - **Bukti Transfer** (JPG/PNG/PDF, max 2MB)
    - (Opsional) Catatan
 5. Klik **Kirim Bukti**
-6. Status tagihan berubah jadi **Menunggu verifikasi** — admin akan review dalam 1×24 jam
+6. Status tagihan berubah jadi **Menunggu verifikasi**, admin akan review dalam 1x24 jam
 
 ### 5. Kalau Bukti Ditolak
 - Status tagihan kembali ke **Belum bayar** / **Terlambat**
 - Alasan penolakan tampil di bawah status (mis. "Nominal tidak sesuai")
-- Upload ulang bukti yang benar dengan klik tombol **💳 Bayar / Upload Bukti** lagi
+- Upload ulang bukti yang benar dengan klik tombol **Bayar / Upload Bukti** lagi
 
 ### 6. Download Kuitansi PDF
 - Untuk pembayaran yang sudah disetujui admin (status **Lunas**), tersedia tombol **Download Kuitansi**
@@ -130,27 +130,27 @@ Panduan singkat untuk **Admin (Pemilik Kos)** dan **Penyewa**.
 
 ### 9. Ganti Password
 - Klik nama Anda di kanan atas → **Profile**
-- Bagian **Update Password** — isi password lama + password baru
+- Bagian **Update Password**: isi password lama + password baru
 
 ---
 
 ## C. Troubleshooting
 
 ### "App sleep" / loading lama saat pertama akses
-Aplikasi di-deploy di Render free tier yang **tidur setelah 15 menit idle**. Saat akses pertama, butuh ~30–60 detik untuk wake-up. Berikutnya akan responsif normal selama traffic aktif.
+Aplikasi di-deploy di Render free tier yang **tidur setelah 15 menit idle**. Saat akses pertama, butuh ~30-60 detik untuk wake-up. Berikutnya akan responsif normal selama traffic aktif.
 
 ### Lupa password admin
 Reset via tinker (admin/developer):
 ```bash
 php artisan tinker
-> $u = User::where('email', 'admin@simkos.test')->first();
+> $u = User::where('email', '<email-admin>')->first();
 > $u->password = Hash::make('password-baru');
 > $u->save();
 ```
 
 ### Tagihan tidak muncul setelah generate
 - Cek apakah penyewa punya **sewa aktif** dengan `tgl_mulai <= periode`
-- Cek filter di halaman Tagihan — coba reset filter
+- Cek filter di halaman Tagihan, coba reset filter
 - Cek log: `storage/logs/laravel.log`
 
 ### Bukti transfer tidak bisa dibuka di production
@@ -167,4 +167,4 @@ Untuk bug / kendala teknis, hubungi tim developer (Kelompok 4 MPTI):
 
 ---
 
-*Dokumen ini bagian dari deliverable project SIMKOS — Manajemen Proyek TI 2026.*
+*Dokumen ini bagian dari deliverable project SIMKOS, Manajemen Proyek TI 2026.*
