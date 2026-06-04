@@ -7,6 +7,8 @@ use App\Http\Requests\Admin\StoreKamarRequest;
 use App\Http\Requests\Admin\UpdateKamarRequest;
 use App\Models\FotoKamar;
 use App\Models\Kamar;
+use App\Models\Penyewa;
+use App\Models\Sewa;
 use App\Services\ImageOptimizer;
 use App\Services\StorageUrl;
 use Illuminate\Http\RedirectResponse;
@@ -108,12 +110,20 @@ class KamarController extends Controller
             },
         ]);
 
+        // Penyewa aktif yang belum punya sewa aktif — kandidat untuk di-assign ke kamar ini.
+        $penyewaTanpaKamar = Penyewa::query()
+            ->where('status_aktif', Penyewa::STATUS_AKTIF)
+            ->whereDoesntHave('sewa', fn ($q) => $q->where('status', Sewa::STATUS_AKTIF))
+            ->orderBy('nama_lengkap')
+            ->get(['id', 'nama_lengkap', 'no_hp']);
+
         return Inertia::render('Admin/Kamar/Show', [
             'kamar' => array_merge($this->mapKamar($kamar), [
                 'peraturan' => $kamar->peraturan,
                 'deposit' => (int) $kamar->deposit,
                 'min_sewa_bulan' => (int) $kamar->min_sewa_bulan,
             ]),
+            'penyewaTanpaKamar' => $penyewaTanpaKamar,
             'riwayatSewa' => $kamar->sewa->map(fn ($s) => [
                 'id' => $s->id,
                 'penyewa_nama' => $s->penyewa->nama_lengkap ?? '—',

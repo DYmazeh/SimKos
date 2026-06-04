@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import AssignKamarForm from '@/components/AssignKamarForm';
 import { Icon, Pill, formatRp } from '@/components/ui';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import { KomplenFotoGrid } from '@/components/KomplenFotoGrid';
@@ -45,6 +46,7 @@ type ShowProps = PageProps<{
     kamar: KamarDetail;
     riwayatSewa: RiwayatItem[];
     komplenList: KomplenItem[];
+    penyewaTanpaKamar: Array<{ id: number; nama_lengkap: string; no_hp: string }>;
 }>;
 
 const statusKamarMeta = (status: string): { label: string; tone: 'success' | 'warning' | 'neutral' } => {
@@ -88,7 +90,7 @@ const fmt = (s: string) => new Date(s).toLocaleDateString('id-ID', { day: '2-dig
 
 export default function KamarShow() {
     const { props } = usePage<ShowProps>();
-    const { kamar, riwayatSewa, komplenList } = props;
+    const { kamar, riwayatSewa, komplenList, penyewaTanpaKamar } = props;
     const [activeFoto, setActiveFoto] = useState(0);
     const mainFoto = kamar.foto[activeFoto] ?? null;
     const statusMeta = statusKamarMeta(kamar.status);
@@ -273,6 +275,37 @@ export default function KamarShow() {
                     </div>
                 </div>
             </div>
+
+            {/* ───── Assign Penyewa (hanya saat kamar tersedia) ───── */}
+            {kamar.status === 'tersedia' && (
+                <section style={{
+                    background: 'white', borderRadius: 14, marginBottom: 20, overflow: 'hidden',
+                    border: '1px solid rgba(11,13,26,0.06)',
+                    boxShadow: '0 1px 2px rgba(11,13,26,0.03)',
+                }}>
+                    <header style={{ padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Icon name="user" size={16} style={{ color: 'var(--blue-600)' }} />
+                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--ink-900)' }}>Assign Penyewa</h3>
+                    </header>
+                    <div style={{ padding: '18px 22px', borderTop: '1px solid rgba(11,13,26,0.06)' }}>
+                        {penyewaTanpaKamar.length > 0 ? (
+                            <AssignKamarForm
+                                mode="kamar"
+                                kamar={{ id: kamar.id, harga_bulanan: kamar.harga_bulanan }}
+                                penyewaOptions={penyewaTanpaKamar}
+                            />
+                        ) : (
+                            <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink-500)', lineHeight: 1.6 }}>
+                                Semua penyewa aktif sudah punya kamar.{' '}
+                                <Link href={route('admin.penyewa.create')} style={{ color: 'var(--blue-600)', fontWeight: 500 }}>
+                                    Tambah penyewa baru
+                                </Link>{' '}
+                                kalau mau menugaskan kamar ini.
+                            </p>
+                        )}
+                    </div>
+                </section>
+            )}
 
             {/* ───── Riwayat Penyewa ───── */}
             <section style={{

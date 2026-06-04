@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/components/AdminLayout';
+import AssignKamarForm from '@/components/AssignKamarForm';
 import { Icon, Pill, formatRp } from '@/components/ui';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import type { PageProps } from '@/types/inertia';
@@ -28,6 +29,7 @@ type ShowProps = PageProps<{
         user: { email: string; verified: boolean } | null;
         sewa: SewaItem[];
     };
+    kamarTersedia: Array<{ id: number; nomor_kamar: string; tipe: string; harga_bulanan: number }>;
 }>;
 
 const KICKER: React.CSSProperties = {
@@ -51,7 +53,7 @@ const fmt = (s: string) => new Date(s).toLocaleDateString('id-ID', { day: '2-dig
 
 export default function PenyewaShow() {
     const { props } = usePage<ShowProps>();
-    const { penyewa } = props;
+    const { penyewa, kamarTersedia } = props;
     const initial = penyewa.nama_lengkap.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
     const sewaAktif = penyewa.sewa.find((s) => s.status === 'aktif');
     const isAktif = penyewa.status_aktif === 'aktif';
@@ -216,11 +218,24 @@ export default function PenyewaShow() {
                                 <StatTile label="Selesai" value={sewaAktif.tgl_selesai ? fmt(sewaAktif.tgl_selesai) : 'Belum ditentukan'} />
                                 <StatTile label="Harga / bulan" value={formatRp(sewaAktif.harga_disepakati)} accent />
                             </div>
+                        ) : !isAktif ? (
+                            <EmptyState
+                                icon="bed"
+                                title="Belum ada sewa aktif."
+                                desc="Penyewa berstatus nonaktif. Aktifkan kembali dulu untuk bisa menugaskan kamar."
+                            />
+                        ) : kamarTersedia.length > 0 ? (
+                            <>
+                                <p style={{ margin: '0 0 16px', fontSize: 13.5, color: 'var(--ink-500)', lineHeight: 1.6 }}>
+                                    Penyewa ini belum menempati kamar. Pilih kamar tersedia untuk membuat kontrak sewa.
+                                </p>
+                                <AssignKamarForm mode="penyewa" penyewaId={penyewa.id} kamarOptions={kamarTersedia} />
+                            </>
                         ) : (
                             <EmptyState
                                 icon="bed"
                                 title="Belum ada sewa aktif."
-                                desc="Tugaskan kamar dari halaman edit penyewa atau buat kontrak baru."
+                                desc="Tidak ada kamar berstatus tersedia untuk di-assign. Tambah kamar baru atau kosongkan kamar dulu."
                             />
                         )}
                     </section>
