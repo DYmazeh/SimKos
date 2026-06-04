@@ -265,7 +265,7 @@ export default function PenyewaForm() {
                                     onChange={(e) => form.setData('tgl_mulai', e.target.value)} />
                             </Field>
 
-                            <Field label="Tanggal akhir sewa (opsional)" htmlFor="tgl_selesai">
+                            <Field label="Tanggal akhir sewa" htmlFor="tgl_selesai">
                                 <Input id="tgl_selesai" type="date"
                                     value={form.data.tgl_selesai}
                                     onChange={(e) => form.setData('tgl_selesai', e.target.value)} />

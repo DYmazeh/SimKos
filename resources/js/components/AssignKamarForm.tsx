@@ -107,7 +107,7 @@ const AssignKamarForm = (props: Props): React.ReactElement => {
                     />
                 </Field>
 
-                <Field label="Tanggal akhir sewa (opsional)" htmlFor="assign-tgl-selesai" error={form.errors.tgl_selesai}>
+                <Field label="Tanggal akhir sewa" htmlFor="assign-tgl-selesai" error={form.errors.tgl_selesai}>
                     <input
                         id="assign-tgl-selesai"
                         type="date"
