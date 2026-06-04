@@ -101,6 +101,38 @@ class AssignKamarTest extends TestCase
         ]);
     }
 
+    public function test_assign_stores_tgl_selesai_when_provided(): void
+    {
+        $penyewa = $this->penyewa();
+        $kamar = $this->kamar();
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.penyewa.sewa.store', $penyewa), [
+                'kamar_id' => $kamar->id,
+                'tgl_mulai' => '2026-06-04',
+                'tgl_selesai' => '2026-12-04',
+            ]);
+
+        $sewa = Sewa::where('penyewa_id', $penyewa->id)->firstOrFail();
+        $this->assertEquals('2026-12-04', $sewa->tgl_selesai?->toDateString());
+    }
+
+    public function test_assign_rejects_tgl_selesai_before_tgl_mulai(): void
+    {
+        $penyewa = $this->penyewa();
+        $kamar = $this->kamar();
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.penyewa.sewa.store', $penyewa), [
+                'kamar_id' => $kamar->id,
+                'tgl_mulai' => '2026-06-04',
+                'tgl_selesai' => '2026-06-01',
+            ])
+            ->assertSessionHasErrors('tgl_selesai');
+
+        $this->assertDatabaseMissing('sewa', ['penyewa_id' => $penyewa->id]);
+    }
+
     public function test_cannot_assign_penyewa_that_already_has_active_sewa(): void
     {
         $penyewa = $this->penyewa();

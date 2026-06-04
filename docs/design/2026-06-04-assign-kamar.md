@@ -59,10 +59,12 @@ yang harus dites, tanpa manfaat berarti.
 
 ## Field, validasi, error
 
-- Field terkirim: `kamar_id`, `tgl_mulai` (wajib), `harga_disepakati` (opsional).
-- Tanpa `tgl_selesai`: mengikuti `AssignKamarService::assign()`. Tanggal selesai
-  diisi nanti saat sewa diakhiri.
-- Validasi sudah ada di `StoreSewaRequest`.
+- Field terkirim: `kamar_id`, `tgl_mulai` (wajib), `tgl_selesai` (opsional),
+  `harga_disepakati` (opsional).
+- `tgl_selesai` bersifat "rencana tanggal keluar". Selama sewa masih aktif ini
+  hanya catatan; saat sewa diakhiri lewat `endSewa`, nilainya ditimpa tanggal
+  keluar yang asli.
+- Validasi di `StoreSewaRequest`, termasuk `tgl_selesai` >= `tgl_mulai`.
 - `AssignKamarService` melempar `DomainException` (mis. kamar keburu terisi, atau
   penyewa keburu punya sewa). `SewaController@store` menangkap -> `errors.assign`,
   ditampilkan di form.

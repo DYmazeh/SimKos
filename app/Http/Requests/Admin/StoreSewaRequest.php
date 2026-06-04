@@ -17,6 +17,7 @@ class StoreSewaRequest extends FormRequest
         return [
             'kamar_id' => ['required', 'integer', Rule::exists('kamar', 'id')],
             'tgl_mulai' => ['required', 'date'],
+            'tgl_selesai' => ['nullable', 'date', 'after_or_equal:tgl_mulai'],
             'harga_disepakati' => ['nullable', 'integer', 'min:0', 'max:99999999'],
         ];
     }

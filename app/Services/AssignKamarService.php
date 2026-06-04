@@ -23,9 +23,10 @@ class AssignKamarService
         Penyewa $penyewa,
         Kamar $kamar,
         Carbon $tglMulai,
+        ?Carbon $tglSelesai = null,
         ?int $hargaDisepakati = null,
     ): Sewa {
-        return DB::transaction(function () use ($penyewa, $kamar, $tglMulai, $hargaDisepakati) {
+        return DB::transaction(function () use ($penyewa, $kamar, $tglMulai, $tglSelesai, $hargaDisepakati) {
             // Lock baris penyewa & kamar selama transaksi
             $penyewa = Penyewa::query()->lockForUpdate()->findOrFail($penyewa->id);
             $kamar = Kamar::query()->lockForUpdate()->findOrFail($kamar->id);
@@ -42,6 +43,7 @@ class AssignKamarService
                 'penyewa_id' => $penyewa->id,
                 'kamar_id' => $kamar->id,
                 'tgl_mulai' => $tglMulai->toDateString(),
+                'tgl_selesai' => $tglSelesai?->toDateString(),
                 'harga_disepakati' => $hargaDisepakati ?? $kamar->harga_bulanan,
                 'status' => Sewa::STATUS_AKTIF,
             ]);

@@ -30,6 +30,7 @@ class SewaController extends Controller
                 penyewa: $penyewa,
                 kamar: $kamar,
                 tglMulai: Carbon::parse($data['tgl_mulai']),
+                tglSelesai: isset($data['tgl_selesai']) ? Carbon::parse($data['tgl_selesai']) : null,
                 hargaDisepakati: $data['harga_disepakati'] ?? null,
             );
         } catch (DomainException $e) {

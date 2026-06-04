@@ -24,9 +24,10 @@ const AssignKamarForm = (props: Props): React.ReactElement => {
     const [penyewaId, setPenyewaId] = useState<number | ''>('');
     const [overrideHarga, setOverrideHarga] = useState(false);
 
-    const form = useForm<{ kamar_id: number | ''; tgl_mulai: string; harga_disepakati: string }>({
+    const form = useForm<{ kamar_id: number | ''; tgl_mulai: string; tgl_selesai: string; harga_disepakati: string }>({
         kamar_id: props.mode === 'kamar' ? props.kamar.id : '',
         tgl_mulai: todayLocal(),
+        tgl_selesai: '',
         harga_disepakati: '',
     });
 
@@ -50,6 +51,7 @@ const AssignKamarForm = (props: Props): React.ReactElement => {
         form.transform((data) => ({
             kamar_id: Number(data.kamar_id),
             tgl_mulai: data.tgl_mulai,
+            ...(data.tgl_selesai ? { tgl_selesai: data.tgl_selesai } : {}),
             ...(overrideHarga && data.harga_disepakati ? { harga_disepakati: Number(data.harga_disepakati) } : {}),
         }));
         form.post(route('admin.penyewa.sewa.store', targetPenyewa), { preserveScroll: true });
@@ -105,8 +107,20 @@ const AssignKamarForm = (props: Props): React.ReactElement => {
                     />
                 </Field>
 
-                <Field label="Harga disepakati / bulan" htmlFor="assign-harga" error={form.errors.harga_disepakati}>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                <Field label="Tanggal akhir sewa (opsional)" htmlFor="assign-tgl-selesai" error={form.errors.tgl_selesai}>
+                    <input
+                        id="assign-tgl-selesai"
+                        type="date"
+                        className="input"
+                        value={form.data.tgl_selesai}
+                        min={form.data.tgl_mulai || undefined}
+                        onChange={(e) => form.setData('tgl_selesai', e.target.value)}
+                    />
+                </Field>
+            </div>
+
+            <Field label="Harga disepakati / bulan" htmlFor="assign-harga" error={form.errors.harga_disepakati}>
+                <div style={{ display: 'flex', gap: 8 }}>
                         <div style={{ position: 'relative', flex: 1 }}>
                             <span style={{ position: 'absolute', left: 14, top: 12, fontSize: 14, color: 'var(--ink-400)' }}>Rp</span>
                             <CurrencyInput
@@ -133,7 +147,6 @@ const AssignKamarForm = (props: Props): React.ReactElement => {
                         </button>
                     </div>
                 </Field>
-            </div>
 
             {assignError && <p className="error" role="alert">{assignError}</p>}
 
