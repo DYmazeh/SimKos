@@ -82,13 +82,6 @@ npm run build
 php artisan serve
 # Buka http://localhost:8000
 ```
-
-### Akun Demo
-- **Admin**: `admin@simkos.test` / `password`
-- **Penyewa**: register sendiri di `/register` (auto-dapat role penyewa)
-
----
-
 ## Setup Supabase (Postgres + Storage)
 
 1. **Bikin project** di [supabase.com](https://supabase.com/dashboard) (region Singapore)
