@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Guest;
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
 use App\Models\Kamar;
-use App\Models\Testimoni;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,19 +23,6 @@ class HomeController extends Controller
         $kamarTersediaCount = Kamar::where('status', Kamar::STATUS_TERSEDIA)->count();
         $minPrice = (int) Kamar::where('status', Kamar::STATUS_TERSEDIA)->min('harga_bulanan');
         $maxPrice = (int) Kamar::where('status', Kamar::STATUS_TERSEDIA)->max('harga_bulanan');
-
-        $testimoni = Testimoni::query()
-            ->where('aktif', true)
-            ->orderBy('urutan')
-            ->limit(6)
-            ->get()
-            ->map(fn ($t) => [
-                'id' => $t->id,
-                'nama_penghuni' => $t->nama_penghuni,
-                'peran' => $t->peran,
-                'isi' => $t->isi,
-                'rating' => $t->rating,
-            ]);
 
         $faqUmum = Faq::query()
             ->where('kategori', Faq::KATEGORI_UMUM)
@@ -69,7 +55,6 @@ class HomeController extends Controller
                 'min' => $minPrice ?: 0,
                 'max' => $maxPrice ?: 0,
             ],
-            'testimoni' => $testimoni,
             'faqUmum' => $faqUmum,
             'faqPeraturan' => $faqPeraturan,
             'profil' => $this->profilKos(),

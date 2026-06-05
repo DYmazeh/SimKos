@@ -9,13 +9,11 @@ import {
     BiayaSection,
     LokasiSection,
     CaraKerjaSection,
-    TestimoniSection,
     PeraturanSection,
     FaqSection,
     KontakSection,
     StickyWA,
     type KamarSummary,
-    type TestimoniItem,
     type FaqItem,
     type ProfilKos,
 } from '@/components/guest/sections';
@@ -25,7 +23,6 @@ type HomeProps = PageProps<{
     kamarFeatured: KamarSummary[];
     kamarTersediaCount: number;
     priceRange: { min: number; max: number };
-    testimoni: TestimoniItem[];
     faqUmum: FaqItem[];
     faqPeraturan: FaqItem[];
     profil: ProfilKos;
@@ -33,7 +30,7 @@ type HomeProps = PageProps<{
 
 export default function Home() {
     const { props } = usePage<HomeProps>();
-    const { kamarFeatured, kamarTersediaCount, priceRange, testimoni, faqUmum, faqPeraturan, profil, auth } = props;
+    const { kamarFeatured, kamarTersediaCount, priceRange, faqUmum, faqPeraturan, profil, auth } = props;
 
     const waUrl = waLink(profil.wa_number, `Halo ${profil.pengelola_nama}, saya ingin bertanya soal kamar kos.`);
 
@@ -77,12 +74,6 @@ export default function Home() {
                 <Slide>
                     <Reveal direction="up" distance={20}>
                         <BiayaSection minPrice={priceRange.min} maxPrice={priceRange.max} />
-                    </Reveal>
-                </Slide>
-
-                <Slide>
-                    <Reveal direction="up" distance={20}>
-                        <TestimoniSection items={testimoni} />
                     </Reveal>
                 </Slide>
 
