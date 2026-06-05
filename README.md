@@ -186,7 +186,6 @@ Tugas mata kuliah Manajemen Proyek TI, internal use only.
 ## Tim Kelompok 4
 
 - Project Manager: Maura Hellena
-- Sponsor: Wahyu Aji Pulungan, S.T., M.T.I.
 
 ---
 
