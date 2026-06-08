@@ -65,14 +65,14 @@ export const Hero = ({
             </div>
 
             <h1 className="h-display" style={{ margin: 0, marginBottom: 16, color: 'var(--ink-900)', maxWidth: '22ch', marginLeft: 'auto', marginRight: 'auto' }}>
-                Hunian modern di kawasan strategis{' '}
+                Hunian modern di kawasan{' '}
                 <span style={{ background: 'linear-gradient(120deg, var(--ink-900), var(--blue-600) 80%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
                     Kedaton, Bandar Lampung.
                 </span>
             </h1>
 
             <p style={{ fontSize: 18, lineHeight: 1.6, color: 'var(--ink-700)', maxWidth: '54ch', margin: '0 auto 28px' }}>
-                Lokasi premium di Jl. Teuku Umar — akses cepat ke kampus Unila &amp; Teknokrat,
+                Lokasi di Jl. Teuku Umar, akses cepat ke kampus Unila &amp; Teknokrat,
                 fasilitas kesehatan, dan pusat perbelanjaan. Manajemen transparan dalam satu sistem terintegrasi.
             </p>
 
